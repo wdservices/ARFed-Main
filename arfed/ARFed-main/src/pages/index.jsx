@@ -8,7 +8,6 @@ import styles from "../styles/Home.module.css";
 import Link from "next/link.js";
 import { motion } from "framer-motion";
 import { useRouter } from "next/router";
-import ChatbotWrapper from "../components/ai-tutor-chatbot/ChatbotWrapper";
 
 export default function Home() {
   const [pos, setPosition] = useState(0);
@@ -394,7 +393,6 @@ export default function Home() {
           </div>
         </div>
         <FooterNav />
-        <ChatbotWrapper />
       </main>
     </div>
   );

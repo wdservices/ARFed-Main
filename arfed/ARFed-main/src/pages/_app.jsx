@@ -2,7 +2,6 @@ import "../styles/globals.css";
 import { motion, AnimatePresence } from "framer-motion";
 import Script from "next/script";
 import Head from "next/head";
-import ChatbotWrapper from "../components/ai-tutor-chatbot/ChatbotWrapper";
 
 function MyApp({ Component, pageProps, router }) {
   return (
@@ -34,7 +33,6 @@ function MyApp({ Component, pageProps, router }) {
           }}
         >
           <Component {...pageProps} />
-          {router.route !== '/' && <ChatbotWrapper />}
           <Script
             type="module"
             src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"

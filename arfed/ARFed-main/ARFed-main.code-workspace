@@ -1,15 +1,9 @@
 {
 	"folders": [
 		{
-			"name": "model-forge-configurator-studio-main",
-			"path": "../model-forge-configurator-studio-main"
-		},
-		{
-			"name": "ARFed-main",
 			"path": "."
 		},
 		{
-			"name": "homepage",
 			"path": "../homepage"
 		}
 	]

@@ -14,8 +14,6 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [registrationType, setRegistrationType] = useState("individual");
-  const [organization, setOrganization] = useState("");
   const router = useRouter();
 
   const login = async () => {
@@ -48,14 +46,8 @@ const Login = () => {
         });
       setLoading(false);
     } catch (err) {
-      console.log('Login error:', err, err?.response);
-      if (err?.response?.data?.message) {
-        toast.warn('Login failed: ' + err.response.data.message);
-      } else if (err?.response?.data) {
-        toast.warn('Login failed: ' + JSON.stringify(err.response.data));
-      } else {
-        toast.warn('Login failed: Unknown error');
-      }
+      console.log(err);
+      toast.warn(err.response.data.message);
       setLoading(false);
     }
   };
@@ -89,38 +81,6 @@ const Login = () => {
         </motion.div>
 
         <div className="space-y-4">
-          <div className="flex justify-center mb-4">
-            <label className="mr-4 text-white">
-              <input
-                type="radio"
-                value="individual"
-                checked={registrationType === "individual"}
-                onChange={() => setRegistrationType("individual")}
-                className="mr-1"
-              />
-              Individual
-            </label>
-            <label className="text-white">
-              <input
-                type="radio"
-                value="group"
-                checked={registrationType === "group"}
-                onChange={() => setRegistrationType("group")}
-                className="mr-1"
-              />
-              Group/Organization
-            </label>
-          </div>
-          {registrationType === "group" && (
-            <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.25 }} className="relative">
-              <input
-                onChange={(e) => setOrganization(e.target.value)}
-                type="text"
-                className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-gray-300 focus:border-white/40 focus:ring-2 focus:ring-white/20 outline-none transition-all duration-200"
-                placeholder="Organization Name"
-              />
-            </motion.div>
-          )}
           <motion.div
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}

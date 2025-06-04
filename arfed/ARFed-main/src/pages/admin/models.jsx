@@ -24,7 +24,6 @@ const Models = () => {
   const [single, setSingle] = useState("");
   const [iosModel, setIos] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [forgeOpen, setForgeOpen] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -152,7 +151,7 @@ const Models = () => {
             ))}
           </select>
           <button
-            onClick={() => setForgeOpen(true)}
+            onClick={() => setOpenModal({})}
             className="flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
           >
             <FaPlus className="mr-2 w-3 h-3" />
@@ -169,8 +168,7 @@ const Models = () => {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: index * 0.1 }}
-            className="bg-white/30 bg-clip-padding backdrop-blur-xl rounded-2xl border border-white/40 overflow-hidden shadow-2xl hover:shadow-3xl transition-shadow"
-            style={{ boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)' }}
+            className="bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 overflow-hidden"
           >
             <img
               src={model.image}
@@ -277,22 +275,6 @@ const Models = () => {
             </button>
           </div>
         </div>
-      </Modal>
-
-      <Modal
-        title="Model Forge Configurator"
-        centered
-        open={forgeOpen}
-        onCancel={() => setForgeOpen(false)}
-        footer={null}
-        width={1200}
-        bodyStyle={{ height: '80vh', padding: 0 }}
-      >
-        <iframe
-          src="/model-forge/index.html"
-          style={{ width: '100%', height: '100%', border: 'none' }}
-          title="Model Forge Configurator"
-        />
       </Modal>
 
       <ToastContainer />

@@ -16,8 +16,8 @@ const Signup = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [registrationType, setRegistrationType] = useState("individual");
-  const [organization, setOrganization] = useState("");
+  const [accountType, setAccountType] = useState("individual"); // "individual" or "group"
+  const [organizationName, setOrganizationName] = useState("");
   const router = useRouter();
 
   const signup = async () => {
@@ -31,6 +31,8 @@ const Signup = () => {
               name: name,
               email: email,
               password: password,
+              accountType: accountType,
+              organizationName: accountType === "group" ? organizationName : null,
             },
             {
               headers: {
@@ -83,56 +85,74 @@ const Signup = () => {
         </motion.div>
 
         <div className="space-y-4">
-          <div className="flex justify-center mb-4">
-            <label className="mr-4 text-white">
-              <input
-                type="radio"
-                value="individual"
-                checked={registrationType === "individual"}
-                onChange={() => setRegistrationType("individual")}
-                className="mr-1"
-              />
-              Individual
-            </label>
-            <label className="text-white">
-              <input
-                type="radio"
-                value="group"
-                checked={registrationType === "group"}
-                onChange={() => setRegistrationType("group")}
-                className="mr-1"
-              />
-              Group/Organization
-            </label>
-          </div>
-          {registrationType === "group" && (
-            <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.25 }} className="relative">
-              <input
-                onChange={(e) => setOrganization(e.target.value)}
-                type="text"
-                className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-gray-300 focus:border-white/40 focus:ring-2 focus:ring-white/20 outline-none transition-all duration-200"
-                placeholder="Organization Name"
-              />
-            </motion.div>
-          )}
+          {/* Account Type Selection */}
           <motion.div
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
+            className="flex flex-col gap-3 mb-4"
+          >
+            <label className="text-white font-medium">I am registering as:</label>
+            <div className="flex gap-6">
+              <label className="flex items-center gap-2 text-white cursor-pointer">
+                <input
+                  type="radio"
+                  name="accountType"
+                  value="individual"
+                  checked={accountType === "individual"}
+                  onChange={(e) => setAccountType(e.target.value)}
+                  className="w-4 h-4 text-purple-600 bg-white/10 border-white/20 focus:ring-purple-500"
+                />
+                Individual
+              </label>
+              <label className="flex items-center gap-2 text-white cursor-pointer">
+                <input
+                  type="radio"
+                  name="accountType"
+                  value="group"
+                  checked={accountType === "group"}
+                  onChange={(e) => setAccountType(e.target.value)}
+                  className="w-4 h-4 text-purple-600 bg-white/10 border-white/20 focus:ring-purple-500"
+                />
+                School/Organization
+              </label>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.35 }}
             className="relative"
           >
             <input
               onChange={(e) => setName(e.target.value)}
               type="text"
               className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-gray-300 focus:border-white/40 focus:ring-2 focus:ring-white/20 outline-none transition-all duration-200"
-              placeholder="Full Name"
+              placeholder={accountType === "individual" ? "Full Name" : "Contact Person Name"}
             />
           </motion.div>
+
+          {accountType === "group" && (
+            <motion.div
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="relative"
+            >
+              <input
+                onChange={(e) => setOrganizationName(e.target.value)}
+                type="text"
+                className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-gray-300 focus:border-white/40 focus:ring-2 focus:ring-white/20 outline-none transition-all duration-200"
+                placeholder="Organization Name"
+              />
+            </motion.div>
+          )}
           
           <motion.div
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.4 }}
+            transition={{ delay: 0.45 }}
             className="relative"
           >
             <input
@@ -166,7 +186,7 @@ const Signup = () => {
           <motion.div
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.6 }}
+            transition={{ delay: 0.55 }}
             className="relative"
           >
             <input
@@ -203,7 +223,7 @@ const Signup = () => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.7 }}
+          transition={{ delay: 0.6 }}
           className="mt-6 text-center text-gray-200"
         >
           Already have an account?{" "}

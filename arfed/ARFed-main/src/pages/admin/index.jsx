@@ -18,7 +18,8 @@ import {
   FaUserPlus,
   FaPlus,
   FaSearch,
-  FaFilter
+  FaFilter,
+  FaAd
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 
@@ -143,6 +144,12 @@ const Admin = () => {
               <div className="flex items-center px-6 py-3 text-white hover:bg-white/10 cursor-pointer">
                 <FaCube className="mr-3" />
                 <span>Models</span>
+              </div>
+            </Link>
+            <Link href="/admin/ads">
+              <div className="flex items-center px-6 py-3 text-white hover:bg-white/10 cursor-pointer">
+                <FaAd className="mr-3" />
+                <span>Ads</span>
               </div>
             </Link>
             <div 
