@@ -213,7 +213,7 @@ const SingleSubject = () => {
         {/* Chathead Button Fixed Bottom Right */}
         <button
           onClick={() => setChatOpen(true)}
-          className="fixed bottom-4 right-4 p-4 bg-white/20 backdrop-blur-lg border border-white/30 rounded-full text-white hover:bg-white/30 transition-colors shadow-lg z-50"
+          className="fixed bottom-4 right-4 p-4 bg-black border border-white rounded-full text-white hover:bg-gray-900 transition-colors shadow-lg z-50"
           aria-label="Open AI Chat"
         >
           <FaComment className="text-2xl" />

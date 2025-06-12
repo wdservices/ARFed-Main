@@ -5,35 +5,57 @@ import { getCookie } from "cookies-next";
 import { useRouter } from "next/router";
 import styles from "../styles/Home.module.css";
 import { FaArrowLeft, FaMicrophone, FaComment } from "react-icons/fa";
-import { Modal } from 'antd';
+import { Modal, message } from 'antd';
 import { useRef } from 'react';
 
 function Single() {
   const token = getCookie("token");
   const router = useRouter();
-  const [model, setModel] = useState([]);
+  const [model, setModel] = useState({
+    title: "Loading...",
+    description: "Please wait while we load the model...",
+    model: "",
+    image: "",
+    audio: ""
+  });
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [currentUtterance, setCurrentUtterance] = useState(null);
   const [chatOpen, setChatOpen] = useState(false);
+  const [error, setError] = useState(null);
   const modelViewerRef = useRef(null);
 
   useEffect(() => {
     const url = router.query.slug;
-    try {
-      axios
-        .get(`https://arfed-api.onrender.com/api/models/${url}`, {
+    if (!url) return;
+
+    const fetchModel = async () => {
+      try {
+        const response = await axios.get(`https://arfed-api.onrender.com/api/models/${url}`, {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
             "auth-token": token,
           },
-        })
-        .then((response) => {
-          setModel(response.data);
         });
-    } catch (e) {
-      console.log(e);
-    }
+        setModel(response.data);
+        setError(null);
+      } catch (e) {
+        console.error("Error fetching model:", e);
+        setError("Failed to load model. Please try again later.");
+        message.error("Failed to load model. Please try again later.");
+        
+        // Set fallback data
+        setModel({
+          title: "Error Loading Model",
+          description: "We're having trouble loading this model. Please try again later.",
+          model: "",
+          image: "/images/error.png", // Make sure to add an error image
+          audio: ""
+        });
+      }
+    };
+
+    fetchModel();
   }, [router.query.slug, token]);
 
   useEffect(() => {
@@ -183,7 +205,7 @@ function Single() {
       {/* Chathead Button Fixed Bottom Right */}
       <button
         onClick={() => setChatOpen(true)}
-        className="fixed bottom-4 right-4 p-4 bg-white/20 backdrop-blur-lg border border-white/30 rounded-full text-white hover:bg-white/30 transition-colors shadow-lg z-50"
+        className="fixed bottom-4 right-4 p-4 bg-black border border-white rounded-full text-white hover:bg-gray-900 transition-colors shadow-lg z-50"
       >
         <FaComment className="text-2xl" />
       </button>

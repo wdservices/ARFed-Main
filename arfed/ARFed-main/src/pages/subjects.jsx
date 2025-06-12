@@ -187,10 +187,10 @@ const Subjects = () => {
         <Payment closeModal={() => openModal(!open)} open={open} />
         <button
           onClick={() => setChatOpen(true)}
-          className="fixed bottom-8 right-8 z-50 bg-white/80 dark:bg-[#181f2a]/80 backdrop-blur-lg border border-white/30 dark:border-[#232946]/30 shadow-xl rounded-full w-16 h-16 flex items-center justify-center hover:scale-105 transition-transform"
+          className="fixed bottom-8 right-8 z-50 bg-black border border-white shadow-xl rounded-full w-16 h-16 flex items-center justify-center hover:scale-105 transition-transform"
           aria-label="Open AI Chat"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-indigo-500">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-white">
             <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 1.23-.115 2.425-.33 3.536A9.057 9.057 0 0112 21a9.05 9.05 0 01-8.67-5.464C3.116 14.425 3 13.23 3 12s.115-2.425.33-3.536A9.057 9.057 0 0112 3a9.057 9.057 0 018.67 5.464c.215 1.111.33 2.306.33 3.536z" />
           </svg>
         </button>
