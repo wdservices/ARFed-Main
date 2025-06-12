@@ -5,7 +5,7 @@ import ModelViewer from '@/components/ModelViewer';
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex flex-col bg-black">
+    <div className="min-h-screen flex flex-col bg-white">
       <div className="container mx-auto px-4 py-6 flex flex-col h-screen max-w-full">
         <NavigationBar />
         
@@ -21,7 +21,7 @@ const Index = () => {
             transition={{ duration: 0.7, delay: 0.3 }}
             className="mb-6 text-center"
           >
-            <h1 className="text-4xl font-bold text-white tracking-tight mb-2">
+            <h1 className="text-4xl font-bold text-gray-900 tracking-tight mb-2">
               ARFed 3D Model Viewer
             </h1>
           </motion.div>
@@ -33,7 +33,7 @@ const Index = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.5 }}
-          className="py-4 text-center text-sm text-gray-500"
+          className="py-4 text-center text-sm text-gray-600 bg-white"
         >
           <p>ARFed 3D Editor • Designed with precision • Powered by Three.js</p>
         </motion.footer>

@@ -242,6 +242,10 @@ const ModelViewer = () => {
         handleAddAnnotation={handleAddAnnotation}
         handleExportToApp={handleExportToApp}
         handleChangeColor={handleToggleColorPicker}
+        modelUrl={modelUrl}
+        modelColor={modelColor}
+        annotations={annotations}
+        isModelLoaded={isModelLoaded}
       />
 
       {/* Color Picker */}

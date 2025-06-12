@@ -1,7 +1,7 @@
 "use client";
 
 import type { ChatMessageData } from "@/types/chat";
-import { cn } from "@/lib/utils";
+import { cn } from "../../lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Copy, User, Bot, AlertTriangle } from "lucide-react";

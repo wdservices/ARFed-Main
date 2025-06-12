@@ -122,31 +122,31 @@ const Admin = () => {
           </div>
 
           <nav className="mt-8">
-            <Link href="/admin">
+            <Link href="/admin" className="block">
               <div className="flex items-center px-6 py-3 text-white hover:bg-white/10 cursor-pointer">
                 <FaChartLine className="mr-3" />
                 <span>Dashboard</span>
               </div>
             </Link>
-            <Link href="/admin/users">
+            <Link href="/admin/users" className="block">
               <div className="flex items-center px-6 py-3 text-white hover:bg-white/10 cursor-pointer">
                 <FaUsers className="mr-3" />
                 <span>Users</span>
               </div>
             </Link>
-            <Link href="/admin/subjects">
+            <Link href="/admin/subjects" className="block">
               <div className="flex items-center px-6 py-3 text-white hover:bg-white/10 cursor-pointer">
                 <FaBook className="mr-3" />
                 <span>Subjects</span>
               </div>
             </Link>
-            <Link href="/admin/models">
+            <Link href="/admin/models" className="block">
               <div className="flex items-center px-6 py-3 text-white hover:bg-white/10 cursor-pointer">
                 <FaCube className="mr-3" />
                 <span>Models</span>
               </div>
             </Link>
-            <Link href="/admin/ads">
+            <Link href="/admin/ads" className="block">
               <div className="flex items-center px-6 py-3 text-white hover:bg-white/10 cursor-pointer">
                 <FaAd className="mr-3" />
                 <span>Ads</span>
@@ -282,25 +282,27 @@ const Admin = () => {
               </motion.div>
             </div>
 
-            {/* Search and Actions */}
-            <div className="flex justify-between items-center mb-6">
-              <div className="relative w-96">
-                <input
-                  type="text"
-                  placeholder="Search users or models..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-4 py-2 pl-10 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/60 focus:outline-none focus:border-white/40"
-                />
-                <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-white/60" />
+            {/* Search and Filter */}
+            <div className="mb-8">
+              <div className="flex items-center gap-4">
+                <div className="flex-1 relative">
+                  <input
+                    type="text"
+                    placeholder="Search users or models..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/60 focus:outline-none focus:border-white/40"
+                  />
+                  <FaSearch className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white/60" />
+                </div>
+                <button
+                  onClick={copyAllEmails}
+                  className="flex items-center px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-200"
+                >
+                  <FaCopy className="mr-2" />
+                  Copy All Emails
+                </button>
               </div>
-              <button
-                onClick={copyAllEmails}
-                className="flex items-center px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-200"
-              >
-                <FaCopy className="mr-2" />
-                Copy All Emails
-              </button>
             </div>
 
             {/* Recent Users */}

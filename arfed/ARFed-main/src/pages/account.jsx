@@ -16,7 +16,7 @@ const account = () => {
   const generator = new AvatarGenerator();
   const id = getCookie("id");
   const [image, setImage] = useState("");
-  const [user, setUser] = useState([]);
+  const [user, setUser] = useState(null);
   const token = getCookie("token");
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -40,8 +40,8 @@ const account = () => {
     } catch (e) {
       console.log(e);
     }
-    setImage(generator.generateRandomAvatar(user.name));
-  }, []);
+    setImage(generator.generateRandomAvatar(user?.name));
+  }, [id, token, user?.name]);
 
   const logout = () => {
     deleteCookie("token");
@@ -125,7 +125,7 @@ const account = () => {
         )}
       </Layout>
       <ToastContainer />
-      <Payment closeModal={() => openModal(!open)} open={open} />
+      <Payment closeModal={() => openModal(!open)} open={open} user={user} />
     </div>
   );
 };

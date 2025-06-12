@@ -8,7 +8,8 @@ import {
   FaCube, 
   FaChartLine, 
   FaSignOutAlt,
-  FaArrowLeft
+  FaArrowLeft,
+  FaAd
 } from 'react-icons/fa';
 
 const AdminLayout = ({ children, title }) => {
@@ -51,6 +52,12 @@ const AdminLayout = ({ children, title }) => {
               <div className="flex items-center px-6 py-3 text-white hover:bg-white/10 cursor-pointer">
                 <FaBook className="mr-3" />
                 <span>Subjects</span>
+              </div>
+            </Link>
+            <Link href="/admin/ads" className="block">
+              <div className="flex items-center px-6 py-3 text-white hover:bg-white/10 cursor-pointer">
+                <FaAd className="mr-3" />
+                <span>Ads</span>
               </div>
             </Link>
             <Link href="/admin/models">

@@ -167,6 +167,15 @@ const SingleSubject = () => {
             <FaArrowLeft className="mr-2" />
             Back
           </button>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setChatOpen(true)}
+              className="text-white hover:text-gray-200 transition-colors"
+              aria-label="Open AI Chat"
+            >
+              <FaComment className="text-2xl" />
+            </button>
+          </div>
         </div>
 
         {/* Main Content Area (starts below fixed header) */}
@@ -209,15 +218,6 @@ const SingleSubject = () => {
           <div className="h-20"></div>
 
         </main>
-
-        {/* Chathead Button Fixed Bottom Right */}
-        <button
-          onClick={() => setChatOpen(true)}
-          className="fixed bottom-4 right-4 p-4 bg-black border border-white rounded-full text-white hover:bg-gray-900 transition-colors shadow-lg z-50"
-          aria-label="Open AI Chat"
-        >
-          <FaComment className="text-2xl" />
-        </button>
 
         {/* Chat Modal */}
         <Modal

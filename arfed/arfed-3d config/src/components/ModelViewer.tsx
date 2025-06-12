@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import * as THREE from 'three';
@@ -7,6 +6,7 @@ import URLInput from './ModelViewer/URLInput';
 import ModelCanvas, { Annotation } from './ModelViewer/ModelCanvas';
 import AnnotationForm from './ModelViewer/AnnotationForm';
 import ColorPicker from './ModelViewer/ColorPicker';
+import ExportModal from './ModelViewer/ExportModal';
 
 // Main ModelViewer component
 const ModelViewer = () => {
@@ -26,6 +26,8 @@ const ModelViewer = () => {
   const [showAnimationControls, setShowAnimationControls] = useState<boolean>(false);
   const [modelColor, setModelColor] = useState('#ffffff');
   const [showColorPicker, setShowColorPicker] = useState<boolean>(false);
+  const [showExportModal, setShowExportModal] = useState<boolean>(false);
+  const [isLiveMode, setIsLiveMode] = useState<boolean>(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const hasModelLoadedRef = useRef<boolean>(false);
 
@@ -124,7 +126,7 @@ const ModelViewer = () => {
     setIsAddingAnnotation(true);
     toast({
       title: "Add Annotation",
-      description: "Click on the model to place an annotation",
+      description: "Click on the model to place an annotation. Use the mouse controls to rotate and position the model as needed.",
     });
   };
 
@@ -213,11 +215,17 @@ const ModelViewer = () => {
       return;
     }
 
-    // Here you would implement the actual export functionality
+    setShowExportModal(true);
+  };
+
+  // Handle export configuration
+  const handleExportConfig = (config: any) => {
+    setIsLiveMode(true);
     toast({
-      title: "Model Exported",
-      description: "Model and annotations have been exported to your app",
+      title: "Model Exported Successfully",
+      description: `${config.title} has been exported to ${config.subject}`,
     });
+    console.log("Export configuration:", config);
   };
 
   return (
@@ -231,6 +239,10 @@ const ModelViewer = () => {
         handleAddAnnotation={handleAddAnnotation}
         handleExportToApp={handleExportToApp}
         handleChangeColor={handleToggleColorPicker}
+        modelUrl={modelUrl}
+        modelColor={modelColor}
+        annotations={annotations}
+        isModelLoaded={isModelLoaded}
       />
 
       {/* Color Picker */}
@@ -241,6 +253,16 @@ const ModelViewer = () => {
           onClose={() => setShowColorPicker(false)}
         />
       )}
+
+      {/* Export Modal */}
+      <ExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        modelUrl={modelUrl}
+        modelColor={modelColor}
+        annotations={annotations}
+        onExport={handleExportConfig}
+      />
 
       {/* Model Canvas */}
       <div className="flex-1 flex flex-col">
@@ -258,6 +280,7 @@ const ModelViewer = () => {
           handleCanvasClick={handleCanvasClick}
           handleDeleteAnnotation={handleDeleteAnnotation}
           modelColor={modelColor}
+          isLiveMode={isLiveMode}
         />
       </div>
 

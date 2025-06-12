@@ -11,9 +11,17 @@ type AnnotationMarkerProps = {
   title: string;
   content: string;
   onDelete: (id: string) => void;
+  isLiveMode?: boolean;
 };
 
-export const AnnotationMarker = ({ id, position, title, content, onDelete }: AnnotationMarkerProps) => {
+export const AnnotationMarker = ({ 
+  id, 
+  position, 
+  title, 
+  content, 
+  onDelete, 
+  isLiveMode = false 
+}: AnnotationMarkerProps) => {
   const [showInfo, setShowInfo] = useState(false);
   const markerRef = useRef<HTMLDivElement>(null);
   
@@ -43,16 +51,18 @@ export const AnnotationMarker = ({ id, position, title, content, onDelete }: Ann
               <div className="flex justify-between items-start mb-1">
                 <h3 className="font-medium text-sm">{title}</h3>
                 <div className="flex gap-1">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete(id);
-                    }}
-                    className="text-gray-400 hover:text-red-500 transition-colors p-1"
-                    aria-label="Delete annotation"
-                  >
-                    <X size={14} />
-                  </button>
+                  {!isLiveMode && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(id);
+                      }}
+                      className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                      aria-label="Delete annotation"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
                   <button
                     onClick={toggleInfo}
                     className="text-gray-400 hover:text-white transition-colors p-1"

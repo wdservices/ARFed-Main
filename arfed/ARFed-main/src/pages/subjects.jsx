@@ -8,6 +8,7 @@ import "swiper/css/scrollbar";
 import { Pagination, Scrollbar, Autoplay } from "swiper";
 import { useRouter } from "next/router";
 import Payment from "../components/Payment";
+import FloatingChat from "../components/FloatingChat";
 import Head from "next/head";
 import { FaBars, FaMoon, FaSun, FaCrown } from "react-icons/fa";
 import Link from "next/link";
@@ -23,7 +24,6 @@ const Subjects = () => {
   const id = getCookie("id");
   const [darkMode, setDarkMode] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [chatOpen, setChatOpen] = useState(false);
 
   useEffect(() => {
     axios.get("https://arfed-api.onrender.com/api/ads", {
@@ -184,32 +184,8 @@ const Subjects = () => {
             ))
           )}
         </div>
-        <Payment closeModal={() => openModal(!open)} open={open} />
-        <button
-          onClick={() => setChatOpen(true)}
-          className="fixed bottom-8 right-8 z-50 bg-black border border-white shadow-xl rounded-full w-16 h-16 flex items-center justify-center hover:scale-105 transition-transform"
-          aria-label="Open AI Chat"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-white">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 1.23-.115 2.425-.33 3.536A9.057 9.057 0 0112 21a9.05 9.05 0 01-8.67-5.464C3.116 14.425 3 13.23 3 12s.115-2.425.33-3.536A9.057 9.057 0 0112 3a9.057 9.057 0 018.67 5.464c.215 1.111.33 2.306.33 3.536z" />
-          </svg>
-        </button>
-        {chatOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-            <div className="relative bg-white dark:bg-[#181f2a] rounded-2xl shadow-2xl w-full max-w-2xl mx-4 p-0 flex flex-col" style={{ height: '70vh' }}>
-              <button
-                onClick={() => setChatOpen(false)}
-                className="absolute top-4 right-4 text-gray-500 dark:text-gray-300 text-2xl font-bold z-10"
-                aria-label="Close Chatbot"
-              >
-                ×
-              </button>
-              <div className="flex-1 p-4">
-                <p className="text-center text-gray-500 dark:text-gray-400">AI Chat Interface Placeholder</p>
-              </div>
-            </div>
-          </div>
-        )}
+        <Payment user={user} closeModal={() => openModal(!open)} open={open} />
+        <FloatingChat />
       </div>
     </div>
   );

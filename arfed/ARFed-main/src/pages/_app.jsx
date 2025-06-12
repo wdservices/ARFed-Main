@@ -1,17 +1,22 @@
 import "../styles/globals.css";
 import { motion, AnimatePresence } from "framer-motion";
 import Script from "next/script";
-import Head from "next/head";
+import { ErrorBoundary } from 'react-error-boundary';
+
+function ErrorFallback({ error }) {
+  return (
+    <div role="alert" className="p-4">
+      <p className="text-red-500">Something went wrong:</p>
+      <pre className="text-sm">{error.message}</pre>
+    </div>
+  );
+}
 
 function MyApp({ Component, pageProps, router }) {
   return (
-    <>
-      <Head>
-        <title>ARFed App</title>
-      </Head>
-
-      <AnimatePresence>
-        <motion.div
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
+      {/* <AnimatePresence mode="wait"> */}
+        {/* <motion.div
           initial="pageInitial"
           key={router.route}
           animate="pageAnimate"
@@ -31,15 +36,15 @@ function MyApp({ Component, pageProps, router }) {
               opacity: 0,
             },
           }}
-        >
+        > */}
           <Component {...pageProps} />
           <Script
             type="module"
             src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"
-          ></Script>
-        </motion.div>
-      </AnimatePresence>
-    </>
+          />
+        {/* </motion.div> */}
+      {/* </AnimatePresence> */}
+    </ErrorBoundary>
   );
 }
 

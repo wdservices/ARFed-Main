@@ -1,8 +1,10 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Loader2, Upload, Pencil, Palette } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Download, Plus, Palette } from 'lucide-react';
+import CodeSnippet from './CodeSnippet';
+import { Annotation } from './ModelCanvas';
 
 interface URLInputProps {
   inputUrl: string;
@@ -12,6 +14,10 @@ interface URLInputProps {
   handleAddAnnotation: () => void;
   handleExportToApp: () => void;
   handleChangeColor: () => void;
+  modelUrl?: string;
+  modelColor?: string;
+  annotations?: Annotation[];
+  isModelLoaded?: boolean;
 }
 
 const URLInput: React.FC<URLInputProps> = ({
@@ -21,75 +27,78 @@ const URLInput: React.FC<URLInputProps> = ({
   isLoading,
   handleAddAnnotation,
   handleExportToApp,
-  handleChangeColor
+  handleChangeColor,
+  modelUrl = '',
+  modelColor = '#ffffff',
+  annotations = [],
+  isModelLoaded = false
 }) => {
   return (
-    <div className="bg-black/20 backdrop-blur-sm rounded-lg p-4 w-80">
-      <h2 className="text-white text-lg font-bold mb-4">ARFed Controls</h2>
-      
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <label htmlFor="model-url" className="text-white text-sm font-medium">
-            Model URL (.glb or .gltf)
-          </label>
-          <Input
-            id="model-url"
-            placeholder="https://example.com/model.glb"
-            value={inputUrl}
-            onChange={(e) => setInputUrl(e.target.value)}
-            className="bg-gray-900 border-gray-700 text-white"
-          />
+    <div className="w-80 flex flex-col gap-4">
+      <Card className="p-6 bg-white border border-gray-200 shadow-lg">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">3D Model Controls</h2>
+        
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Model URL (.glb or .gltf)
+            </label>
+            <input
+              type="url"
+              value={inputUrl}
+              onChange={(e) => setInputUrl(e.target.value)}
+              placeholder="Enter model URL..."
+              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent shadow-sm"
+              style={{ backgroundColor: '#ffffff', color: '#111827' }}
+            />
+          </div>
+          
+          <Button 
+            onClick={handleLoadModel} 
+            disabled={isLoading}
+            className="w-full bg-gradient-to-r from-primary to-purple-600 text-white hover:opacity-90 shadow-sm"
+          >
+            {isLoading ? "Loading..." : "Load Model"}
+          </Button>
         </div>
         
-        <Button
-          onClick={handleLoadModel}
-          disabled={isLoading}
-          className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Loading...
-            </>
-          ) : (
-            <>
-              <Upload className="mr-2 h-4 w-4" />
-              Load Model
-            </>
-          )}
-        </Button>
-        
-        <div className="pt-4 border-t border-gray-800">
-          <div className="grid grid-cols-2 gap-2">
-            <Button
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Model Actions</h3>
+          <div className="space-y-3">
+            <Button 
               onClick={handleAddAnnotation}
-              variant="outline"
-              className="bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white border-0"
+              className="w-full bg-gradient-to-r from-primary to-purple-600 text-white hover:opacity-90 justify-start shadow-sm"
             >
-              <Pencil className="mr-2 h-4 w-4" />
+              <Plus className="mr-2" size={16} />
               Add Annotation
             </Button>
             
-            <Button
+            <Button 
               onClick={handleChangeColor}
-              variant="outline"
-              className="bg-gradient-to-r from-pink-500 to-orange-600 hover:from-pink-600 hover:to-orange-700 text-white border-0"
+              className="w-full bg-gradient-to-r from-primary to-purple-600 text-white hover:opacity-90 justify-start shadow-sm"
             >
-              <Palette className="mr-2 h-4 w-4" />
+              <Palette className="mr-2" size={16} />
               Change Color
+            </Button>
+            
+            <Button 
+              onClick={handleExportToApp}
+              className="w-full bg-gradient-to-r from-primary to-purple-600 text-white hover:opacity-90 justify-start shadow-sm"
+            >
+              <Download className="mr-2" size={16} />
+              Export to App
             </Button>
           </div>
         </div>
-        
-        <div className="pt-4 border-t border-gray-800">
-          <Button
-            onClick={handleExportToApp}
-            className="w-full bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white"
-          >
-            Deploy to App
-          </Button>
-        </div>
-      </div>
+      </Card>
+
+      {/* Code Snippet Section */}
+      <CodeSnippet
+        modelUrl={modelUrl}
+        modelColor={modelColor}
+        annotations={annotations}
+        isModelLoaded={isModelLoaded}
+      />
     </div>
   );
 };

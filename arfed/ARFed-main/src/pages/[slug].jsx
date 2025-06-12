@@ -4,9 +4,10 @@ import axios from "axios";
 import { getCookie } from "cookies-next";
 import { useRouter } from "next/router";
 import styles from "../styles/Home.module.css";
-import { FaArrowLeft, FaMicrophone, FaComment } from "react-icons/fa";
-import { Modal, message } from 'antd';
+import { FaArrowLeft, FaMicrophone } from "react-icons/fa";
+import { message } from 'antd';
 import { useRef } from 'react';
+import FloatingChat from "../components/FloatingChat";
 
 function Single() {
   const token = getCookie("token");
@@ -20,7 +21,6 @@ function Single() {
   });
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [currentUtterance, setCurrentUtterance] = useState(null);
-  const [chatOpen, setChatOpen] = useState(false);
   const [error, setError] = useState(null);
   const modelViewerRef = useRef(null);
 
@@ -43,7 +43,7 @@ function Single() {
         console.error("Error fetching model:", e);
         setError("Failed to load model. Please try again later.");
         message.error("Failed to load model. Please try again later.");
-        
+
         // Set fallback data
         setModel({
           title: "Error Loading Model",
@@ -131,7 +131,7 @@ function Single() {
         </div>
 
         {/* Microphone Icon */}
-        <div>
+        <div className="flex items-center gap-4">
           {isSpeaking ? (
             <div className="p-2 bg-white/20 backdrop-blur-lg border border-white/30 rounded-full cursor-pointer text-white" onClick={() => pause()}>
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="bi bi-pause-circle-fill" viewBox="0 0 16 16">
@@ -150,9 +150,9 @@ function Single() {
       </div>
 
       {/* Main Content Area (starts below fixed header) */}
-      <main className="pt-16 p-4 overflow-y-auto">
+      <main className=" overflow-y-auto">
         {/* Model Viewer */}
-        <div className="w-full h-[55vh] mb-4">
+        <div className="w-full h-[90vh] mb-4">
           <div className={styles.single}>
             <model-viewer
               ref={modelViewerRef}
@@ -176,7 +176,7 @@ function Single() {
               <div
                 slot="ar-button"
                 id="ar-button"
-                className="p-3 absolute bottom-4 left-1/2 transform -translate-x-1/2"
+                className="p-3 absolute bottom-10 left-1/2 transform -translate-x-1/2"
               >
                 <img
                   className="cursor-pointer w-32 md:w-40"
@@ -190,38 +190,22 @@ function Single() {
         </div>
 
         {/* Title */}
-        <h1 className="text-2xl text-white my-4 text-center">{model.title}</h1>
+        <div className="bg-white/20 backdrop-blur-lg border border-white/30 rounded-lg p-4">
+          <h1 className="text-2xl text-white my-4 text-center">{model.title}</h1>
 
-        {/* Description */}
-        <div className="bg-white/20 backdrop-blur-lg border border-white/30 rounded-lg p-4 text-white mb-4">
-          {model.description}
+          {/* Description */}
+          <div className=" text-white">
+            {model.description}
+          </div>
+
         </div>
-
         {/* Add some padding at the bottom to ensure content isn't hidden by the chathead */}
-        <div className="h-20"></div>
+        {/* <div className="h-20"></div> */}
 
       </main>
 
-      {/* Chathead Button Fixed Bottom Right */}
-      <button
-        onClick={() => setChatOpen(true)}
-        className="fixed bottom-4 right-4 p-4 bg-black border border-white rounded-full text-white hover:bg-gray-900 transition-colors shadow-lg z-50"
-      >
-        <FaComment className="text-2xl" />
-      </button>
-
-      {/* Chat Modal */}
-      <Modal
-        title="AI Chatbot"
-        centered
-        open={chatOpen}
-        onCancel={() => setChatOpen(false)}
-        footer={[]}
-      >
-        <div className="p-4">
-          <p className="text-gray-800">AI Chat Interface goes here...</p>
-        </div>
-      </Modal>
+      {/* Add the FloatingChat component */}
+      <FloatingChat />
     </div>
   );
 }

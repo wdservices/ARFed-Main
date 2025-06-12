@@ -56,7 +56,7 @@ const AnnotationForm: React.FC<AnnotationFormProps> = ({
             />
           </div>
           <div className="flex justify-end space-x-3 mt-6">
-            <Button onClick={onCancel} variant="outline" className="border-gray-700 text-white hover:bg-gray-800">Cancel</Button>
+            <Button onClick={onCancel} className="bg-gray-700 text-white hover:bg-gray-600 border-gray-600">Cancel</Button>
             <Button onClick={onSave} className="bg-gradient-to-r from-primary to-purple-600 text-white hover:opacity-90">Save Annotation</Button>
           </div>
         </div>

@@ -1,3 +1,4 @@
+
 import React, { Suspense, useRef, useEffect } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, Html } from '@react-three/drei';
@@ -25,52 +26,85 @@ const LoadingIndicator = () => (
   </Html>
 );
 
-// Scene component with event handlers
-const Scene = ({ isAddingAnnotation }: { isAddingAnnotation: boolean }) => {
+// Scene component with enhanced event handlers for annotation interaction
+const Scene = ({ 
+  isAddingAnnotation, 
+  onModelClick 
+}: { 
+  isAddingAnnotation: boolean;
+  onModelClick?: (point: THREE.Vector3) => void;
+}) => {
   const threeState = useThree();
   const { scene, camera, raycaster, mouse, gl } = threeState;
   
+  // Configure scene and renderer for better shadows
   useEffect(() => {
-    const handlePointerMove = (event: PointerEvent) => {
-      if (!isAddingAnnotation) return;
+    if (scene) {
+      scene.environment = null;
+      scene.background = null;
+    }
+    
+    // Configure renderer with shadows enabled
+    if (gl) {
+      gl.toneMapping = THREE.NoToneMapping;
+      gl.toneMappingExposure = 1;
+      gl.shadowMap.enabled = true;
+      gl.shadowMap.type = THREE.PCFSoftShadowMap;
+    }
+  }, [scene, gl]);
+  
+  useEffect(() => {
+    if (!isAddingAnnotation) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      // Prevent the event from bubbling to orbit controls
+      event.stopPropagation();
       
       // Calculate mouse position in normalized device coordinates
       const canvas = gl.domElement;
       const rect = canvas.getBoundingClientRect();
-      mouse.x = ((event.clientX - rect.left) / canvas.clientWidth) * 2 - 1;
-      mouse.y = -((event.clientY - rect.top) / canvas.clientHeight) * 2 + 1;
-    };
-
-    const handlePointerDown = (event: PointerEvent) => {
-      if (!isAddingAnnotation) return;
+      const mouseX = ((event.clientX - rect.left) / canvas.clientWidth) * 2 - 1;
+      const mouseY = -((event.clientY - rect.top) / canvas.clientHeight) * 2 + 1;
       
-      // Update raycaster with current mouse position
-      raycaster.setFromCamera(mouse, camera);
+      // Create a new mouse vector for this specific click
+      const clickMouse = new THREE.Vector2(mouseX, mouseY);
       
-      // Check for intersections with the model
+      // Update raycaster with the click position
+      raycaster.setFromCamera(clickMouse, camera);
+      
+      // Check for intersections with the model only
       const intersects = raycaster.intersectObjects(scene.children, true);
       
-      if (intersects.length > 0) {
-        const intersection = intersects[0];
-        // We need to communicate this back to the parent component
+      // Filter out any non-mesh objects (like lights, cameras, etc.)
+      const meshIntersects = intersects.filter(intersect => 
+        intersect.object instanceof THREE.Mesh && 
+        intersect.object.userData?.isModel !== false
+      );
+      
+      if (meshIntersects.length > 0) {
+        const intersection = meshIntersects[0];
+        const clickPoint = intersection.point.clone();
+        
+        console.log("Annotation clicked at:", clickPoint);
+        
+        // Dispatch the custom event with the position
         window.dispatchEvent(new CustomEvent('annotation-position-selected', {
-          detail: { position: intersection.point.clone() }
+          detail: { position: clickPoint }
         }));
         
-        // Temporarily turn off adding annotation mode to prevent multiple clicks
+        // Signal that annotation position is set
         window.dispatchEvent(new CustomEvent('annotation-position-set'));
       }
     };
 
+    // Only add the event listener when in annotation mode
     const canvas = gl.domElement;
-    canvas.addEventListener('pointermove', handlePointerMove);
-    canvas.addEventListener('pointerdown', handlePointerDown);
+    canvas.addEventListener('pointerdown', handlePointerDown, { capture: true });
     
     return () => {
-      canvas.removeEventListener('pointermove', handlePointerMove);
-      canvas.removeEventListener('pointerdown', handlePointerDown);
+      canvas.removeEventListener('pointerdown', handlePointerDown, { capture: true });
     };
-  }, [scene, camera, raycaster, mouse, gl, isAddingAnnotation]);
+  }, [scene, camera, raycaster, gl, isAddingAnnotation]);
 
   return null;
 };
@@ -89,6 +123,7 @@ interface ModelCanvasProps {
   handleCanvasClick: (event: React.MouseEvent) => void;
   handleDeleteAnnotation: (id: string) => void;
   modelColor?: string;
+  isLiveMode?: boolean;
 }
 
 const ModelCanvas: React.FC<ModelCanvasProps> = ({
@@ -104,21 +139,48 @@ const ModelCanvas: React.FC<ModelCanvasProps> = ({
   handleAnimationSetup,
   handleCanvasClick,
   handleDeleteAnnotation,
-  modelColor = '#ffffff'
+  modelColor = '#ffffff',
+  isLiveMode = false
 }) => {
+  const orbitControlsRef = useRef<any>(null);
+  const modelRef = useRef<THREE.Object3D | null>(null);
+
+  // Completely remove any automatic camera movement
+  const handleModelClick = (clickPoint: THREE.Vector3) => {
+    // Do nothing - let the user control the camera manually
+    console.log("Model click registered, no automatic rotation");
+  };
+
   return (
     <div className="relative flex-1 bg-white rounded-2xl overflow-hidden animate-fade-in h-[calc(100vh-180px)]">
       <Canvas
         ref={canvasRef}
-        gl={{ antialias: true, alpha: true, logarithmicDepthBuffer: true }}
-        shadows
+        gl={{ 
+          antialias: true, 
+          alpha: true, 
+          logarithmicDepthBuffer: true,
+          powerPreference: "high-performance"
+        }}
+        shadows={true}
         dpr={[1, 2]}
-        onClick={handleCanvasClick}
         className="w-full h-full"
+        onCreated={({ scene, gl }) => {
+          // Enable shadows and configure lighting
+          scene.environment = null;
+          scene.background = null;
+          gl.toneMapping = THREE.NoToneMapping;
+          gl.toneMappingExposure = 1;
+          gl.shadowMap.enabled = true;
+          gl.shadowMap.type = THREE.PCFSoftShadowMap;
+        }}
       >
-        <Scene isAddingAnnotation={isAddingAnnotation} />
+        <Scene 
+          isAddingAnnotation={isAddingAnnotation} 
+          onModelClick={handleModelClick}
+        />
         <PerspectiveCamera makeDefault position={[0, 0, 5]} fov={50} />
         <OrbitControls
+          ref={orbitControlsRef}
           makeDefault
           enableDamping
           dampingFactor={0.05}
@@ -129,22 +191,59 @@ const ModelCanvas: React.FC<ModelCanvasProps> = ({
           zoomSpeed={1.0}
           enablePan={true}
           panSpeed={0.5}
+          enabled={!isAddingAnnotation}
         />
         
-        {/* Much brighter lighting setup for white background */}
-        <ambientLight intensity={1.2} />
-        <directionalLight position={[10, 10, 5]} intensity={2} castShadow />
-        <directionalLight position={[-10, -10, -5]} intensity={1.5} />
-        <directionalLight position={[0, 10, 0]} intensity={1} />
-        <directionalLight position={[0, -10, 0]} intensity={0.8} />
-        <pointLight position={[10, 0, 10]} intensity={1.5} />
-        <pointLight position={[-10, 0, -10]} intensity={1.5} />
-        <pointLight position={[0, 10, 0]} intensity={1} />
-        <pointLight position={[0, -10, 0]} intensity={1} />
+        {/* Enhanced lighting setup with much brighter lights */}
+        <ambientLight intensity={1.2} color="#ffffff" />
+        <directionalLight 
+          position={[10, 10, 5]} 
+          intensity={2.5} 
+          color="#ffffff"
+          castShadow
+          shadow-mapSize-width={2048}
+          shadow-mapSize-height={2048}
+          shadow-camera-far={50}
+          shadow-camera-left={-10}
+          shadow-camera-right={10}
+          shadow-camera-top={10}
+          shadow-camera-bottom={-10}
+        />
+        <directionalLight 
+          position={[-10, -10, -5]} 
+          intensity={1.8} 
+          color="#ffffff"
+          castShadow
+          shadow-mapSize-width={1024}
+          shadow-mapSize-height={1024}
+        />
+        <pointLight 
+          position={[5, 5, 5]} 
+          intensity={2.0} 
+          color="#ffffff"
+          castShadow
+          shadow-mapSize-width={1024}
+          shadow-mapSize-height={1024}
+        />
+        <pointLight 
+          position={[-5, -5, -5]} 
+          intensity={1.5} 
+          color="#ffffff"
+          castShadow
+          shadow-mapSize-width={1024}
+          shadow-mapSize-height={1024}
+        />
+        
+        {/* Add a ground plane to receive shadows */}
+        <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -2, 0]}>
+          <planeGeometry args={[20, 20]} />
+          <shadowMaterial transparent opacity={0.2} />
+        </mesh>
         
         <Suspense fallback={<LoadingIndicator />}>
           {modelUrl && (
             <ModelLoader 
+              ref={modelRef}
               url={modelUrl}
               scale={modelScale}
               onLoaded={handleModelLoaded} 
@@ -163,6 +262,7 @@ const ModelCanvas: React.FC<ModelCanvasProps> = ({
               title={annotation.title}
               content={annotation.content}
               onDelete={handleDeleteAnnotation}
+              isLiveMode={isLiveMode}
             />
           ))}
         </Suspense>
@@ -182,7 +282,7 @@ const ModelCanvas: React.FC<ModelCanvasProps> = ({
       {isModelLoaded && (
         <div className="absolute bottom-4 right-4 px-4 py-2 bg-white/90 backdrop-blur-sm rounded-lg border border-gray-300 shadow-lg">
           <p className="text-gray-900 text-sm font-medium">
-            Use mouse to zoom, pan and rotate
+            {isAddingAnnotation ? "Click on the model to place annotation" : "Use mouse to zoom, pan and rotate"}
           </p>
         </div>
       )}
