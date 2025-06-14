@@ -1,9 +1,10 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, Star, Smartphone, Users, Calendar } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Pricing = () => {
+  const isMobile = useIsMobile();
   const plans = [
     {
       name: "Daily Plan",
@@ -19,7 +20,8 @@ const Pricing = () => {
       ],
       icon: <Smartphone className="text-purple-500" size={24} />,
       popular: false,
-      cta: "Choose Daily Plan"
+      cta: "Choose Daily Plan",
+      planId: "daily"
     },
     {
       name: "Termly Plan",
@@ -37,7 +39,8 @@ const Pricing = () => {
       ],
       icon: <Calendar className="text-purple-500" size={24} />,
       popular: false,
-      cta: "Choose Termly Plan"
+      cta: "Choose Termly Plan",
+      planId: "termly"
     },
     {
       name: "Monthly Plan",
@@ -54,7 +57,8 @@ const Pricing = () => {
       icon: <Smartphone className="text-purple-500" size={24} />,
       popular: true,
       cta: "Choose Monthly Plan",
-      discount: "Most popular choice!"
+      discount: "Most popular choice!",
+      planId: "monthly"
     },
     {
       name: "Yearly Plan",
@@ -72,7 +76,8 @@ const Pricing = () => {
       ],
       icon: <Users className="text-cyan-500" size={24} />,
       popular: false,
-      cta: "Choose Yearly Plan"
+      cta: "Choose Yearly Plan",
+      planId: "yearly"
     }
   ];
 
@@ -134,6 +139,12 @@ const Pricing = () => {
                     ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600' 
                     : 'bg-gray-900 hover:bg-gray-800'
                   } text-white font-semibold py-3 rounded-lg transition-all duration-200 transform hover:scale-105`}
+                  onClick={() => {
+                    console.log(`Selected plan: ${plan.planId}`);
+                    if (isMobile) {
+                      console.log("Mobile device detected. Check for mobile-specific issues.");
+                    }
+                  }}
                 >
                   {plan.cta}
                 </Button>

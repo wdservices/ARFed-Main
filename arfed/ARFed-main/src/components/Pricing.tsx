@@ -1,14 +1,33 @@
-
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Check, Star, Smartphone, Users, Calendar } from "lucide-react";
+import { useState } from "react";
+import Payment from "./Payment";
+import { useRouter } from "next/router";
+import { getCookie } from "cookies-next";
 
 const Pricing = () => {
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const router = useRouter();
+  const token = getCookie("token");
+
+  const handlePlanSelect = (plan) => {
+    if (!token) {
+      // If user is not logged in, redirect to login page
+      router.push("/login");
+      return;
+    }
+    setSelectedPlan(plan);
+    setIsPaymentOpen(true);
+  };
+
   const plans = [
     {
+      id: "daily",
       name: "Daily Plan",
       price: "₦250",
-      usdPrice: "$2.55",
+      usdPrice: "$0.30",
       period: "/day",
       description: "All access to premium AR lessons & AI tutoring for one day.",
       features: [
@@ -19,9 +38,33 @@ const Pricing = () => {
       ],
       icon: <Smartphone className="text-purple-500" size={24} />,
       popular: false,
-      cta: "Choose Daily Plan"
+      cta: "Choose Daily Plan",
+      amount: 250,
+      planId: 142602
     },
     {
+      id: "monthly",
+      name: "Monthly Plan",
+      price: "₦10,500",
+      usdPrice: "$7.99",
+      period: "/month",
+      description: "Unlimited AR, AI-chat help for monthly access.",
+      features: [
+        "Unlimited AR lessons",
+        "Advanced AI chat tutor",
+        "Progress tracking",
+        "Priority support",
+        "Custom lesson plans"
+      ],
+      icon: <Smartphone className="text-purple-500" size={24} />,
+      popular: true,
+      cta: "Choose Monthly Plan",
+      discount: "Most popular choice!",
+      amount: 10500,
+      planId: 142599
+    },
+    {
+      id: "termly",
       name: "Termly Plan",
       price: "₦31,000",
       usdPrice: "$20.99",
@@ -37,26 +80,12 @@ const Pricing = () => {
       ],
       icon: <Calendar className="text-purple-500" size={24} />,
       popular: false,
-      cta: "Choose Termly Plan"
+      cta: "Choose Termly Plan",
+      amount: 31000,
+      planId: 142601
     },
     {
-      name: "Monthly Plan",
-      price: "₦10,500",
-      usdPrice: "$7.99",
-      period: "/month",
-      description: "Unlimited AR, AI-chat help for monthly access.",
-      features: [
-        "Unlimited AR lessons",
-        "Advanced AI chat tutor",
-        "Progress tracking",
-        "Priority support"
-      ],
-      icon: <Smartphone className="text-purple-500" size={24} />,
-      popular: true,
-      cta: "Choose Monthly Plan",
-      discount: "Most popular choice!"
-    },
-    {
+      id: "yearly",
       name: "Yearly Plan",
       price: "₦126,000", 
       usdPrice: "$95",
@@ -72,7 +101,9 @@ const Pricing = () => {
       ],
       icon: <Users className="text-cyan-500" size={24} />,
       popular: false,
-      cta: "Choose Yearly Plan"
+      cta: "Choose Yearly Plan",
+      amount: 126000,
+      planId: 142600
     }
   ];
 
@@ -130,6 +161,7 @@ const Pricing = () => {
                 </ul>
 
                 <Button 
+                  onClick={() => handlePlanSelect(plan)}
                   className={`w-full ${plan.popular 
                     ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600' 
                     : 'bg-gray-900 hover:bg-gray-800'
@@ -146,11 +178,22 @@ const Pricing = () => {
           <p className="text-gray-600 mb-6">
             Ready to transform your classroom? Contact us for custom enterprise solutions.
           </p>
-          <Button variant="outline" size="lg" className="border-2 border-purple-500 text-purple-500 hover:bg-purple-500 hover:text-white">
+          <Button 
+            variant="outline" 
+            size="lg" 
+            className="border-2 border-purple-500 text-purple-500 hover:bg-purple-500 hover:text-white"
+          >
             Book a Demo
           </Button>
         </div>
       </div>
+
+      {/* Payment Modal */}
+      <Payment 
+        open={isPaymentOpen} 
+        closeModal={() => setIsPaymentOpen(false)} 
+        user={selectedPlan}
+      />
     </section>
   );
 };

@@ -3,6 +3,7 @@ import { Button } from "./ui/button";
 import { Menu } from "lucide-react";
 import { FaRobot } from "react-icons/fa";
 import router from "next/router";
+import Image from "next/image";
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -19,7 +20,10 @@ const Navigation = () => {
     <header className="fixed top-0 left-0 right-0 z-20 bg-purple-900/80 backdrop-blur-sm">
       <nav className="container mx-auto px-4 py-4">
         <div className="flex justify-between items-center">
-          <div className="text-white font-bold text-2xl">ARFed</div>
+          <div className="flex items-center space-x-2">
+            <Image src="/arfed.png" alt="ARFed Logo" width={40} height={40} className="rounded-lg" />
+            <span className="text-white font-bold text-2xl">ARFed</span>
+          </div>
           
           {/* Mobile menu button */}
           <Button 

@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { getCookie } from "cookies-next";
 import { Modal } from "antd";
 import axios from "axios";
-import { toast } from "react-toastify";
+import { toast } from "react-hot-toast";
 import { FaCrown, FaCheck, FaCalendarAlt, FaCalendarDay, FaCalendarWeek } from "react-icons/fa";
 
 const Payment = ({ open, closeModal, user }) => {
@@ -10,6 +10,46 @@ const Payment = ({ open, closeModal, user }) => {
   const token = getCookie("token");
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isScriptLoaded, setIsScriptLoaded] = useState(false);
+
+  useEffect(() => {
+    let script = null;
+    const loadScript = () => {
+      // Remove any existing script
+      const existingScript = document.querySelector('script[src="https://checkout.flutterwave.com/v3.js"]');
+      if (existingScript) {
+        document.body.removeChild(existingScript);
+      }
+
+      // Create and append new script
+      script = document.createElement("script");
+      script.src = "https://checkout.flutterwave.com/v3.js";
+      script.async = true;
+      
+      script.onload = () => {
+        console.log("Flutterwave script loaded successfully");
+        setIsScriptLoaded(true);
+      };
+      
+      script.onerror = (error) => {
+        console.error("Failed to load Flutterwave script:", error);
+        toast.error("Failed to load payment system. Please try again later.");
+        setIsScriptLoaded(false);
+      };
+
+      document.body.appendChild(script);
+    };
+
+    if (open) {
+      loadScript();
+    }
+
+    return () => {
+      if (script && document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
+    };
+  }, [open]);
 
   function generateReferenceKey(length) {
     const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -34,7 +74,7 @@ const Payment = ({ open, closeModal, user }) => {
         "24-hour support"
       ],
       amount: 250,
-      planId: 95523
+      planId: 142602
     },
     {
       id: "monthly",
@@ -50,7 +90,7 @@ const Payment = ({ open, closeModal, user }) => {
         "Custom lesson plans"
       ],
       amount: 10500,
-      planId: 95522,
+      planId: 142599,
       popular: true
     },
     {
@@ -67,7 +107,7 @@ const Payment = ({ open, closeModal, user }) => {
         "Early access to new features"
       ],
       amount: 31000,
-      planId: 95523
+      planId: 142601
     },
     {
       id: "yearly",
@@ -84,74 +124,88 @@ const Payment = ({ open, closeModal, user }) => {
         "2 months free"
       ],
       amount: 126000,
-      planId: 95524
+      planId: 142600
     }
   ];
 
   const handlePayment = async (plan) => {
-    if (!user) return;
+    if (!user) {
+      toast.error("Please log in to make a payment");
+      return;
+    }
+
+    if (!isScriptLoaded) {
+      toast.error("Payment system is still loading. Please try again in a moment.");
+      return;
+    }
+
     setIsProcessing(true);
     setSelectedPlan(plan);
 
-    const config = {
-      public_key: "FLWPUBK-f1ca421754831757166c4e74547967c0-X",
-      tx_ref: generateReferenceKey(25),
-      amount: plan.amount,
-      payment_plan: plan.planId,
-      currency: "NGN",
-      payment_options: "card,banktransfer,ussd",
-      customer: {
-        email: user.email,
-        name: user.name,
-      },
-      customizations: {
-        title: "ARFed",
-        description: `ARFed ${plan.name} Subscription`,
-        logo: "./images/logo.svg",
-      },
-      onClose: () => {
-        toast.error("Payment cancelled");
-        setIsProcessing(false);
-        setSelectedPlan(null);
-      },
-      callback: async (response) => {
-        try {
-          const result = await axios.put(
-            `https://arfed-api.vercel.app/api/user/suscribe/${id}`,
-            {
-              plan: plan.id,
-              startDate: new Date().toISOString(),
-              endDate: calculateEndDate(plan.id),
-              paymentId: response.transaction_id
-            },
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-                "auth-token": token,
-              },
-            }
-          );
-          console.log(result.data);
-          toast.success("Payment Successful! Your subscription is now active.");
-          closeModal();
-        } catch (e) {
-          console.log(e);
-          toast.error("Payment Failed");
-        } finally {
+    try {
+      const config = {
+        public_key: "FLWPUBK-f1ca421754831757166c4e74547967c0-X",
+        tx_ref: generateReferenceKey(25),
+        amount: plan.amount,
+        payment_plan: plan.planId,
+        currency: "NGN",
+        payment_options: "card,banktransfer,ussd",
+        customer: {
+          email: user?.email,
+          name: user?.name,
+        },
+        customizations: {
+          title: "ARFed",
+          description: `ARFed ${plan.name} Subscription`,
+          logo: "./images/logo.svg",
+        },
+        onClose: () => {
+          toast.error("Payment cancelled");
           setIsProcessing(false);
           setSelectedPlan(null);
-        }
-      },
-    };
+        },
+        callback: async (response) => {
+          try {
+            const result = await axios.put(
+              `https://arfed-api.vercel.app/api/user/suscribe/${id}`,
+              {
+                plan: plan.id,
+                startDate: new Date().toISOString(),
+                endDate: calculateEndDate(plan.id),
+                paymentId: response.transaction_id
+              },
+              {
+                headers: {
+                  "Content-Type": "application/json",
+                  Accept: "application/json",
+                  "auth-token": token,
+                },
+              }
+            );
+            console.log(result.data);
+            toast.success("Payment Successful! Your subscription is now active.");
+            closeModal();
+          } catch (e) {
+            console.error("Payment verification failed:", e);
+            toast.error("Payment verification failed. Please contact support.");
+          } finally {
+            setIsProcessing(false);
+            setSelectedPlan(null);
+          }
+        },
+      };
 
-    const script = document.createElement("script");
-    script.src = "https://checkout.flutterwave.com/v3.js";
-    script.async = true;
-    script.onload = () => {
-      window.FlutterwaveCheckout(config);
-    };
-    document.body.appendChild(script);
+      if (typeof window.FlutterwaveCheckout === 'function') {
+        window.FlutterwaveCheckout(config);
+      } else {
+        throw new Error("Payment system not initialized");
+      }
+    } catch (error) {
+      console.error("Payment initialization failed:", error);
+      toast.error("Failed to initialize payment. Please try again.");
+      setIsProcessing(false);
+      setSelectedPlan(null);
+    }
   };
 
   const calculateEndDate = (planId) => {

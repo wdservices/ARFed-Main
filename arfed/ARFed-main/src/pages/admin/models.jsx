@@ -171,7 +171,7 @@ const Models = () => {
             className="bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 overflow-hidden"
           >
             <img
-              src={model.image}
+              src={`https://arfed-api.onrender.com/${model.image}`}
               alt={model.title}
               className="w-full h-48 object-contain bg-[#181f2a]"
             />

@@ -8,6 +8,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Head from "next/head";
 import { FaEye, FaEyeSlash, FaArrowLeft } from "react-icons/fa";
+import Image from "next/image";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -16,38 +17,48 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
-  const login = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setLoading(true);
     try {
-      await axios
-        .post(
-          "https://arfed-api.onrender.com/api/user/login",
-          {
-            email: email,
-            password: password,
-          },
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-          }
-        )
-        .then((response) => {
-          setCookie("token", response.data.token);
-          setCookie("id", response.data.id);
-          toast.success("Logged in successfully!");
-          if (response.data.role === "user") {
-            router.push("/subjects");
-          } else {
-            router.push("/admin");
-          }
-          setLoading(false);
-        });
-      setLoading(false);
-    } catch (err) {
-      console.log(err);
-      toast.warn(err.response.data.message);
+      const response = await axios.post("https://arfed-api.onrender.com/api/user/login", {
+        email,
+        password,
+      }, {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      });
+
+      if (response.data.token) {
+        setCookie("token", response.data.token);
+        setCookie("id", response.data.id);
+        toast.success("Logged in successfully!");
+        
+        console.log("Login successful. Response data:", response.data);
+
+        // Check if user is admin and redirect accordingly
+        if (response.data.role === "admin") {
+          router.replace("/admin");
+        } else {
+          router.replace("/subjects");
+        }
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        toast.error(error.response.data.message || "Login failed. Please check your credentials.");
+      } else if (error.request) {
+        // The request was made but no response was received
+        toast.error("No response from server. Please check your internet connection.");
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        toast.error("An error occurred. Please try again.");
+      }
+    } finally {
       setLoading(false);
     }
   };
@@ -70,9 +81,10 @@ const Login = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="text-3xl font-bold text-white mb-2 tracking-tight"
+            className="flex flex-col items-center mb-4"
           >
-            ARFed
+            <Image src="/arfed.png" alt="ARFed Logo" width={80} height={80} className="rounded-lg mb-4" />
+            <span className="text-3xl font-bold text-white tracking-tight">ARFed</span>
           </motion.div>
           <h1 className="text-3xl font-bold text-white mb-2">
             Welcome Back
@@ -80,7 +92,7 @@ const Login = () => {
           <p className="text-gray-200 mt-2">Sign in to continue your learning journey</p>
         </motion.div>
 
-        <div className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <motion.div
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
@@ -88,8 +100,10 @@ const Login = () => {
             className="relative"
           >
             <input
+              value={email}
               onChange={(e) => setEmail(e.target.value)}
               type="email"
+              required
               className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-gray-300 focus:border-white/40 focus:ring-2 focus:ring-white/20 outline-none transition-all duration-200"
               placeholder="Email Address"
             />
@@ -102,12 +116,15 @@ const Login = () => {
             className="relative"
           >
             <input
+              value={password}
               onChange={(e) => setPassword(e.target.value)}
               type={showPassword ? "text" : "password"}
+              required
               className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-gray-300 focus:border-white/40 focus:ring-2 focus:ring-white/20 outline-none transition-all duration-200"
               placeholder="Password"
             />
             <button
+              type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-white transition-colors"
             >
@@ -116,9 +133,9 @@ const Login = () => {
           </motion.div>
 
           <motion.button
+            type="submit"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={login}
             className="w-full bg-white text-purple-600 py-3 rounded-lg font-medium hover:bg-white/90 transition-all duration-200 shadow-lg shadow-purple-500/20"
           >
             {loading ? (
@@ -130,7 +147,7 @@ const Login = () => {
               "Sign In"
             )}
           </motion.button>
-        </div>
+        </form>
 
         <motion.div
           initial={{ opacity: 0 }}

@@ -12,54 +12,72 @@ import FloatingChat from "../components/FloatingChat";
 import Head from "next/head";
 import { FaBars, FaMoon, FaSun, FaCrown } from "react-icons/fa";
 import Link from "next/link";
+import { toast } from "react-hot-toast";
+import { useUser } from "../context/UserContext";
 
 const Subjects = () => {
+  const { user, loading } = useUser();
   const token = getCookie("token");
   const [subjects, setSubjects] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [ads, setAds] = useState([]);
   const [open, openModal] = useState(false);
   const router = useRouter();
-  const [user, setUser] = useState([]);
   const id = getCookie("id");
   const [darkMode, setDarkMode] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  useEffect(() => {
-    axios.get("https://arfed-api.onrender.com/api/ads", {
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "auth-token": token,
-      },
-    }).then((response) => setAds(response.data));
-    axios.get(`https://arfed-api.onrender.com/api/user/${id}`, {
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "auth-token": token,
-      },
-    }).then((response) => {
-      setUser(response.data[0]);
-      setLoading(false);
-    });
-    axios.get("https://arfed-api.onrender.com/api/subject", {
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "auth-token": token,
-      },
-    }).then((response) => {
-      setLoading(false);
-      setSubjects(response.data);
-    });
-  }, []);
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 18) return "Good Afternoon";
+    return "Good Evening";
+  };
 
-  const single = (id) => {
-    if (id === "63dace7d1b0974f12c03d419" || user.plan === "premium") {
-      router.push(`/subject/${id}`);
+  useEffect(() => {
+    const fetchSubjectsAndAds = async () => {
+      try {
+        const [adsRes, subjectsRes] = await Promise.all([
+          axios.get("https://arfed-api.onrender.com/api/ads", {
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+              "auth-token": token,
+            },
+          }),
+          axios.get("https://arfed-api.onrender.com/api/subject", {
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+              "auth-token": token,
+            },
+          })
+        ]);
+        setAds(adsRes.data);
+        setSubjects(subjectsRes.data);
+      } catch (error) {
+        console.error("Error fetching subjects or ads:", error);
+        toast.error("Failed to fetch subjects or ads.");
+      }
+    };
+
+    if (token && id) {
+      Promise.all([
+        fetchSubjectsAndAds()
+      ])
+        .finally(() => { });
     } else {
+      toast.warn("Authentication required. Please log in.");
+    }
+
+  }, [token, id]);
+
+  const single = (subjectId) => {
+    if (user && (subjectId === "63dace7d1b0974f12c03d419" || user.plan === "premium")) {
+      router.push(`/subject/${subjectId}`);
+    } else if (user) {
       openModal(true);
+    } else {
+      toast.warn("Please log in to access this feature.");
     }
   };
 
@@ -71,6 +89,15 @@ const Subjects = () => {
     }
   }, [darkMode]);
 
+  if (loading || !user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#1E3A8A] via-[#2563EB] to-[#3B82F6]">
+        <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+        <p className="ml-4 text-white text-lg">Loading ARFed...</p>
+      </div>
+    );
+  }
+
   return (
     <div className={darkMode ? "dark" : ""}>
       <Head>
@@ -80,7 +107,13 @@ const Subjects = () => {
       <div className="relative min-h-screen bg-gradient-to-br from-[#1E3A8A] via-[#2563EB] to-[#3B82F6] overflow-hidden transition-colors duration-300">
         <header className="flex items-center justify-between px-4 py-4 shadow-md bg-white/80 dark:bg-[#181f2a]/80 backdrop-blur-md sticky top-0 z-20">
           <div className="text-gray-700 dark:text-gray-200 font-medium">
-            {user.accountType === "group" ? user.organizationName : user.name}
+            {user ? (
+              <span>
+                {getGreeting()}, {user?.accountType === "group" ? user?.organizationName : user?.name}
+              </span>
+            ) : (
+              "Welcome to ARFed"
+            )}
           </div>
           <div className="flex items-center gap-4">
             <button
@@ -99,7 +132,7 @@ const Subjects = () => {
             </button>
           </div>
         </header>
-        {menuOpen && (
+        {menuOpen && user && (
           <div className="fixed inset-0 z-40 flex justify-end">
             <div className="fixed inset-0 bg-black/30 backdrop-blur-sm transition-opacity" onClick={() => setMenuOpen(false)}></div>
             <nav className="relative w-72 max-w-full h-full bg-white/90 dark:bg-[#181f2a]/90 backdrop-blur-lg shadow-2xl border-l border-white/30 dark:border-[#232946]/30 p-8 flex flex-col gap-4 animate-slide-in-right z-50">
@@ -107,11 +140,11 @@ const Subjects = () => {
               
               {/* User Profile Info */}
               <div className="text-xl font-bold text-gray-800 dark:text-white mb-2">
-                 Hello {user.accountType === "group" ? user.organizationName : user.name}
+                 Hello {user?.accountType === "group" ? user?.organizationName : user?.name || "Guest"}
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400 mb-4 pb-4 border-b border-gray-300 dark:border-gray-700">
-                <p>Email: {user.email}</p>
-                <p>Plan: {user.plan}</p>
+                <p>Email: {user?.email || "N/A"}</p>
+                <p>Plan: {user?.plan || "N/A"}</p>
               </div>
 
               {/* Subjects Section */}
@@ -165,7 +198,7 @@ const Subjects = () => {
                 onClick={() => single(subject._id)}
                 className="relative bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow cursor-pointer flex flex-col items-center p-4 group border border-gray-200 dark:border-gray-700"
               >
-                {subject._id !== "63dace7d1b0974f12c03d419" && user.plan === "free" && (
+                {user && subject._id !== "63dace7d1b0974f12c03d419" && user.plan === "free" && (
                   <span className="absolute top-3 left-3 bg-yellow-400 text-white px-2 py-1 rounded-full text-xs flex items-center gap-1 shadow">
                     <FaCrown className="text-white" /> Premium
                   </span>

@@ -16,31 +16,40 @@ const AddModel = ({ open, setOpen }) => {
   const [ios, setIos] = useState("");
   const [subjects, setSubjects] = useState([]);
   const [audio, setAudio] = useState("");
+
   useEffect(() => {
-    try {
-      axios
-        .get("https://arfed-api.vercel.app/api/subject", {
+    console.log("Current token:", token);
+    const fetchSubjects = async () => {
+      if (!token) {
+        console.warn("No token found, skipping subject fetch.");
+        toast.warn("Authentication token not found. Please log in again.");
+        return;
+      }
+      try {
+        const response = await axios.get("https://arfed-api.onrender.com/api/subject", {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
             "auth-token": token,
           },
-        })
-        .then((response) => {
-          // console.log(response.data);
-          setSubjects(response.data);
         });
-    } catch (e) {
-      console.log(e);
-    }
-  }, []);
+        setSubjects(response.data);
+        console.log("Subjects fetched successfully:", response.data);
+      } catch (error) {
+        console.error("Failed to fetch subjects:", error);
+        toast.error("Failed to fetch subjects");
+      }
+    };
+    fetchSubjects();
+  }, [token]);
+
   const addSubject = () => {
     if (title && description && image && model !== "") {
       try {
         setLoading(true);
         axios
           .post(
-            "https://arfed-api.vercel.app/api/models",
+            "https://arfed-api.onrender.com/api/models",
             {
               title,
               description,

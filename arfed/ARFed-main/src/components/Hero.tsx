@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "./ui/button";
 import { Play } from "lucide-react";
@@ -39,7 +38,7 @@ const Hero = () => {
             <div className="relative z-10 bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-lg rounded-3xl p-8 border border-white/20">
               <div className="rounded-2xl shadow-2xl w-full overflow-hidden">
                 <iframe 
-                  src="https://www.youtube.com/embed/nTQUwghvy5Q?autoplay=0" 
+                  src="https://www.youtube.com/embed/28SYOEkB7J8" 
                   allowFullScreen
                   className="w-full aspect-video"
                   title="ARFed Introduction"

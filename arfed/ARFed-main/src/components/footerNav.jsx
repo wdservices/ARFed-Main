@@ -1,11 +1,13 @@
 import React from "react";
 import Link from "next/link.js";
+import Image from "next/image";
 
 const FooterNav = () => {
   return (
     <div className="lg:flex justify-between p-4 lg:px-20 py-6 border-t border-[#D2D2D2]">
-      <Link href={"/"}>
-        <img src="/images/logo.svg" className="w-20 my-4 " alt="" />
+      <Link href={"/"} className="flex items-center space-x-2">
+        <Image src="/arfed.png" alt="ARFed Logo" width={40} height={40} className="rounded-lg" />
+        <span className="text-xl font-bold text-gray-800">ARFed</span>
       </Link>
       <div className="lg:flex w-1/2 my-auto justify-evenly text-sm">
         <a href="#about">

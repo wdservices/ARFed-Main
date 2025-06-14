@@ -7,7 +7,7 @@ const ModelCard = ({ model }) => {
         <Link href={`/${model._id}`}>
             <div className='bg-white rounded-md lg:w-96 w-full'>
                 <div className='mx-auto p-6 w-full subject'>
-                    <img src={model.image} className="w-full h-44" alt="" />
+                    <img src={`https://arfed-api.onrender.com/${model.image}`} className="w-full h-44" alt="" />
                     {/* <model-viewer src={model.model} ar ar-modes="webxr scene-viewer quick-look" camera-controls poster={model.image} shadow-intensity="1" touch-action="pan-y" autoplay auto-rotate> </model-viewer> */}
                 </div>
                 <div className='bg-[#39F9CD] p-3 rounded-md'>

@@ -1,6 +1,6 @@
-
 import { Button } from "@/components/ui/button";
 import { Play } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Hero = () => {
   return (
@@ -27,9 +27,15 @@ const Hero = () => {
                 <Play className="mr-2" size={20} />
                 Download on Google Play
               </Button>
-              <Button variant="outline" size="lg" className="border-2 border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-white font-semibold px-8 py-4 rounded-full transition-all duration-200">
-                Subscribe for Web Access
-              </Button>
+              <Link to="/signup" style={{ textDecoration: 'none' }}>
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="border-2 border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-white font-semibold px-8 py-4 rounded-full transition-all duration-200"
+                >
+                  Sign Up for Web Access
+                </Button>
+              </Link>
             </div>
           </div>
 
@@ -38,7 +44,7 @@ const Hero = () => {
             <div className="relative z-10 bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-lg rounded-3xl p-8 border border-white/20">
               <div className="rounded-2xl shadow-2xl w-full overflow-hidden">
                 <iframe 
-                  src="https://www.youtube.com/embed/nTQUwghvy5Q?autoplay=0" 
+                  src="https://youtube.com/shorts/28SYOEkB7J8" 
                   allowFullScreen
                   className="w-full aspect-video"
                   title="ARFed Introduction"

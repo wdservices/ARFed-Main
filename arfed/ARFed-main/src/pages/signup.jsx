@@ -7,6 +7,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Head from "next/head";
 import { FaEye, FaEyeSlash, FaArrowLeft } from "react-icons/fa";
+import Image from "next/image";
 
 const Signup = () => {
   const [email, setEmail] = useState("");
@@ -74,9 +75,10 @@ const Signup = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="text-3xl font-bold text-white mb-2 tracking-tight"
+            className="flex flex-col items-center mb-4"
           >
-            ARFed
+            <Image src="/arfed.png" alt="ARFed Logo" width={80} height={80} className="rounded-lg mb-4" />
+            <span className="text-3xl font-bold text-white tracking-tight">ARFed</span>
           </motion.div>
           <h1 className="text-3xl font-bold text-white mb-2">
             Create Account

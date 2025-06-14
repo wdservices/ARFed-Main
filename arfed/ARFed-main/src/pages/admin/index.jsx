@@ -21,9 +21,11 @@ import {
   FaFilter,
   FaAd
 } from "react-icons/fa";
-import { toast } from "react-toastify";
+import { toast } from "react-hot-toast";
+import { useUser } from "../../context/UserContext";
 
 const Admin = () => {
+  const { user, loading, logoutUser } = useUser();
   const token = getCookie("token");
   const [users, setUsers] = useState([]);
   const [models, setModels] = useState([]);
@@ -35,8 +37,26 @@ const Admin = () => {
   const router = useRouter();
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    const checkAdminAccess = async () => {
+      if (!loading) {
+        if (!user) {
+          router.replace('/login');
+          return;
+        }
+        
+        if (user.role !== "admin") {
+          toast.error("Access denied. Admin privileges required.");
+          router.replace('/subjects');
+          return;
+        }
+
+        // Only fetch data if user is admin
+        await fetchData();
+      }
+    };
+
+    checkAdminAccess();
+  }, [loading, user]);
 
   const fetchData = async () => {
     try {
@@ -70,8 +90,8 @@ const Admin = () => {
 
       // Calculate monthly users
       const currentMonth = new Date().getMonth();
-      const monthlyUsers = usersRes.data.filter(user => {
-        const userMonth = new Date(user.date).getMonth();
+      const monthlyUsers = usersRes.data.filter(u => {
+        const userMonth = new Date(u.date).getMonth();
         return userMonth === currentMonth;
       }).length;
       setMonthlyUsers(monthlyUsers);
@@ -82,8 +102,8 @@ const Admin = () => {
   };
 
   const logout = () => {
-    deleteCookie("token");
-    router.push("/login");
+    logoutUser();
+    router.replace("/login");
   };
 
   const copyAllEmails = () => {
@@ -92,14 +112,27 @@ const Admin = () => {
     toast.success("All emails copied to clipboard!");
   };
 
-  const filteredUsers = users.filter(user => 
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredUsers = users.filter(u => 
+    u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const filteredModels = models.filter(model =>
     model.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#1E3A8A] via-[#2563EB] to-[#3B82F6]">
+        <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+        <p className="ml-4 text-white text-lg">Loading Admin Dashboard...</p>
+      </div>
+    );
+  }
+
+  if (!user || user.role !== "admin") {
+    return null; // Don't render anything while redirecting
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#1E3A8A] via-[#2563EB] to-[#3B82F6]">
@@ -249,10 +282,8 @@ const Admin = () => {
                   </div>
                 </div>
                 <div className="mt-4">
-                  <p className="text-white/60 text-sm">Models This Month</p>
-                  <p className="text-white font-semibold">
-                    {models.filter(m => new Date(m.date).getMonth() === new Date().getMonth()).length}
-                  </p>
+                  <p className="text-white/60 text-sm">Active Models</p>
+                  <p className="text-white font-semibold">{models.length}</p>
                 </div>
               </motion.div>
 
@@ -264,139 +295,96 @@ const Admin = () => {
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-white/60">User Growth</p>
-                    <h2 className="text-3xl font-bold text-white mt-2">
-                      {((monthlyUsers / users.length) * 100).toFixed(1)}%
-                    </h2>
+                    <p className="text-white/60">Total Active Ads</p>
+                    <h2 className="text-3xl font-bold text-white mt-2">{models.length}</h2>
                   </div>
                   <div className="p-3 bg-white/10 rounded-lg">
-                    <FaUserPlus className="text-white text-xl" />
+                    <FaAd className="text-white text-xl" />
                   </div>
                 </div>
                 <div className="mt-4">
-                  <p className="text-white/60 text-sm">Monthly Growth Rate</p>
-                  <p className="text-white font-semibold">
-                    {((monthlyUsers / users.length) * 100).toFixed(1)}%
-                  </p>
+                  <p className="text-white/60 text-sm">Ad Clicks (Last 30 Days)</p>
+                  <p className="text-white font-semibold">N/A</p>
                 </div>
               </motion.div>
             </div>
 
-            {/* Search and Filter */}
-            <div className="mb-8">
-              <div className="flex items-center gap-4">
-                <div className="flex-1 relative">
-                  <input
-                    type="text"
-                    placeholder="Search users or models..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/60 focus:outline-none focus:border-white/40"
-                  />
-                  <FaSearch className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white/60" />
-                </div>
-                <button
-                  onClick={copyAllEmails}
-                  className="flex items-center px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-200"
-                >
-                  <FaCopy className="mr-2" />
-                  Copy All Emails
-                </button>
+            {/* Search and Filters */}
+            <div className="mb-8 flex items-center justify-between">
+              <div className="relative w-full max-w-md">
+                <input
+                  type="text"
+                  placeholder="Search users or models..."
+                  className="w-full px-4 py-3 bg-white/10 text-white rounded-lg border border-white/20 focus:outline-none focus:border-white/40 placeholder-white/60"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <FaSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60" />
               </div>
             </div>
 
-            {/* Recent Users */}
+            {/* User and Model Lists */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.5 }}
-                className="bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 overflow-hidden"
-              >
-                <div className="p-4 border-b border-white/20">
-                  <h3 className="text-lg font-semibold text-white">Recent Users</h3>
-                </div>
-                <div className="p-4">
-                  <div className="space-y-4">
-                    {filteredUsers.slice(0, 5).map((user, index) => (
-                      <div key={index} className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center">
-                            <span className="text-white font-semibold">
-                              {user.name.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                          <div className="ml-4">
-                            <p className="text-white font-medium">{user.name}</p>
-                            <p className="text-white/60 text-sm">{user.email}</p>
-                          </div>
+              {/* Users List */}
+              <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+                <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+                  <FaUsers className="mr-2" /> Recent Users
+                  <button onClick={copyAllEmails} className="ml-auto text-sm text-white/60 hover:text-white flex items-center">
+                    <FaCopy className="mr-1" /> Copy Emails
+                  </button>
+                </h3>
+                <div className="space-y-4">
+                  {filteredUsers.length > 0 ? (
+                    filteredUsers.slice(0, 5).map(u => (
+                      <div key={u._id} className="flex items-center bg-white/5 rounded-lg p-3">
+                        <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center mr-3">
+                          <span className="text-white text-sm font-semibold">{u.name.charAt(0).toUpperCase()}</span>
                         </div>
-                        <div className="text-white/60 text-sm">
-                          {new Date(user.date).toLocaleDateString()}
+                        <div>
+                          <p className="text-white font-semibold">{u.name}</p>
+                          <p className="text-white/60 text-sm">{u.email}</p>
                         </div>
+                        <Link href={`/admin/users?id=${u._id}`} className="ml-auto text-blue-300 hover:underline text-sm">
+                          View Details
+                        </Link>
                       </div>
-                    ))}
-                  </div>
-                  {users.length > 5 && (
-                    <Link href="/admin/users">
-                      <div className="text-white/60 text-sm mt-4 hover:text-white cursor-pointer">
-                        View all users →
-                      </div>
-                    </Link>
+                    ))
+                  ) : (
+                    <p className="text-white/60">No users found.</p>
                   )}
                 </div>
-              </motion.div>
+              </div>
 
-              {/* Recent Models */}
-              <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.6 }}
-                className="bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 overflow-hidden"
-              >
-                <div className="p-4 border-b border-white/20">
-                  <h3 className="text-lg font-semibold text-white">Recent Models</h3>
-                </div>
-                <div className="p-4">
-                  <div className="space-y-4">
-                    {filteredModels.slice(0, 5).map((model, index) => (
-                      <div key={index} className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <img
-                            src={model.image}
-                            alt={model.title}
-                            className="w-10 h-10 rounded-lg object-cover"
-                          />
-                          <div className="ml-4">
-                            <p className="text-white font-medium">{model.title}</p>
-                            <p className="text-white/60 text-sm">
-                              {new Date(model.date).toLocaleDateString()}
-                            </p>
-                          </div>
+              {/* Models List */}
+              <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+                <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+                  <FaCube className="mr-2" /> Recent Models
+                </h3>
+                <div className="space-y-4">
+                  {filteredModels.length > 0 ? (
+                    filteredModels.slice(0, 5).map(model => (
+                      <div key={model._id} className="flex items-center bg-white/5 rounded-lg p-3">
+                        <img src={model.image} alt={model.title} className="w-10 h-10 object-cover rounded-md mr-3" />
+                        <div>
+                          <p className="text-white font-semibold">{model.title}</p>
+                          <p className="text-white/60 text-sm">{model.subject}</p>
                         </div>
+                        <Link href={`/admin/models?id=${model._id}`} className="ml-auto text-blue-300 hover:underline text-sm">
+                          View Details
+                        </Link>
                       </div>
-                    ))}
-                  </div>
-                  {models.length > 5 && (
-                    <Link href="/admin/models">
-                      <div className="text-white/60 text-sm mt-4 hover:text-white cursor-pointer">
-                        View all models →
-                      </div>
-                    </Link>
+                    ))
+                  ) : (
+                    <p className="text-white/60">No models found.</p>
                   )}
                 </div>
-              </motion.div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-
-      <SubjectModal
-        open={subject}
-        setOpen={() => openSubject(!subject)}
-        subject={null}
-      />
-      <AddModel open={model} setOpen={() => openModel(!model)} />
+      <SubjectModal open={subject} closeModal={() => openSubject(false)} refetch={fetchData} />
+      <AddModel open={model} closeModal={() => openModel(false)} refetch={fetchData} />
     </div>
   );
 };
