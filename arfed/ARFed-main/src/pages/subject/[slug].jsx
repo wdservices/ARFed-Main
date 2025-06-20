@@ -9,9 +9,10 @@ import Layout from "../../components/Layout";
 import axios from "axios";
 import { getCookie } from "cookies-next";
 import { useRouter } from "next/router";
-import { FaCrown, FaMicrophone, FaArrowLeft, FaComment } from "react-icons/fa"; 
+import { FaCrown, FaMicrophone, FaArrowLeft } from "react-icons/fa"; 
 import { Modal } from 'antd'; // Import Modal from antd
 import { useRef } from 'react';
+import FloatingChat from "../../components/FloatingChat";
 
 const SingleSubject = () => {
   const token = getCookie("token");
@@ -167,15 +168,6 @@ const SingleSubject = () => {
             <FaArrowLeft className="mr-2" />
             Back
           </button>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setChatOpen(true)}
-              className="text-white hover:text-gray-200 transition-colors"
-              aria-label="Open AI Chat"
-            >
-              <FaComment className="text-2xl" />
-            </button>
-          </div>
         </div>
 
         {/* Main Content Area (starts below fixed header) */}
@@ -219,18 +211,7 @@ const SingleSubject = () => {
 
         </main>
 
-        {/* Chat Modal */}
-        <Modal
-          title="AI Chatbot"
-          centered
-          open={chatOpen}
-          onCancel={() => setChatOpen(false)}
-          footer={[]}
-        >
-          <div className="p-4">
-            <p className="text-gray-800">AI Chat Interface goes here...</p>
-          </div>
-        </Modal>
+        <FloatingChat />
 
         {/* Quiz Modal (Placeholder) */}
         {/* This modal is a placeholder for the quiz functionality */}

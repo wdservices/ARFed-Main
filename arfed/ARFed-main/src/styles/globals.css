@@ -112,3 +112,16 @@ model-viewer[ar-status="session-started"]>#ar-prompt {
 model-viewer>#ar-prompt>img {
   animation: circle 4s linear infinite;
 }
+
+@keyframes breath {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+.animate-breath {
+  animation: breath 2.4s ease-in-out infinite;
+}

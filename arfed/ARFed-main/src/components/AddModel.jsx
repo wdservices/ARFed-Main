@@ -5,7 +5,7 @@ import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const AddModel = ({ open, setOpen }) => {
+const AddModel = ({ open, closeModal }) => {
   const token = getCookie("token");
   const [title, setTitle] = useState("");
   const [description, setDesc] = useState("");
@@ -71,7 +71,7 @@ const AddModel = ({ open, setOpen }) => {
           .then((response) => {
             console.log(response.data);
             setLoading(false);
-            setOpen();
+            closeModal();
             setDesc("");
             setImage("");
             setTitle("");
@@ -95,7 +95,7 @@ const AddModel = ({ open, setOpen }) => {
         style={{ top: 20 }}
         open={open}
         footer={null}
-        onCancel={setOpen}
+        onCancel={closeModal}
         width={500}
       >
         <div className="my-2">

@@ -19,7 +19,8 @@ import {
   FaPlus,
   FaSearch,
   FaFilter,
-  FaAd
+  FaAd,
+  FaVrCardboard
 } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import { useUser } from "../../context/UserContext";
@@ -218,6 +219,13 @@ const Admin = () => {
                 >
                   <FaPlus className="mr-2" />
                   Add Model
+                </button>
+                <button
+                  onClick={() => router.push('/admin/vr')}
+                  className="flex items-center px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-200"
+                >
+                  <FaVrCardboard className="mr-2" />
+                  Add 360 VR
                 </button>
               </div>
             </div>

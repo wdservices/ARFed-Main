@@ -27,9 +27,11 @@ const Hero = () => {
                 <Play className="mr-2" size={20} />
                 Download on Google Play
               </Button>
-              <Button variant="outline" size="lg" className="border-2 border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-white font-semibold px-8 py-4 rounded-full transition-all duration-200">
-                Subscribe for Web Access
-              </Button>
+              <a href="/signup" style={{ textDecoration: 'none' }}>
+                <Button variant="outline" size="lg" className="border-2 border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-white font-semibold px-8 py-4 rounded-full transition-all duration-200">
+                  Subscribe for Web Access
+                </Button>
+              </a>
             </div>
           </div>
 

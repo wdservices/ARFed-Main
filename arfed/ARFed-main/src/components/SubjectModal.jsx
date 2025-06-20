@@ -5,7 +5,7 @@ import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const SubjectModal = ({ open, setOpen }) => {
+const SubjectModal = ({ open, closeModal }) => {
   const token = getCookie("token");
   const [title, setTitle] = useState("");
   const [description, setDesc] = useState("");
@@ -18,7 +18,7 @@ const SubjectModal = ({ open, setOpen }) => {
         setLoading(true);
         axios
           .post(
-            "https://arfed-api.vercel.app/api/subject",
+            "https://arfed-api.onrender.com/api/subject",
             {
               title,
               description,
@@ -35,7 +35,7 @@ const SubjectModal = ({ open, setOpen }) => {
           .then((response) => {
             console.log(response.data);
             setLoading(false);
-            setOpen();
+            closeModal();
             setDesc("");
             setImage("");
             setTitle("");
@@ -58,7 +58,7 @@ const SubjectModal = ({ open, setOpen }) => {
         style={{ top: 20 }}
         open={open}
         footer={null}
-        onCancel={setOpen}
+        onCancel={closeModal}
         width={500}
       >
         <div className="my-2">

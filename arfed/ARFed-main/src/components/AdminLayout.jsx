@@ -9,7 +9,8 @@ import {
   FaChartLine, 
   FaSignOutAlt,
   FaArrowLeft,
-  FaAd
+  FaAd,
+  FaVrCardboard
 } from 'react-icons/fa';
 
 const AdminLayout = ({ children, title }) => {
@@ -64,6 +65,12 @@ const AdminLayout = ({ children, title }) => {
               <div className="flex items-center px-6 py-3 text-white hover:bg-white/10 cursor-pointer">
                 <FaCube className="mr-3" />
                 <span>Models</span>
+              </div>
+            </Link>
+            <Link href="/admin/vr">
+              <div className="flex items-center px-6 py-3 text-white hover:bg-white/10 cursor-pointer">
+                <FaVrCardboard className="mr-3" />
+                <span>360 VR</span>
               </div>
             </Link>
             <div 

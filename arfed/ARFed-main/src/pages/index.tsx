@@ -4,6 +4,7 @@ import EducationAR from "../components/EducationAR";
 import Pricing from "../components/Pricing";
 import Footer from "../components/Footer";
 import Navigation from "../components/Navigation";
+import FloatingChat from "../components/FloatingChat";
 import React from "react";
 
 const Index: React.FC = () => {
@@ -25,6 +26,7 @@ const Index: React.FC = () => {
       <div id="contact">
         <Footer />
       </div>
+      <FloatingChat />
     </div>
   );
 };

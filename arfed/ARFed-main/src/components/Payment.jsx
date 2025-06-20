@@ -51,6 +51,16 @@ const Payment = ({ open, closeModal, user }) => {
     };
   }, [open]);
 
+  // Check if device is mobile
+  const isMobile = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  };
+
+  // Check if Flutterwave is available
+  const isFlutterwaveAvailable = () => {
+    return typeof window !== 'undefined' && window.FlutterwaveCheckout;
+  };
+
   function generateReferenceKey(length) {
     const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     let result = "";
@@ -157,7 +167,7 @@ const Payment = ({ open, closeModal, user }) => {
         customizations: {
           title: "ARFed",
           description: `ARFed ${plan.name} Subscription`,
-          logo: "./images/logo.svg",
+          logo: "https://arfed-main.vercel.app/images/logo.svg",
         },
         onClose: () => {
           toast.error("Payment cancelled");
@@ -167,7 +177,7 @@ const Payment = ({ open, closeModal, user }) => {
         callback: async (response) => {
           try {
             const result = await axios.put(
-              `https://arfed-api.vercel.app/api/user/suscribe/${id}`,
+              `https://arfed-api.onrender.com/api/user/suscribe/${id}`,
               {
                 plan: plan.id,
                 startDate: new Date().toISOString(),
@@ -193,16 +203,31 @@ const Payment = ({ open, closeModal, user }) => {
             setSelectedPlan(null);
           }
         },
+        // Mobile-specific configurations
+        ...(isMobile() && {
+          redirect_url: window.location.href,
+          meta: {
+            source: "mobile_web",
+            user_agent: navigator.userAgent
+          }
+        })
       };
 
-      if (typeof window.FlutterwaveCheckout === 'function') {
+      if (isFlutterwaveAvailable()) {
         window.FlutterwaveCheckout(config);
       } else {
-        throw new Error("Payment system not initialized");
+        // Retry loading the script if not available
+        if (!isScriptLoaded) {
+          toast.error("Payment system is still loading. Please try again in a moment.");
+        } else {
+          toast.error("Payment system not available. Please refresh the page and try again.");
+        }
+        setIsProcessing(false);
+        setSelectedPlan(null);
       }
     } catch (error) {
       console.error("Payment initialization failed:", error);
-      toast.error("Failed to initialize payment. Please try again.");
+      toast.error(`Payment error: ${error.message || "Failed to initialize payment. Please try again."}`);
       setIsProcessing(false);
       setSelectedPlan(null);
     }
@@ -236,10 +261,10 @@ const Payment = ({ open, closeModal, user }) => {
       open={open}
       footer={null}
       onCancel={closeModal}
-      width={800}
+      width={isMobile() ? "95%" : 800}
       className="subscription-modal"
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-4">
+      <div className={`grid ${isMobile() ? 'grid-cols-1 gap-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'} p-4`}>
         {plans.map((plan) => (
           <div
             key={plan.id}
