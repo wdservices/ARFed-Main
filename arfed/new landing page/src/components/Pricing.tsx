@@ -1,10 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, Star, Smartphone, Users, Calendar } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useMobile } from "@/hooks/use-mobile";
 
 const Pricing = () => {
-  const isMobile = useIsMobile();
+  const isMobile = useMobile();
   const plans = [
     {
       name: "Daily Plan",

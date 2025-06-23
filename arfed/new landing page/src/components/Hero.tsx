@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+youcoimport { Button } from "@/components/ui/button";
 import { Play } from "lucide-react";
 import { Link } from "react-router-dom";
 
