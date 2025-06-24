@@ -1,4 +1,5 @@
 import "../styles/globals.css";
+import "@/src/index.css";
 import { motion, AnimatePresence } from "framer-motion";
 import Script from "next/script";
 import { ErrorBoundary } from 'react-error-boundary';

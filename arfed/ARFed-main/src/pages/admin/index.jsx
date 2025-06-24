@@ -4,7 +4,6 @@ import axios from "axios";
 import { getCookie, deleteCookie } from "cookies-next";
 import Head from "next/head";
 import SubjectModal from "../../components/SubjectModal";
-import AddModel from "../../components/AddModel";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
@@ -24,6 +23,7 @@ import {
 } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import { useUser } from "../../context/UserContext";
+import Index3DConfigurator from "@/components/Configurator3D/Index";
 
 const Admin = () => {
   const { user, loading, logoutUser } = useUser();
@@ -392,7 +392,21 @@ const Admin = () => {
         </div>
       </div>
       <SubjectModal open={subject} closeModal={() => openSubject(false)} refetch={fetchData} />
-      <AddModel open={model} closeModal={() => openModel(false)} refetch={fetchData} />
+      {model && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70">
+          <div className="relative w-full h-full max-w-6xl max-h-[90vh] bg-white rounded-lg overflow-hidden shadow-lg">
+            <button
+              onClick={() => openModel(false)}
+              className="absolute top-4 right-4 z-10 bg-red-500 text-white rounded-full p-2 hover:bg-red-600"
+            >
+              Close
+            </button>
+            <div className="w-full h-full overflow-auto">
+              <Index3DConfigurator subjects={subjects} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

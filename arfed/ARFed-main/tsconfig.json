@@ -23,9 +23,9 @@
       }
     ],
     "strictNullChecks": true,
-    "baseUrl": ".",
+    "baseUrl": "./src",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["*"],
     }
   },
   "include": [
