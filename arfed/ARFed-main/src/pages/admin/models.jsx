@@ -8,6 +8,7 @@ import "react-toastify/dist/ReactToastify.css";
 import AdminLayout from "../../components/AdminLayout";
 import { motion } from "framer-motion";
 import { FaSearch, FaEdit, FaTrash, FaPlus } from "react-icons/fa";
+import ModelCanvas from "@/components/ModelViewer/ModelCanvas";
 
 const Models = () => {
   const [models, setModels] = useState([]);
@@ -24,6 +25,10 @@ const Models = () => {
   const [single, setSingle] = useState("");
   const [iosModel, setIos] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [show3DConfig, setShow3DConfig] = useState(false);
+  const [modelUrl, setModelUrl] = useState("");
+  const [isModelLoading, setIsModelLoading] = useState(false);
+  const [isModelLoaded, setIsModelLoaded] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -150,13 +155,6 @@ const Models = () => {
               </option>
             ))}
           </select>
-          <button
-            onClick={() => setOpenModal({})}
-            className="flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
-          >
-            <FaPlus className="mr-2 w-3 h-3" />
-            Add Model
-          </button>
         </div>
       </div>
 
@@ -276,6 +274,72 @@ const Models = () => {
           </div>
         </div>
       </Modal>
+
+      {/* 3D Configurator Modal */}
+      {show3DConfig && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70">
+          <div className="relative w-full h-full max-w-6xl max-h-[90vh] bg-white rounded-lg overflow-hidden shadow-lg">
+            <button
+              onClick={() => setShow3DConfig(false)}
+              className="absolute top-4 right-4 z-10 bg-red-500 text-white rounded-full p-2 hover:bg-red-600"
+            >
+              Close
+            </button>
+            
+            {/* Simple header with model URL input */}
+            <div className="flex items-center justify-between p-4 bg-gray-50 border-b">
+              <div className="flex items-center space-x-4">
+                <input
+                  type="url"
+                  placeholder="Enter model URL (.glb or .gltf)"
+                  value={modelUrl}
+                  onChange={(e) => setModelUrl(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[300px]"
+                />
+                <button
+                  onClick={() => {
+                    if (modelUrl) {
+                      setIsModelLoading(true);
+                      setIsModelLoaded(false);
+                    }
+                  }}
+                  disabled={!modelUrl || isModelLoading}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isModelLoading ? "Loading..." : "Load Model"}
+                </button>
+              </div>
+            </div>
+            
+            {/* Model Canvas */}
+            <div className="w-full h-full overflow-hidden">
+              <ModelCanvas
+                canvasRef={null}
+                modelUrl={modelUrl}
+                modelScale={1.0}
+                isLoading={isModelLoading}
+                isModelLoaded={isModelLoaded}
+                annotations={[]}
+                isAddingAnnotation={false}
+                handleModelLoaded={() => {
+                  setIsModelLoading(false);
+                  setIsModelLoaded(true);
+                  toast.success("Model loaded successfully");
+                }}
+                handleModelError={(error) => {
+                  setIsModelLoading(false);
+                  setIsModelLoaded(false);
+                  toast.error("Failed to load model");
+                }}
+                handleAnimationSetup={() => {}}
+                handleCanvasClick={() => {}}
+                handleDeleteAnnotation={() => {}}
+                modelColor="#ffffff"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       <ToastContainer />
     </AdminLayout>

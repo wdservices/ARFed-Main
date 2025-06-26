@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
+import { deleteCookie } from 'cookies-next';
 import { 
   FaUsers, 
   FaBook, 

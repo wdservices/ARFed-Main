@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Mail, Play, Twitter, Linkedin, Youtube } from "lucide-react";
@@ -63,10 +62,10 @@ const Footer = () => {
           <div>
             <h5 className="font-semibold mb-4 text-cyan-400">Education</h5>
             <ul className="space-y-2 text-sm">
-              <li><a href="#" className="text-purple-100 hover:text-white transition-colors">For Teachers</a></li>
-              <li><a href="#" className="text-purple-100 hover:text-white transition-colors">For Students</a></li>
-              <li><a href="#" className="text-purple-100 hover:text-white transition-colors">Lesson Plans</a></li>
-              <li><a href="#" className="text-purple-100 hover:text-white transition-colors">Research</a></li>
+              <li><a href="/education" className="text-purple-100 hover:text-white transition-colors">For Teachers</a></li>
+              <li><a href="/education" className="text-purple-100 hover:text-white transition-colors">For Students</a></li>
+              <li><a href="/education" className="text-purple-100 hover:text-white transition-colors">Lesson Plans</a></li>
+              <li><a href="/education" className="text-purple-100 hover:text-white transition-colors">Research</a></li>
             </ul>
           </div>
           

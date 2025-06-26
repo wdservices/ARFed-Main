@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import Image from "next/image";
 import { Link } from "react-router-dom";
 
 const Signup = () => {
@@ -49,7 +48,7 @@ const Signup = () => {
             transition={{ delay: 0.2 }}
             className="flex flex-col items-center mb-4"
           >
-            <Image src="/arfed.png" alt="ARFed Logo" width={80} height={80} className="rounded-lg mb-4" />
+            <img src="/arfed.png" alt="ARFed Logo" width={80} height={80} className="rounded-lg mb-4" />
             <span className="text-3xl font-bold text-white tracking-tight">ARFed</span>
           </motion.div>
           <h1 className="text-3xl font-bold text-white mb-2">

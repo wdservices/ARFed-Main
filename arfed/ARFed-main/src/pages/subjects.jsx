@@ -16,10 +16,11 @@ import { toast } from "react-hot-toast";
 import { useUser } from "../context/UserContext";
 
 const Subjects = () => {
-  const { user, loading } = useUser();
+  const { user } = useUser();
   const token = getCookie("token");
   const [subjects, setSubjects] = useState([]);
   const [ads, setAds] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [open, openModal] = useState(false);
   const router = useRouter();
   const id = getCookie("id");
@@ -64,7 +65,9 @@ const Subjects = () => {
       Promise.all([
         fetchSubjectsAndAds()
       ])
-        .finally(() => { });
+        .finally(() => {
+          setLoading(false);
+        });
     } else {
       toast.warn("Authentication required. Please log in.");
     }

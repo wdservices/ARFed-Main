@@ -2,7 +2,7 @@ import React, { Suspense, useRef, useEffect } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, Html } from '@react-three/drei';
 import * as THREE from 'three';
-import { AnnotationMarker } from '@/components/AnnotationMarker';
+import CustomAnnotation from './CustomAnnotation';
 import ModelLoader from './ModelLoader';
 
 // Define annotation type that was previously in ModelViewer
@@ -97,16 +97,26 @@ const Scene = ({
         const clickPoint = intersection.point.clone();
         
         console.log("Annotation clicked at:", clickPoint);
+        console.log("Intersection object:", intersection.object);
+        console.log("Intersection face:", intersection.face);
         
-        // Dispatch the custom event with the position
-        window.dispatchEvent(new CustomEvent('annotation-position-selected', {
-          detail: { position: clickPoint }
-        }));
-        
-        // Signal that annotation position is set
-        window.dispatchEvent(new CustomEvent('annotation-position-set'));
+        // Ensure the position is properly set
+        if (clickPoint && clickPoint.x !== undefined && clickPoint.y !== undefined && clickPoint.z !== undefined) {
+          // Dispatch the custom event with the position
+          window.dispatchEvent(new CustomEvent('annotation-position-selected', {
+            detail: { position: clickPoint }
+          }));
+          
+          // Signal that annotation position is set
+          window.dispatchEvent(new CustomEvent('annotation-position-set'));
+        } else {
+          console.error("Invalid click point:", clickPoint);
+        }
       } else {
         console.log("No intersections found for annotation placement");
+        console.log("Available meshes:", meshes.length);
+        console.log("Raycaster origin:", raycaster.ray.origin);
+        console.log("Raycaster direction:", raycaster.ray.direction);
       }
     };
 
@@ -271,17 +281,25 @@ const ModelCanvas: React.FC<ModelCanvasProps> = ({
           )}
 
           {/* Render annotations */}
-          {isModelLoaded && annotations.map((annotation) => (
-            <AnnotationMarker
-              key={annotation.id}
-              id={annotation.id}
-              position={annotation.position}
-              title={annotation.title}
-              content={annotation.content}
-              onDelete={handleDeleteAnnotation}
-              isLiveMode={isLiveMode}
-            />
-          ))}
+          {isModelLoaded && annotations.length > 0 && (
+            <>
+              {annotations.map((annotation) => {
+                console.log("Rendering annotation:", annotation.id, "at position:", annotation.position);
+                return (
+                  <CustomAnnotation
+                    key={annotation.id}
+                    id={annotation.id}
+                    position={annotation.position}
+                    title={annotation.title}
+                    content={annotation.content}
+                    onDelete={handleDeleteAnnotation}
+                    isLiveMode={isLiveMode}
+                    modelRef={modelRef}
+                  />
+                );
+              })}
+            </>
+          )}
         </Suspense>
       </Canvas>
 
@@ -301,6 +319,12 @@ const ModelCanvas: React.FC<ModelCanvasProps> = ({
           <p className="text-gray-900 text-sm font-medium">
             {isAddingAnnotation ? "Click on the model to place annotation" : "Use mouse to zoom, pan and rotate"}
           </p>
+          {/* Debug info for annotations */}
+          <div className="mt-2 text-xs text-gray-600">
+            <p>Annotations: {annotations.length}</p>
+            <p>Live Mode: {isLiveMode ? 'Yes' : 'No'}</p>
+            <p>Model Loaded: {isModelLoaded ? 'Yes' : 'No'}</p>
+          </div>
         </div>
       )}
       

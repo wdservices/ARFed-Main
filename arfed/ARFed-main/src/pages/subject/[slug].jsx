@@ -13,20 +13,30 @@ import { FaCrown, FaMicrophone, FaArrowLeft } from "react-icons/fa";
 import { Modal } from 'antd'; // Import Modal from antd
 import { useRef } from 'react';
 import FloatingChat from "../../components/FloatingChat";
+import { useIsMobile } from "../../hooks/use-mobile";
 
 const SingleSubject = () => {
-  const token = getCookie("token");
   const router = useRouter();
+  const isMobile = useIsMobile();
   const [models, setModels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
-  const id = getCookie("id");
   const [quizOpen, setQuizOpen] = useState(false);
   const [quizQuestions, setQuizQuestions] = useState([]);
-  const [userAnswers, setUserAnswers] = useState({});
   const [quizScore, setQuizScore] = useState(null);
+  const [userAnswers, setUserAnswers] = useState({});
   const [currentModel, setCurrentModel] = useState(null);
   const [chatOpen, setChatOpen] = useState(false);
+
+  const token = getCookie("token");
+  const id = getCookie("id");
+
+  // Device check: if not mobile and not admin, redirect to /UseMobile
+  useEffect(() => {
+    if (user && user.role !== "admin" && isMobile === false) {
+      router.replace("/UseMobile");
+    }
+  }, [user, isMobile, router]);
 
   useEffect(() => {
     const url = router.query.slug;

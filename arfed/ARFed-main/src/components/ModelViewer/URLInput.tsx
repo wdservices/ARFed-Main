@@ -1,10 +1,11 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Added Card specific imports
 import { Download, Plus, Palette } from 'lucide-react';
 import CodeSnippet from './CodeSnippet';
 import { Annotation } from './ModelCanvas';
+import { toast } from '@/components/ui/use-toast';
+import * as THREE from 'three';
 
 interface URLInputProps {
   inputUrl: string;
@@ -33,6 +34,36 @@ const URLInput: React.FC<URLInputProps> = ({
   annotations = [],
   isModelLoaded = false
 }) => {
+  // Add test annotation function
+  const handleAddTestAnnotation = () => {
+    if (!isModelLoaded) {
+      toast({
+        title: "No Model Loaded",
+        description: "Please load a model before adding test annotations",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Create a test annotation at a visible position
+    const testAnnotation = {
+      id: `test-${Date.now()}`,
+      position: new THREE.Vector3(0, 0, 0),
+      title: "Test Annotation",
+      content: "This is a test annotation to verify visibility. If you can see this, annotations are working correctly!"
+    };
+    
+    // Dispatch event to add the test annotation
+    window.dispatchEvent(new CustomEvent('add-test-annotation', {
+      detail: { annotation: testAnnotation }
+    }));
+    
+    toast({
+      title: "Test Annotation Added",
+      description: "A test annotation has been added at the center of the model",
+    });
+  };
+
   return (
     <div className="w-80 flex flex-col gap-4">
       <Card className="shadow-lg"> {/* Removed bg-white and border-gray-200, Card handles this */}
@@ -72,6 +103,15 @@ const URLInput: React.FC<URLInputProps> = ({
               >
                 <Plus className="mr-2" size={16} />
                 Add Annotation
+              </Button>
+              
+              <Button 
+                onClick={handleAddTestAnnotation}
+                variant="outline"
+                className="w-full justify-start shadow-sm bg-yellow-50 border-yellow-200 text-yellow-800 hover:bg-yellow-100"
+              >
+                <Plus className="mr-2" size={16} />
+                Add Test Annotation
               </Button>
               
               <Button 

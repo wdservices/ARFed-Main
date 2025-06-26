@@ -1,4 +1,4 @@
-ythimport { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Play } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -44,7 +44,7 @@ const Hero = () => {
             <div className="relative z-10 bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-lg rounded-3xl p-8 border border-white/20">
               <div className="rounded-2xl shadow-2xl w-full overflow-hidden">
                 <iframe 
-                  src="https://youtube.com/shorts/28SYOEkB7J8" 
+                  src="https://www.youtube.com/embed/28SYOEkB7J8?autoplay=0&mute=1&controls=1&rel=0" 
                   allowFullScreen
                   className="w-full aspect-video"
                   title="ARFed Introduction"

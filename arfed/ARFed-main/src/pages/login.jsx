@@ -9,6 +9,7 @@ import "react-toastify/dist/ReactToastify.css";
 import Head from "next/head";
 import { FaEye, FaEyeSlash, FaArrowLeft } from "react-icons/fa";
 import Image from "next/image";
+import { useIsMobile } from "../hooks/use-mobile";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -16,6 +17,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+  const isMobile = useIsMobile();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -38,9 +40,12 @@ const Login = () => {
         
         console.log("Login successful. Response data:", response.data);
 
-        // Check if user is admin and redirect accordingly
+        // Always redirect admin to /admin first
         if (response.data.role === "admin") {
           router.replace("/admin");
+        } else if (isMobile === false) {
+          // Only check device for non-admins
+          router.replace("/UseMobile");
         } else {
           router.replace("/subjects");
         }

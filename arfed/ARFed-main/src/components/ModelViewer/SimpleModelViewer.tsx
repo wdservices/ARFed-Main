@@ -1,17 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import * as THREE from 'three';
-import { Animation } from './AnimationControls';
-import URLInput from './ModelViewer/URLInput';
-import ModelCanvas, { Annotation } from './ModelViewer/ModelCanvas';
-import AnnotationForm from './ModelViewer/AnnotationForm';
-import ColorPicker from './ModelViewer/ColorPicker';
-import ExportModal from './ModelViewer/ExportModal';
+import { Animation } from '../AnimationControls';
+import ModelCanvas, { Annotation } from './ModelCanvas';
+import AnnotationForm from './AnnotationForm';
+import ColorPicker from './ColorPicker';
+import ExportModal from './ExportModal';
 
-// Main ModelViewer component
-const ModelViewer = () => {
+// Simplified ModelViewer component for admin modals
+const SimpleModelViewer = ({ subjects = [], onModelSave }: { subjects?: any[], onModelSave?: (modelData: any) => void }) => {
   const [modelUrl, setModelUrl] = useState('');
-  const [inputUrl, setInputUrl] = useState('');
   const [modelScale, setModelScale] = useState(1.0);
   const [isLoading, setIsLoading] = useState(false);
   const [isModelLoaded, setIsModelLoaded] = useState(false);
@@ -27,7 +25,6 @@ const ModelViewer = () => {
   const [modelColor, setModelColor] = useState('#ffffff');
   const [showColorPicker, setShowColorPicker] = useState<boolean>(false);
   const [showExportModal, setShowExportModal] = useState<boolean>(false);
-  const [isLiveMode, setIsLiveMode] = useState<boolean>(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const hasModelLoadedRef = useRef<boolean>(false);
 
@@ -40,48 +37,18 @@ const ModelViewer = () => {
     const handleAnnotationSet = () => {
       setIsAddingAnnotation(false);
     };
-
-    const handleTestAnnotation = (event: CustomEvent) => {
-      const testAnnotation = event.detail.annotation;
-      console.log("Adding test annotation:", testAnnotation);
-      setAnnotations(prev => [...prev, testAnnotation]);
-    };
     
     window.addEventListener('annotation-position-selected', handleAnnotationPosition as EventListener);
     window.addEventListener('annotation-position-set', handleAnnotationSet);
-    window.addEventListener('add-test-annotation', handleTestAnnotation as EventListener);
     
     return () => {
       window.removeEventListener('annotation-position-selected', handleAnnotationPosition as EventListener);
       window.removeEventListener('annotation-position-set', handleAnnotationSet);
-      window.removeEventListener('add-test-annotation', handleTestAnnotation as EventListener);
     };
   }, []);
 
-  // Handle URL input and load model
-  const handleLoadModel = () => {
-    if (!inputUrl) {
-      toast({
-        title: "URL Required",
-        description: "Please enter a valid model URL",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    setIsModelLoaded(false);
-    hasModelLoadedRef.current = false;
-    setAnnotations([]);
-    setModelUrl(inputUrl);
-    
-    // Log the URL for debugging
-    console.log("Loading model from URL:", inputUrl);
-  };
-
   // Handle model loaded successfully
   const handleModelLoaded = () => {
-    // Only show toast and update state if this is the first time loading
     if (!hasModelLoadedRef.current) {
       setIsLoading(false);
       setIsModelLoaded(true);
@@ -90,7 +57,6 @@ const ModelViewer = () => {
         title: "Success",
         description: "Model loaded successfully",
       });
-      console.log("Model loaded successfully");
     }
   };
 
@@ -100,10 +66,10 @@ const ModelViewer = () => {
     setIsLoading(false);
     setIsModelLoaded(false);
     hasModelLoadedRef.current = false;
-    setModelUrl(''); // Reset model URL on error
+    setModelUrl('');
     toast({
       title: "Error Loading Model",
-      description: error.message || "Failed to load the 3D model. Make sure the URL is correct and the model is in a supported format (.glb or .gltf).",
+      description: error.message || "Failed to load the 3D model.",
       variant: "destructive",
     });
   };
@@ -113,11 +79,6 @@ const ModelViewer = () => {
     setActiveModel(model);
     setAnimationMixer(mixer);
     setShowAnimationControls(true);
-  };
-  
-  // Handle animation change
-  const handleAnimationChange = (newAnimations: Animation[]) => {
-    setAnimations(newAnimations);
   };
 
   // Handle adding a new annotation
@@ -134,42 +95,14 @@ const ModelViewer = () => {
     setIsAddingAnnotation(true);
     toast({
       title: "Add Annotation",
-      description: "Click on the model to place an annotation. Use the mouse controls to rotate and position the model as needed.",
+      description: "Click on the model to place an annotation",
     });
-  };
-
-  // Toggle color picker
-  const handleToggleColorPicker = () => {
-    if (!isModelLoaded) {
-      toast({
-        title: "No Model Loaded",
-        description: "Please load a model before changing colors",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setShowColorPicker(!showColorPicker);
   };
 
   // Handle color change
   const handleColorChange = (color: string) => {
     setModelColor(color);
     setShowColorPicker(false);
-  };
-
-  // Handle canvas click when adding annotation
-  const handleCanvasClick = (event: React.MouseEvent) => {
-    if (!isAddingAnnotation || !canvasRef.current) return;
-
-    // Calculate mouse position in normalized device coordinates
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-    const x = ((event.clientX - rect.left) / canvas.clientWidth) * 2 - 1;
-    const y = -((event.clientY - rect.top) / canvas.clientHeight) * 2 + 1;
-
-    // Raycasting is handled inside the Scene component
-    console.log("Canvas clicked at:", { x, y });
   };
 
   // Finish adding an annotation
@@ -212,46 +145,76 @@ const ModelViewer = () => {
     });
   };
 
-  // Export to app
-  const handleExportToApp = () => {
-    if (!isModelLoaded) {
-      toast({
-        title: "No Model Loaded",
-        description: "Please load a model before exporting",
-        variant: "destructive",
+  // Handle export submission
+  const handleExportSubmit = (config: any) => {
+    console.log("Exporting model with config:", config);
+    if (onModelSave) {
+      onModelSave({
+        modelUrl,
+        modelColor,
+        annotations,
+        ...config
       });
-      return;
     }
-
-    setShowExportModal(true);
-  };
-
-  // Handle export configuration
-  const handleExportConfig = (config: any) => {
-    setIsLiveMode(true);
     toast({
-      title: "Model Exported Successfully",
-      description: `${config.title} has been exported to ${config.subject}`,
+      title: "Model Saved",
+      description: "Model has been saved successfully",
     });
-    console.log("Export configuration:", config);
+    setShowExportModal(false);
   };
 
   return (
-    <div className="flex flex-row h-full w-full gap-4">
-      {/* Left sidebar with controls */}
-      <URLInput 
-        inputUrl={inputUrl}
-        setInputUrl={setInputUrl}
-        handleLoadModel={handleLoadModel}
-        isLoading={isLoading}
-        handleAddAnnotation={handleAddAnnotation}
-        handleExportToApp={handleExportToApp}
-        handleChangeColor={handleToggleColorPicker}
-        modelUrl={modelUrl}
-        modelColor={modelColor}
-        annotations={annotations}
-        isModelLoaded={isModelLoaded}
-      />
+    <div className="flex flex-col h-full w-full">
+      {/* Simple header with basic controls */}
+      <div className="flex items-center justify-between p-4 bg-gray-50 border-b">
+        <div className="flex items-center space-x-4">
+          <input
+            type="url"
+            placeholder="Enter model URL (.glb or .gltf)"
+            value={modelUrl}
+            onChange={(e) => setModelUrl(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[300px]"
+          />
+          <button
+            onClick={() => {
+              if (modelUrl) {
+                setIsLoading(true);
+                setIsModelLoaded(false);
+                hasModelLoadedRef.current = false;
+                setAnnotations([]);
+              }
+            }}
+            disabled={!modelUrl || isLoading}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? "Loading..." : "Load Model"}
+          </button>
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={handleAddAnnotation}
+            disabled={!isModelLoaded}
+            className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+          >
+            Add Annotation
+          </button>
+          <button
+            onClick={() => setShowColorPicker(true)}
+            disabled={!isModelLoaded}
+            className="px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+          >
+            Change Color
+          </button>
+          <button
+            onClick={() => setShowExportModal(true)}
+            disabled={!isModelLoaded}
+            className="px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+          >
+            Save Model
+          </button>
+        </div>
+      </div>
 
       {/* Color Picker */}
       {showColorPicker && (
@@ -262,18 +225,8 @@ const ModelViewer = () => {
         />
       )}
 
-      {/* Export Modal */}
-      <ExportModal
-        isOpen={showExportModal}
-        onClose={() => setShowExportModal(false)}
-        modelUrl={modelUrl}
-        modelColor={modelColor}
-        annotations={annotations}
-        onExport={handleExportConfig}
-      />
-
       {/* Model Canvas */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1">
         <ModelCanvas
           canvasRef={canvasRef}
           modelUrl={modelUrl}
@@ -285,10 +238,9 @@ const ModelViewer = () => {
           handleModelLoaded={handleModelLoaded}
           handleModelError={handleModelError}
           handleAnimationSetup={handleAnimationSetup}
-          handleCanvasClick={handleCanvasClick}
+          handleCanvasClick={() => {}}
           handleDeleteAnnotation={handleDeleteAnnotation}
           modelColor={modelColor}
-          isLiveMode={isLiveMode}
         />
       </div>
 
@@ -302,8 +254,19 @@ const ModelViewer = () => {
         onSave={handleSaveAnnotation}
         onCancel={handleCancelAnnotation}
       />
+
+      {/* Export Modal */}
+      <ExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        modelUrl={modelUrl}
+        modelColor={modelColor}
+        annotations={annotations}
+        onExport={handleExportSubmit}
+        subjects={subjects}
+      />
     </div>
   );
 };
 
-export default ModelViewer;
+export default SimpleModelViewer; 
