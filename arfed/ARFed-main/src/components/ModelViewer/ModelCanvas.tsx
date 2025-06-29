@@ -2,7 +2,7 @@ import React, { Suspense, useRef, useEffect } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, Html } from '@react-three/drei';
 import * as THREE from 'three';
-import CustomAnnotation from './CustomAnnotation';
+import { AnnotationMarker } from '@/components/AnnotationMarker';
 import ModelLoader from './ModelLoader';
 
 // Define annotation type that was previously in ModelViewer
@@ -97,26 +97,16 @@ const Scene = ({
         const clickPoint = intersection.point.clone();
         
         console.log("Annotation clicked at:", clickPoint);
-        console.log("Intersection object:", intersection.object);
-        console.log("Intersection face:", intersection.face);
         
-        // Ensure the position is properly set
-        if (clickPoint && clickPoint.x !== undefined && clickPoint.y !== undefined && clickPoint.z !== undefined) {
-          // Dispatch the custom event with the position
-          window.dispatchEvent(new CustomEvent('annotation-position-selected', {
-            detail: { position: clickPoint }
-          }));
-          
-          // Signal that annotation position is set
-          window.dispatchEvent(new CustomEvent('annotation-position-set'));
-        } else {
-          console.error("Invalid click point:", clickPoint);
-        }
+        // Dispatch the custom event with the position
+        window.dispatchEvent(new CustomEvent('annotation-position-selected', {
+          detail: { position: clickPoint }
+        }));
+        
+        // Signal that annotation position is set
+        window.dispatchEvent(new CustomEvent('annotation-position-set'));
       } else {
         console.log("No intersections found for annotation placement");
-        console.log("Available meshes:", meshes.length);
-        console.log("Raycaster origin:", raycaster.ray.origin);
-        console.log("Raycaster direction:", raycaster.ray.direction);
       }
     };
 
@@ -209,97 +199,39 @@ const ModelCanvas: React.FC<ModelCanvasProps> = ({
             orbitControlsRef.current = ref;
             if (ref) (window as any).orbitControlsRef = ref;
           }}
-          makeDefault
           enableDamping
           dampingFactor={0.05}
-          rotateSpeed={0.5}
           minDistance={1}
           maxDistance={100}
-          enableZoom={true}
-          zoomSpeed={1.0}
-          enablePan={true}
-          panSpeed={0.5}
         />
-        
-        {/* Enhanced lighting setup with much brighter lights */}
-        <ambientLight intensity={1.2} color="#ffffff" />
-        <directionalLight 
-          position={[10, 10, 5]} 
-          intensity={2.5} 
-          color="#ffffff"
-          castShadow
-          shadow-mapSize-width={2048}
-          shadow-mapSize-height={2048}
-          shadow-camera-far={50}
-          shadow-camera-left={-10}
-          shadow-camera-right={10}
-          shadow-camera-top={10}
-          shadow-camera-bottom={-10}
-        />
-        <directionalLight 
-          position={[-10, -10, -5]} 
-          intensity={1.8} 
-          color="#ffffff"
-          castShadow
-          shadow-mapSize-width={1024}
-          shadow-mapSize-height={1024}
-        />
-        <pointLight 
-          position={[5, 5, 5]} 
-          intensity={2.0} 
-          color="#ffffff"
-          castShadow
-          shadow-mapSize-width={1024}
-          shadow-mapSize-height={1024}
-        />
-        <pointLight 
-          position={[-5, -5, -5]} 
-          intensity={1.5} 
-          color="#ffffff"
-          castShadow
-          shadow-mapSize-width={1024}
-          shadow-mapSize-height={1024}
-        />
-        
-        {/* Add a ground plane to receive shadows */}
-        <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -2, 0]}>
-          <planeGeometry args={[20, 20]} />
-          <shadowMaterial transparent opacity={0.2} />
-        </mesh>
-        
+        <ambientLight intensity={1.2} />
+        <directionalLight position={[10, 10, 5]} intensity={2} />
+        <directionalLight position={[-10, -10, -5]} intensity={1.5} />
+        <pointLight position={[10, 0, 10]} intensity={1.5} />
+        <pointLight position={[-10, 0, -10]} intensity={1.5} />
         <Suspense fallback={<LoadingIndicator />}>
           {modelUrl && (
-            <ModelLoader 
-              ref={modelRef}
+            <ModelLoader
               url={modelUrl}
               scale={modelScale}
-              onLoaded={handleModelLoaded} 
+              onLoaded={handleModelLoaded}
               onError={handleModelError}
               onAnimationSetup={handleAnimationSetup}
-              color={modelColor}
+              modelRef={modelRef}
+              modelColor={modelColor}
             />
           )}
-
-          {/* Render annotations */}
-          {isModelLoaded && annotations.length > 0 && (
-            <>
-              {annotations.map((annotation) => {
-                console.log("Rendering annotation:", annotation.id, "at position:", annotation.position);
-                return (
-                  <CustomAnnotation
-                    key={annotation.id}
-                    id={annotation.id}
-                    position={annotation.position}
-                    title={annotation.title}
-                    content={annotation.content}
-                    onDelete={handleDeleteAnnotation}
-                    isLiveMode={isLiveMode}
-                    modelRef={modelRef}
-                  />
-                );
-              })}
-            </>
-          )}
+          {annotations.map((annotation) => (
+            <AnnotationMarker
+              key={annotation.id}
+              id={annotation.id}
+              position={annotation.position}
+              title={annotation.title}
+              content={annotation.content}
+              onDelete={handleDeleteAnnotation}
+              isLiveMode={isLiveMode}
+            />
+          ))}
         </Suspense>
       </Canvas>
 

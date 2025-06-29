@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { Html } from '@react-three/drei';
 import { Vector3 } from 'three';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -22,38 +22,20 @@ export const AnnotationMarker = ({
   isLiveMode = false 
 }: AnnotationMarkerProps) => {
   const [showInfo, setShowInfo] = useState(false);
-  const [isVisible, setIsVisible] = useState(true);
   const markerRef = useRef<HTMLDivElement>(null);
-  
-  // Ensure annotation is always visible initially
-  useEffect(() => {
-    setIsVisible(true);
-  }, []);
   
   const toggleInfo = () => {
     setShowInfo(!showInfo);
   };
-
-  // Don't render if not visible
-  if (!isVisible) return null;
   
   return (
-    <Html 
-      position={[position.x, position.y, position.z]}
-      center
-      distanceFactor={8}
-      zIndexRange={[100, 0]}
-    >
+    <Html position={[position.x, position.y, position.z]}>
       <div className="relative" ref={markerRef}>
         <div 
-          className={`w-5 h-5 bg-gradient-to-r from-primary to-purple-600 text-white rounded-full flex items-center justify-center cursor-pointer transform hover:scale-110 transition-transform shadow-lg ${showInfo ? 'ring-2 ring-white/50' : ''}`}
+          className={`w-6 h-6 bg-gradient-to-r from-primary to-purple-600 text-white rounded-full flex items-center justify-center cursor-pointer transform hover:scale-110 transition-transform shadow-lg ${showInfo ? 'ring-2 ring-white/50' : ''}`}
           onClick={toggleInfo}
-          style={{ 
-            filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
-            zIndex: 1000
-          }}
         >
-          <Flag size={10} />
+          <Flag size={12} />
         </div>
         
         <AnimatePresence>
@@ -63,11 +45,7 @@ export const AnnotationMarker = ({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               className="absolute z-50 -translate-x-1/2 -translate-y-full mb-2 bg-black/90 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg p-3 min-w-[220px] text-white"
-              style={{ 
-                top: '-0.5rem', 
-                left: '50%',
-                zIndex: 1001
-              }}
+              style={{ top: '-0.5rem', left: '50%' }}
             >
               <div className="flex justify-between items-start mb-1">
                 <h3 className="font-medium text-sm">{title}</h3>
