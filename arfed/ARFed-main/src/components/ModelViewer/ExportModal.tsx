@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { X, ChevronDown } from 'lucide-react';
@@ -15,6 +15,7 @@ interface ExportModalProps {
   modelColor: string;
   annotations: any[];
   onExport: (config: ExportConfig) => void;
+  subjects?: {_id: string, title: string}[];
 }
 
 interface ExportConfig {
@@ -22,6 +23,7 @@ interface ExportConfig {
   subject: string;
   description: string;
   imageUrl: string;
+  iosModelUrl?: string;
   audioUrl: string;
   generatedCode: string;
 }
@@ -32,41 +34,54 @@ const ExportModal: React.FC<ExportModalProps> = ({
   modelUrl,
   modelColor,
   annotations,
-  onExport
+  onExport,
+  subjects: propSubjects = [],
 }) => {
-  const token = getCookie("token");
+  const token = typeof window !== 'undefined' ? (require('cookies-next').getCookie?.("token") ?? null) : null;
   const [config, setConfig] = useState<ExportConfig>({
     title: '',
     subject: '',
     description: '',
     imageUrl: '',
+    iosModelUrl: '',
     audioUrl: '',
     generatedCode: ''
   });
-  const [subjects, setSubjects] = useState([]);
+  const [subjects, setSubjects] = useState<any[]>(propSubjects);
   const [loading, setLoading] = useState(false);
 
-  // Fetch subjects when modal opens
+  // Fetch subjects if not provided as prop
   useEffect(() => {
-    if (isOpen && token) {
+    if (isOpen && token && (!propSubjects || propSubjects.length === 0)) {
       fetchSubjects();
     }
-  }, [isOpen, token]);
+  }, [isOpen, token, propSubjects]);
 
-  // Update config when modal opens
+  // Update config when modal opens or when generated code changes
+  const generatedCode = useMemo(() => {
+    if (!modelUrl) {
+      return `// Load a 3D model to see the generated code\nimport { Canvas } from '@react-three/fiber';\nimport { OrbitControls } from '@react-three/drei';\n\nconst ModelViewer = () => {\n  return (\n    <Canvas>\n      <OrbitControls />\n      <ambientLight intensity={0.5} />\n      <directionalLight position={[10, 10, 5]} intensity={1} />\n      {/* Load your 3D model here */}\n    </Canvas>\n  );\n};\n\nexport default ModelViewer;`;
+    }
+    const annotationsCode = annotations.length > 0 
+      ? annotations.map((annotation, index) => `\n  // Annotation ${index + 1}: ${annotation.title}\n  <AnnotationMarker\n    id="${annotation.id}"\n    position={[${annotation.position.x.toFixed(2)}, ${annotation.position.y.toFixed(2)}, ${annotation.position.z.toFixed(2)}]}\n    title="${annotation.title}"\n    content="${annotation.content}"\n  />`).join('')
+      : '';
+    return `import React, { Suspense } from 'react';\nimport { Canvas } from '@react-three/fiber';\nimport { OrbitControls, useGLTF } from '@react-three/drei';\nimport * as THREE from 'three';\n\n// Model component\nconst Model = () => {\n  const { scene } = useGLTF('${modelUrl}');\n  \n  // Apply model color\n  scene.traverse((child) => {\n    if (child.isMesh) {\n      child.material = new THREE.MeshStandardMaterial({\n        color: '${modelColor}',\n      });\n    }\n  });\n  \n  return <primitive object={scene} />;\n};\n\n// Annotation marker component\nconst AnnotationMarker = ({ position, title, content }) => {\n  return (\n    <mesh position={position}>\n      <sphereGeometry args={[0.05]} />\n      <meshBasicMaterial color="red" />\n      {/* Add your annotation UI here */}\n    </mesh>\n  );\n};\n\n// Main ModelViewer component\nconst ModelViewer = () => {\n  return (\n    <div style={{ width: '100%', height: '100vh' }}>\n      <Canvas\n        camera={{ position: [0, 0, 5], fov: 50 }}\n        gl={{ antialias: true }}\n      >\n        <OrbitControls \n          enableDamping\n          dampingFactor={0.05}\n          minDistance={1}\n          maxDistance={100}\n        />\n        \n        {/* Lighting setup */}\n        <ambientLight intensity={1.2} />\n        <directionalLight position={[10, 10, 5]} intensity={2} />\n        <directionalLight position={[-10, -10, -5]} intensity={1.5} />\n        <pointLight position={[10, 0, 10]} intensity={1.5} />\n        <pointLight position={[-10, 0, -10]} intensity={1.5} />\n        \n        <Suspense fallback={null}>\n          <Model />${annotationsCode}\n        </Suspense>\n      </Canvas>\n    </div>\n  );\n};\n\nexport default ModelViewer;`;
+  }, [modelUrl, modelColor, annotations]);
+
   useEffect(() => {
     if (isOpen) {
       setConfig(prev => ({
         ...prev,
-        generatedCode: generateModelCode()
+        iosModelUrl: modelUrl,
+        generatedCode: generatedCode
       }));
     }
-  }, [isOpen, modelUrl]);
+  }, [isOpen, modelUrl, generatedCode]);
 
   const fetchSubjects = async () => {
     if (!token) {
       console.warn("No token found, skipping subject fetch.");
-      toast.warn("Authentication token not found. Please log in again.");
+      if (typeof toast !== 'undefined') toast.warn("Authentication token not found. Please log in again.");
       return;
     }
     try {
@@ -80,135 +95,32 @@ const ExportModal: React.FC<ExportModalProps> = ({
       setSubjects(response.data);
     } catch (error) {
       console.error("Failed to fetch subjects:", error);
-      toast.error("Failed to fetch subjects");
+      if (typeof toast !== 'undefined') toast.error("Failed to fetch subjects");
     }
-  };
-
-  const generateModelCode = () => {
-    if (!modelUrl) {
-      return `// Load a 3D model to see the generated code
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
-
-const ModelViewer = () => {
-  return (
-    <Canvas>
-      <OrbitControls />
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[10, 10, 5]} intensity={1} />
-      {/* Load your 3D model here */}
-    </Canvas>
-  );
-};
-
-export default ModelViewer;`;
-    }
-
-    const annotationsCode = annotations.length > 0 
-      ? annotations.map((annotation, index) => `
-  // Annotation ${index + 1}: ${annotation.title}
-  <AnnotationMarker
-    id="${annotation.id}"
-    position={[${annotation.position.x.toFixed(2)}, ${annotation.position.y.toFixed(2)}, ${annotation.position.z.toFixed(2)}]}
-    title="${annotation.title}"
-    content="${annotation.content}"
-  />`).join('')
-      : '';
-
-    return `import React, { Suspense } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls, useGLTF } from '@react-three/drei';
-import * as THREE from 'three';
-
-// Model component
-const Model = () => {
-  const { scene } = useGLTF('${modelUrl}');
-  
-  // Apply model color
-  scene.traverse((child) => {
-    if (child.isMesh) {
-      child.material = new THREE.MeshStandardMaterial({
-        color: '${modelColor}',
-      });
-    }
-  });
-  
-  return <primitive object={scene} />;
-};
-
-// Annotation marker component
-const AnnotationMarker = ({ position, title, content }) => {
-  return (
-    <mesh position={position}>
-      <sphereGeometry args={[0.05]} />
-      <meshBasicMaterial color="red" />
-      {/* Add your annotation UI here */}
-    </mesh>
-  );
-};
-
-// Main ModelViewer component
-const ModelViewer = () => {
-  return (
-    <div style={{ width: '100%', height: '100vh' }}>
-      <Canvas
-        camera={{ position: [0, 0, 5], fov: 50 }}
-        gl={{ antialias: true }}
-      >
-        <OrbitControls 
-          enableDamping
-          dampingFactor={0.05}
-          minDistance={1}
-          maxDistance={100}
-        />
-        
-        {/* Lighting setup */}
-        <ambientLight intensity={1.2} />
-        <directionalLight position={[10, 10, 5]} intensity={2} />
-        <directionalLight position={[-10, -10, -5]} intensity={1.5} />
-        <pointLight position={[10, 0, 10]} intensity={1.5} />
-        <pointLight position={[-10, 0, -10]} intensity={1.5} />
-        
-        <Suspense fallback={null}>
-          <Model />${annotationsCode}
-        </Suspense>
-      </Canvas>
-    </div>
-  );
-};
-
-export default ModelViewer;`;
   };
 
   const handleSubmit = async () => {
     // Validate required fields - only essential fields are required
     if (!config.title || !config.subject || !config.description) {
-      toast.warn("Title, Subject, and Description are required");
+      if (typeof toast !== 'undefined') toast.warn("Title, Subject, and Description are required");
       return;
     }
-
-    // Check if 3D model is loaded
     if (!modelUrl) {
-      toast.warn("Please load a 3D model first");
+      if (typeof toast !== 'undefined') toast.warn("Please load a 3D model first");
       return;
     }
-
     try {
       setLoading(true);
-      
-      // Post to the models API
-      const response = await axios.post(
+      await axios.post(
         "https://arfed-api.onrender.com/api/models",
         {
           title: config.title,
           description: config.description,
-          audio: config.audioUrl || '', // Make audio optional
-          image: config.imageUrl || '', // Make image URL optional
-          model: modelUrl, // Use the loaded 3D model URL
+          audio: config.audioUrl || '',
+          image: config.imageUrl || '',
+          model: modelUrl,
           subjectId: config.subject,
-          iosModel: modelUrl, // Use the loaded 3D model URL
-          audio: config.audioUrl || '', // Make audio optional
-          // Add annotations and model customizations
+          iosModel: modelUrl,
           annotations: annotations.map(annotation => ({
             id: annotation.id,
             title: annotation.title,
@@ -234,29 +146,21 @@ export default ModelViewer;`;
           },
         }
       );
-
-      console.log("Model created successfully:", response.data);
       setLoading(false);
-      
-      // Call the onExport callback with the config
       onExport(config);
-      
-      // Close modal and reset form
       onClose();
       setConfig({
         title: '',
         subject: '',
         description: '',
         imageUrl: '',
+        iosModelUrl: '',
         audioUrl: '',
         generatedCode: ''
       });
-      
-      toast.success("Model Created Successfully");
     } catch (error) {
       setLoading(false);
-      console.error("Error creating model:", error);
-      toast.error("Failed to create model. Please try again.");
+      if (typeof toast !== 'undefined') toast.error("Failed to export model");
     }
   };
 

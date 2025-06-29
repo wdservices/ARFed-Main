@@ -240,22 +240,50 @@ const ModelViewer = ({ subjects = [] }) => {
   };
 
   return (
-    <div className="flex flex-row h-full w-full gap-4">
+    <div
+      className="flex flex-row h-full w-full gap-4"
+      style={{ background: '#0f172a', minHeight: '100vh', padding: 24 }}
+    >
       {/* Left sidebar with controls */}
-      <URLInput 
-        inputUrl={inputUrl}
-        setInputUrl={setInputUrl}
-        handleLoadModel={handleLoadModel}
-        isLoading={isLoading}
-        handleAddAnnotation={handleAddAnnotation}
-        handleExportToApp={handleExportToApp}
-        handleChangeColor={handleToggleColorPicker}
-        modelUrl={modelUrl}
-        modelColor={modelColor}
-        annotations={annotations}
-        isModelLoaded={isModelLoaded}
-      />
-
+      <div
+        style={{
+          background: '#111827',
+          borderRadius: 12,
+          boxShadow: '0 2px 16px rgba(0,0,0,0.10)',
+          border: '1px solid #1e293b',
+          padding: 16,
+          minWidth: 320,
+          maxWidth: 340,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 16,
+          color: '#fff',
+        }}
+      >
+        <URLInput 
+          inputUrl={inputUrl}
+          setInputUrl={setInputUrl}
+          handleLoadModel={handleLoadModel}
+          isLoading={isLoading}
+          handleAddAnnotation={handleAddAnnotation}
+          handleExportToApp={handleExportToApp}
+          handleChangeColor={handleToggleColorPicker}
+          modelUrl={modelUrl}
+          modelColor={modelColor}
+          annotations={annotations}
+          isModelLoaded={isModelLoaded}
+          buttonStyle={{
+            background: 'linear-gradient(to right, #2563eb, #3b82f6)',
+            color: '#fff',
+            border: 'none',
+          }}
+          outlineButtonStyle={{
+            background: 'transparent',
+            color: '#fff',
+            border: '1px solid #fff',
+          }}
+        />
+      </div>
       {/* Color Picker */}
       {showColorPicker && (
         <ColorPicker 
@@ -264,9 +292,8 @@ const ModelViewer = ({ subjects = [] }) => {
           onClose={() => setShowColorPicker(false)}
         />
       )}
-
       {/* Model Canvas */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col" style={{ background: '#f1f5f9', borderRadius: 12, minHeight: 600 }}>
         <ModelCanvas
           canvasRef={canvasRef}
           modelUrl={modelUrl}
@@ -281,9 +308,9 @@ const ModelViewer = ({ subjects = [] }) => {
           handleCanvasClick={handleCanvasClick}
           handleDeleteAnnotation={handleDeleteAnnotation}
           modelColor={modelColor}
+          lightingIntensity={0.7}
         />
       </div>
-
       {/* Annotation Form */}
       <AnnotationForm
         position={newAnnotationPosition as THREE.Vector3}
@@ -294,7 +321,6 @@ const ModelViewer = ({ subjects = [] }) => {
         onSave={handleSaveAnnotation}
         onCancel={handleCancelAnnotation}
       />
-
       {/* Export Modal */}
       <ExportModal
         isOpen={showExportModal}
@@ -302,8 +328,10 @@ const ModelViewer = ({ subjects = [] }) => {
         modelUrl={modelUrl}
         modelColor={modelColor}
         annotations={annotations}
-        onExport={handleExportSubmit}
         subjects={subjects}
+        onExport={(config) => {
+          toast({ title: 'Model Exported', description: 'Model and annotations have been exported to your app' });
+        }}
       />
     </div>
   );
