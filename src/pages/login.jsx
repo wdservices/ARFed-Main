@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Link from "next/link.js";
 import axios from "axios";
 import { motion } from "framer-motion";
-import { setCookie } from "cookies-next";
+import { setCookies } from "cookies-next";
 import { useRouter } from "next/router";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -34,8 +34,8 @@ const Login = () => {
       });
 
       if (response.data.token) {
-        setCookie("token", response.data.token);
-        setCookie("id", response.data.id);
+        setCookies("token", response.data.token);
+        setCookies("id", response.data.id);
         toast.success("Logged in successfully!");
         
         console.log("Login successful. Response data:", response.data);
