@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import axios from 'axios';
-import { getCookie, deleteCookie } from 'cookies-next';
+import { getCookie, removeCookies } from 'cookies-next';
 import { toast } from 'react-hot-toast';
 
 const UserContext = createContext(null);
@@ -38,8 +38,8 @@ export const UserProvider = ({ children }) => {
   };
 
   const logoutUser = () => {
-    deleteCookie('token');
-    deleteCookie('id');
+    removeCookies('token');
+    removeCookies('id');
     setUser(null); // Clear user state immediately
     setLoading(false); // Set loading to false after logout
   };

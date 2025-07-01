@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -54,20 +53,20 @@ const Footer = () => {
           <div>
             <h5 className="font-semibold mb-4 text-cyan-400">Product</h5>
             <ul className="space-y-2 text-sm">
-              <li><a href="#" className="text-purple-100 hover:text-white transition-colors">Features</a></li>
-              <li><a href="#" className="text-purple-100 hover:text-white transition-colors">Pricing</a></li>
-              <li><a href="#" className="text-purple-100 hover:text-white transition-colors">AR Models</a></li>
-              <li><a href="#" className="text-purple-100 hover:text-white transition-colors">AI Tutor</a></li>
+              <li><a href="#features" className="text-purple-100 hover:text-white transition-colors">Features</a></li>
+              <li><a href="#pricing" className="text-purple-100 hover:text-white transition-colors">Pricing</a></li>
+              <li><a href="/product/ar-models" className="text-purple-100 hover:text-white transition-colors">AR Models</a></li>
+              <li><a href="/product/ai-tutor" className="text-purple-100 hover:text-white transition-colors">AI Tutor</a></li>
             </ul>
           </div>
           
           <div>
             <h5 className="font-semibold mb-4 text-cyan-400">Education</h5>
             <ul className="space-y-2 text-sm">
-              <li><a href="#" className="text-purple-100 hover:text-white transition-colors">For Teachers</a></li>
-              <li><a href="#" className="text-purple-100 hover:text-white transition-colors">For Students</a></li>
-              <li><a href="#" className="text-purple-100 hover:text-white transition-colors">Lesson Plans</a></li>
-              <li><a href="#" className="text-purple-100 hover:text-white transition-colors">Research</a></li>
+              <li><a href="/education/teachers" className="text-purple-100 hover:text-white transition-colors">For Teachers</a></li>
+              <li><a href="/education/students" className="text-purple-100 hover:text-white transition-colors">For Students</a></li>
+              <li><a href="/education/lesson-plans" className="text-purple-100 hover:text-white transition-colors">Lesson Plans</a></li>
+              <li><a href="/education/research" className="text-purple-100 hover:text-white transition-colors">Research</a></li>
             </ul>
           </div>
           
