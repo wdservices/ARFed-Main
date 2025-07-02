@@ -42,6 +42,12 @@ const Navigation = () => {
             <a onClick={() => scrollToSection('education')} className="text-white hover:text-cyan-300 transition-colors cursor-pointer">About Us</a>
             <a onClick={() => scrollToSection('contact')} className="text-white hover:text-cyan-300 transition-colors cursor-pointer">Contact Us</a>
             <a onClick={() => scrollToSection('pricing')} className="text-white hover:text-cyan-300 transition-colors cursor-pointer">Book a Demo</a>
+            <a
+              href="/faq"
+              className="text-white hover:text-pink-400 transition-colors font-medium px-4"
+            >
+              FAQ
+            </a>
             <Button 
               variant="ghost" 
               className="w-10 h-10 rounded-full bg-[#39F9CD] hover:bg-[#2EE6B8] text-white flex items-center justify-center"
@@ -70,6 +76,12 @@ const Navigation = () => {
               <a onClick={() => scrollToSection('education')} className="text-white hover:text-cyan-300 transition-colors px-3 py-2 cursor-pointer">About Us</a>
               <a onClick={() => scrollToSection('contact')} className="text-white hover:text-cyan-300 transition-colors px-3 py-2 cursor-pointer">Contact Us</a>
               <a onClick={() => scrollToSection('pricing')} className="text-white hover:text-cyan-300 transition-colors px-3 py-2 cursor-pointer">Book a Demo</a>
+              <a
+                href="/faq"
+                className="text-white hover:text-pink-400 transition-colors font-medium px-4"
+              >
+                FAQ
+              </a>
               <Button 
                 variant="ghost" 
                 className="w-10 h-10 rounded-full bg-[#39F9CD] hover:bg-[#2EE6B8] text-white flex items-center justify-center mx-auto"
