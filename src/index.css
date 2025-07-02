@@ -74,24 +74,24 @@
        or a specific dark transparent color.
        Using bg-background/95 should work if --background is correctly set for dark mode.
     */
-    @apply bg-background/95 backdrop-blur-sm border border-border rounded-lg shadow-lg;
+    @apply bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg;
     /* color will be inherited or set by text-foreground */
   }
   
   .input-field {
     /* This uses Tailwind classes that should adapt with CSS variables */
-    @apply rounded-md border border-input bg-background px-3 py-2 text-foreground text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+    @apply rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-gray-100 text-sm ring-offset-white dark:ring-offset-gray-800 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2;
   }
   
   .button-primary {
     /* This gradient will use the --primary variable, which changes in dark mode */
-    @apply bg-gradient-to-r from-primary to-purple-600 text-primary-foreground hover:from-primary/90 hover:to-purple-700;
+    @apply bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700;
      /* Note: 'to-purple-600' is hardcoded. This might need adjustment for dark theme aesthetics if purple doesn't fit. */
   }
   
   .button-secondary {
     /* Removing !important and relying on CSS variables and Tailwind classes for dark mode adaptability */
-    @apply bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border;
+    @apply bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600;
   }
 }
 
@@ -130,7 +130,7 @@
 
 /* Add gradient text utility */
 .text-gradient {
-  @apply bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent;
+  @apply bg-gradient-to-r from-blue-600 to-purple-500 bg-clip-text text-transparent;
 }
 
 /* Add glow effect */
@@ -144,14 +144,14 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: hsl(var(--muted)); /* Use CSS variable */
+  background: #f1f5f9; /* light gray */
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--secondary-foreground)); /* Use CSS variable */
+  background: #64748b; /* slate-500 */
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--foreground)); /* Use CSS variable */
+  background: #475569; /* slate-600 */
 }

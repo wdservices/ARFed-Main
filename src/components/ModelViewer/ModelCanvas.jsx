@@ -3,15 +3,7 @@ import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { AnnotationMarker } from '@/components/AnnotationMarker';
-import ModelLoader from './ModelLoader';
-
-// Define annotation type that was previously in ModelViewer
-export type Annotation = {
-  id: string;
-  position: THREE.Vector3;
-  content: string;
-  title: string;
-};
+import ModelLoader from './ModelLoader.jsx';
 
 // Loading indicator component
 const LoadingIndicator = () => (
@@ -26,24 +18,16 @@ const LoadingIndicator = () => (
 );
 
 // Scene component with enhanced event handlers for annotation interaction
-const Scene = ({ 
-  isAddingAnnotation, 
-  onModelClick 
-}: { 
-  isAddingAnnotation: boolean;
-  onModelClick?: (point: THREE.Vector3) => void;
-}) => {
+const Scene = ({ isAddingAnnotation, onModelClick }) => {
   const threeState = useThree();
   const { scene, camera, raycaster, gl } = threeState;
-  
+
   // Configure scene and renderer for better shadows
   useEffect(() => {
     if (scene) {
       scene.environment = null;
       scene.background = null;
     }
-    
-    // Configure renderer with shadows enabled
     if (gl) {
       gl.toneMapping = THREE.NoToneMapping;
       gl.toneMappingExposure = 1;
@@ -51,99 +35,47 @@ const Scene = ({
       gl.shadowMap.type = THREE.PCFSoftShadowMap;
     }
   }, [scene, gl]);
-  
+
   useEffect(() => {
     if (!isAddingAnnotation) return;
-
-    const handleClick = (event: MouseEvent) => {
-      // Only handle clicks when in annotation mode
+    const handleClick = (event) => {
       if (!isAddingAnnotation) return;
-      
       event.preventDefault();
       event.stopPropagation();
-      
-      // Calculate mouse position in normalized device coordinates
       const canvas = gl.domElement;
       const rect = canvas.getBoundingClientRect();
       const mouseX = ((event.clientX - rect.left) / canvas.clientWidth) * 2 - 1;
       const mouseY = -((event.clientY - rect.top) / canvas.clientHeight) * 2 + 1;
-      
-      // Create a new mouse vector for this specific click
       const clickMouse = new THREE.Vector2(mouseX, mouseY);
-      
-      // Update raycaster with the click position
       raycaster.setFromCamera(clickMouse, camera);
-      
-      // Get all meshes in the scene (excluding annotation markers and UI elements)
-      const meshes: THREE.Mesh[] = [];
+      const meshes = [];
       scene.traverse((object) => {
-        if (object instanceof THREE.Mesh && 
-            !object.userData?.isAnnotation && 
-            !object.userData?.isHelper &&
-            object.visible) {
+        if (object instanceof THREE.Mesh && !object.userData?.isAnnotation && !object.userData?.isHelper && object.visible) {
           meshes.push(object);
         }
       });
-      
-      console.log("Found meshes for annotation:", meshes.length);
-      
-      // Check for intersections with model meshes
       const intersects = raycaster.intersectObjects(meshes, true);
-      
-      console.log("Intersections found:", intersects.length);
-      
       if (intersects.length > 0) {
         const intersection = intersects[0];
         const clickPoint = intersection.point.clone();
-        
-        console.log("Annotation clicked at:", clickPoint);
-        
-        // Dispatch the custom event with the position
         window.dispatchEvent(new CustomEvent('annotation-position-selected', {
           detail: { position: clickPoint }
         }));
-        
-        // Signal that annotation position is set
         window.dispatchEvent(new CustomEvent('annotation-position-set'));
-      } else {
-        console.log("No intersections found for annotation placement");
       }
     };
-
-    // Add event listener to the canvas when in annotation mode
     const canvas = gl.domElement;
     canvas.addEventListener('click', handleClick, false);
-    
-    // Change cursor to indicate annotation mode
     canvas.style.cursor = 'crosshair';
-    
     return () => {
       canvas.removeEventListener('click', handleClick, false);
       canvas.style.cursor = 'grab';
     };
   }, [scene, camera, raycaster, gl, isAddingAnnotation]);
-
   return null;
 };
 
-interface ModelCanvasProps {
-  canvasRef: React.RefObject<HTMLCanvasElement>;
-  modelUrl: string;
-  modelScale: number;
-  isLoading: boolean;
-  isModelLoaded: boolean;
-  annotations: Annotation[];
-  isAddingAnnotation: boolean;
-  handleModelLoaded: () => void;
-  handleModelError: (error: Error) => void;
-  handleAnimationSetup: (model: THREE.Object3D, mixer: THREE.AnimationMixer) => void;
-  handleCanvasClick: (event: React.MouseEvent) => void;
-  handleDeleteAnnotation: (id: string) => void;
-  modelColor?: string;
-  isLiveMode?: boolean;
-}
-
-const ModelCanvas: React.FC<ModelCanvasProps> = ({
+const ModelCanvas = ({
   canvasRef,
   modelUrl,
   modelScale = 1,
@@ -159,13 +91,11 @@ const ModelCanvas: React.FC<ModelCanvasProps> = ({
   modelColor = '#ffffff',
   isLiveMode = false
 }) => {
-  const orbitControlsRef = useRef<any>(null);
-  const modelRef = useRef<THREE.Object3D | null>(null);
-
-  const handleModelClick = (clickPoint: THREE.Vector3) => {
+  const orbitControlsRef = useRef(null);
+  const modelRef = useRef(null);
+  const handleModelClick = (clickPoint) => {
     console.log("Model click registered at:", clickPoint);
   };
-
   return (
     <div className="relative flex-1 bg-white rounded-2xl overflow-hidden animate-fade-in h-[calc(100vh-180px)]">
       <Canvas
@@ -180,7 +110,6 @@ const ModelCanvas: React.FC<ModelCanvasProps> = ({
         dpr={[1, 2]}
         className="w-full h-full"
         onCreated={({ scene, gl }) => {
-          // Enable shadows and configure lighting
           scene.environment = null;
           scene.background = null;
           gl.toneMapping = THREE.NoToneMapping;
@@ -197,7 +126,7 @@ const ModelCanvas: React.FC<ModelCanvasProps> = ({
         <OrbitControls
           ref={ref => {
             orbitControlsRef.current = ref;
-            if (ref) (window as any).orbitControlsRef = ref;
+            if (ref) window.orbitControlsRef = ref;
           }}
           enableDamping
           dampingFactor={0.05}
@@ -234,7 +163,6 @@ const ModelCanvas: React.FC<ModelCanvasProps> = ({
           ))}
         </Suspense>
       </Canvas>
-
       {!modelUrl && !isLoading && (
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <div className="text-center max-w-md px-8 py-12 bg-white/90 backdrop-blur-sm rounded-lg border border-gray-300 shadow-lg">
@@ -245,13 +173,11 @@ const ModelCanvas: React.FC<ModelCanvasProps> = ({
           </div>
         </div>
       )}
-      
       {isModelLoaded && (
         <div className="absolute bottom-4 right-4 px-4 py-2 bg-white/90 backdrop-blur-sm rounded-lg border border-gray-300 shadow-lg">
           <p className="text-gray-900 text-sm font-medium">
             {isAddingAnnotation ? "Click on the model to place annotation" : "Use mouse to zoom, pan and rotate"}
           </p>
-          {/* Debug info for annotations */}
           <div className="mt-2 text-xs text-gray-600">
             <p>Annotations: {annotations.length}</p>
             <p>Live Mode: {isLiveMode ? 'Yes' : 'No'}</p>
@@ -259,7 +185,6 @@ const ModelCanvas: React.FC<ModelCanvasProps> = ({
           </div>
         </div>
       )}
-      
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-white/90 backdrop-blur-sm">
           <div className="flex flex-col items-center">
@@ -272,4 +197,4 @@ const ModelCanvas: React.FC<ModelCanvasProps> = ({
   );
 };
 
-export default ModelCanvas;
+export default ModelCanvas; 

@@ -2,10 +2,18 @@ import { useState, useRef, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import * as THREE from 'three';
 import { Animation } from '../AnimationControls';
-import ModelCanvas, { Annotation } from './ModelCanvas';
+import ModelCanvas from './ModelCanvas.jsx';
 import AnnotationForm from './AnnotationForm';
 import ColorPicker from './ColorPicker';
 import ExportModal from './ExportModal';
+
+// Define Annotation type locally since it is no longer exported from ModelCanvas
+export type Annotation = {
+  id: string;
+  position: THREE.Vector3;
+  content: string;
+  title: string;
+};
 
 // Simplified ModelViewer component for admin modals
 const SimpleModelViewer = ({ subjects = [], onModelSave }: { subjects?: any[], onModelSave?: (modelData: any) => void }) => {

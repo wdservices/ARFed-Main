@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useRef } from 'react';
 import { Html } from '@react-three/drei';
 import { Vector3 } from 'three';
@@ -71,11 +73,8 @@ export const AnnotationMarker = ({
                   </button>
                 </div>
               </div>
-              
               <div className="h-px bg-gray-700 w-full my-1" />
-              
               <p className="text-xs text-gray-300 mt-1">{content}</p>
-              
               <div className="absolute w-3 h-3 bg-black/90 transform rotate-45 left-1/2 -ml-1.5 -bottom-1.5 border-r border-b border-gray-700"></div>
             </motion.div>
           )}

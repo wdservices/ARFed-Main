@@ -3,9 +3,16 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Added Card specific imports
 import { Download, Plus, Palette } from 'lucide-react';
 import CodeSnippet from './CodeSnippet';
-import { Annotation } from './ModelCanvas';
 import { toast } from '@/components/ui/use-toast';
 import * as THREE from 'three';
+
+// Define Annotation type locally since it is no longer exported from ModelCanvas
+export type Annotation = {
+  id: string;
+  position: any; // Use any for Vector3, or import THREE if needed
+  content: string;
+  title: string;
+};
 
 interface URLInputProps {
   inputUrl: string;

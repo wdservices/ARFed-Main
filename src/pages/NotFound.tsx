@@ -1,19 +1,8 @@
-
-import { useLocation, Link } from "react-router-dom";
-import { useEffect } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 
 const NotFound = () => {
-  const location = useLocation();
-
-  useEffect(() => {
-    console.error(
-      "404 Error: User attempted to access non-existent route:",
-      location.pathname
-    );
-  }, [location.pathname]);
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-accent/30 p-4">
       <motion.div 
@@ -46,11 +35,11 @@ const NotFound = () => {
           transition={{ delay: 0.5, duration: 0.5 }}
         >
           <Link 
-            to="/" 
+            href="/" 
             className="inline-flex items-center space-x-2 button-primary"
           >
             <ArrowLeft size={16} />
-            <span>Return to Editor</span>
+            <span>Return to Home</span>
           </Link>
         </motion.div>
       </motion.div>

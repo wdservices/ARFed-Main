@@ -4,7 +4,14 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { toast } from '@/components/ui/use-toast';
-import { Annotation } from './ModelCanvas';
+
+// Define Annotation type locally since it is no longer exported from ModelCanvas
+export type Annotation = {
+  id: string;
+  position: any; // Use any for Vector3, or import THREE if needed
+  content: string;
+  title: string;
+};
 
 interface CodeSnippetProps {
   modelUrl: string;

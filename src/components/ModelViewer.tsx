@@ -3,10 +3,18 @@ import { toast } from '@/components/ui/use-toast';
 import * as THREE from 'three';
 import { Animation } from './AnimationControls';
 import URLInput from './ModelViewer/URLInput';
-import ModelCanvas, { Annotation } from './ModelViewer/ModelCanvas';
+import ModelCanvas from './ModelViewer/ModelCanvas.jsx';
 import AnnotationForm from './ModelViewer/AnnotationForm';
 import ColorPicker from './ModelViewer/ColorPicker';
 import ExportModal from './ModelViewer/ExportModal';
+
+// Define Annotation type locally since it is no longer exported from ModelCanvas
+export type Annotation = {
+  id: string;
+  position: THREE.Vector3;
+  content: string;
+  title: string;
+};
 
 // Main ModelViewer component
 const ModelViewer = () => {

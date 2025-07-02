@@ -1,7 +1,7 @@
 import ModelViewer from '@/components/ModelViewer';
 import { motion } from 'framer-motion';
 
-const Index = ({ subjects = [] }) => {
+const Index = () => {
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-[#1E3A8A] via-[#2563EB] to-[#3B82F6] overflow-hidden">
       {/* Decorative background dots */}
@@ -20,7 +20,7 @@ const Index = ({ subjects = [] }) => {
           <p className="text-gray-200">View, annotate, and interact with 3D models in real time.</p>
         </div>
         <div className="flex-1 flex flex-col">
-          <ModelViewer subjects={subjects} />
+          <ModelViewer />
         </div>
         <footer className="mt-8 text-center text-sm text-white/80">
           ARFed 3D Editor • Designed with precision • Powered by Three.js

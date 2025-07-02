@@ -4,16 +4,7 @@ import { useLoader } from '@react-three/fiber';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as THREE from 'three';
 
-interface ModelLoaderProps {
-  url: string;
-  scale: number;
-  onLoaded: () => void;
-  onError: (error: Error) => void;
-  onAnimationSetup: (model: THREE.Object3D, mixer: THREE.AnimationMixer) => void;
-  color?: string;
-}
-
-const ModelLoader = forwardRef<THREE.Object3D | null, ModelLoaderProps>(({ 
+const ModelLoader = forwardRef(({ 
   url, 
   scale = 1,
   onLoaded, 
@@ -22,11 +13,11 @@ const ModelLoader = forwardRef<THREE.Object3D | null, ModelLoaderProps>(({
   color = '#ffffff'
 }, ref) => {
   const { camera } = useThree();
-  const mixerRef = useRef<THREE.AnimationMixer | null>(null);
-  const modelRef = useRef<THREE.Object3D | null>(null);
-  const hasNotifiedRef = useRef<boolean>(false);
-  const [model, setModel] = useState<THREE.Group | null>(null);
-  const hasSetCamera = useRef<boolean>(false);
+  const mixerRef = useRef(null);
+  const modelRef = useRef(null);
+  const hasNotifiedRef = useRef(false);
+  const [model, setModel] = useState(null);
+  const hasSetCamera = useRef(false);
 
   useImperativeHandle(ref, () => modelRef.current);
   
@@ -44,7 +35,7 @@ const ModelLoader = forwardRef<THREE.Object3D | null, ModelLoaderProps>(({
         const gltfLoader = new GLTFLoader();
         
         // Add a timeout to the loading process
-        const loadPromise = new Promise<any>((resolve, reject) => {
+        const loadPromise = new Promise((resolve, reject) => {
           gltfLoader.load(
             url,
             (gltf) => resolve(gltf),
@@ -95,7 +86,7 @@ const ModelLoader = forwardRef<THREE.Object3D | null, ModelLoaderProps>(({
           camera.lookAt(center);
           camera.updateProjectionMatrix();
           // Set OrbitControls target to model center if available
-          const controls = (window as any).orbitControlsRef;
+          const controls = window.orbitControlsRef;
           if (controls && controls.target) {
             controls.target.set(center.x, center.y, center.z);
             controls.update && controls.update();
@@ -178,4 +169,4 @@ const ModelLoader = forwardRef<THREE.Object3D | null, ModelLoaderProps>(({
 
 ModelLoader.displayName = 'ModelLoader';
 
-export default ModelLoader;
+export default ModelLoader; 

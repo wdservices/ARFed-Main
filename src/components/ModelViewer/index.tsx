@@ -3,10 +3,18 @@ import { toast } from '@/components/ui/use-toast';
 import * as THREE from 'three';
 import { Animation } from '../AnimationControls';
 import URLInput from './URLInput';
-import ModelCanvas, { Annotation } from './ModelCanvas';
+import ModelCanvas from './ModelCanvas';
 import AnnotationForm from './AnnotationForm';
 import ColorPicker from './ColorPicker';
 import ExportModal from './ExportModal';
+
+// Define Annotation type locally since it is no longer exported from ModelCanvas
+export type Annotation = {
+  id: string;
+  position: any; // Use any for Vector3, or import THREE if needed
+  content: string;
+  title: string;
+};
 
 // Main ModelViewer component
 const ModelViewer = ({ subjects = [] }) => {
@@ -272,16 +280,6 @@ const ModelViewer = ({ subjects = [] }) => {
           modelColor={modelColor}
           annotations={annotations}
           isModelLoaded={isModelLoaded}
-          buttonStyle={{
-            background: 'linear-gradient(to right, #2563eb, #3b82f6)',
-            color: '#fff',
-            border: 'none',
-          }}
-          outlineButtonStyle={{
-            background: 'transparent',
-            color: '#fff',
-            border: '1px solid #fff',
-          }}
         />
       </div>
       {/* Color Picker */}
@@ -308,7 +306,6 @@ const ModelViewer = ({ subjects = [] }) => {
           handleCanvasClick={handleCanvasClick}
           handleDeleteAnnotation={handleDeleteAnnotation}
           modelColor={modelColor}
-          lightingIntensity={0.7}
         />
       </div>
       {/* Annotation Form */}

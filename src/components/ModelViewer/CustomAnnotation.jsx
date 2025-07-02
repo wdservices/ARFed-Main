@@ -1,21 +1,11 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronDown, ChevronUp, Flag } from 'lucide-react';
 
-interface CustomAnnotationProps {
-  id: string;
-  position: THREE.Vector3;
-  title: string;
-  content: string;
-  onDelete: (id: string) => void;
-  isLiveMode?: boolean;
-  modelRef?: React.RefObject<THREE.Object3D>;
-}
-
-export const CustomAnnotation: React.FC<CustomAnnotationProps> = ({
+export const CustomAnnotation = ({
   id,
   position,
   title,
@@ -27,8 +17,8 @@ export const CustomAnnotation: React.FC<CustomAnnotationProps> = ({
   const [showInfo, setShowInfo] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [screenPosition, setScreenPosition] = useState({ x: 0, y: 0 });
-  const markerRef = useRef<THREE.Mesh>(null);
-  const htmlRef = useRef<HTMLDivElement>(null);
+  const markerRef = useRef(null);
+  const htmlRef = useRef(null);
   
   // Get camera and renderer from Three.js context
   const { camera, gl } = useThree();
@@ -60,7 +50,7 @@ export const CustomAnnotation: React.FC<CustomAnnotationProps> = ({
     setShowInfo(!showInfo);
   };
 
-  const handleDelete = (e: React.MouseEvent) => {
+  const handleDelete = (e) => {
     e.stopPropagation();
     onDelete(id);
   };
