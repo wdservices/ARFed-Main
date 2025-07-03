@@ -122,6 +122,19 @@ const Subjects = () => {
             -webkit-box-orient: vertical;
             overflow: hidden;
             text-overflow: ellipsis;
+            word-wrap: break-word;
+            hyphens: auto;
+          }
+          .subject-title {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-wrap: break-word;
+            hyphens: auto;
+            max-height: 3rem;
+            line-height: 1.5;
           }
         `}</style>
       </Head>
@@ -307,7 +320,7 @@ const Subjects = () => {
                     
                     {/* Subject Title */}
                     <div className="text-center">
-                      <h3 className="font-bold text-base text-white capitalize mb-2 group-hover:text-white/90 transition-colors line-clamp-2 min-h-[2.5rem] flex items-center justify-center">
+                      <h3 className="font-bold text-sm text-white capitalize mb-2 group-hover:text-white/90 transition-colors subject-title">
                         {subject.title}
                       </h3>
                       <div className="w-8 h-1 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full mx-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
