@@ -87,6 +87,21 @@ const Payment = ({ open, closeModal, user }) => {
       planId: 142602
     },
     {
+      id: "weekly",
+      name: "Weekly Plan",
+      price: "₦1,500",
+      period: "per week",
+      icon: <FaCalendarWeek className="text-pink-500" size={24} />,
+      features: [
+        "Full access to all AR lessons",
+        "AI tutor assistance",
+        "Basic progress tracking",
+        "24-hour support"
+      ],
+      amount: 1500,
+      planId: 143575
+    },
+    {
       id: "monthly",
       name: "Monthly Plan",
       price: "₦10,500",

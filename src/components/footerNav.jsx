@@ -19,9 +19,9 @@ const FooterNav = () => {
         <a href="#pricing">
           <div className="lg:my-0 my-4">Pricing</div>
         </a>
-        <a href="mailto:hello.arfed@gmail.com">
+        <Link href="/contact-us">
           <div className="lg:my-0 my-4">Contact Us</div>
-        </a>
+        </Link>
         <Link href="/privacy">
           <div className="lg:my-0 my-4">Policies</div>
         </Link>

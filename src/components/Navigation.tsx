@@ -40,8 +40,8 @@ const Navigation = () => {
             <a onClick={() => scrollToSection('features')} className="text-white hover:text-cyan-300 transition-colors cursor-pointer">Features</a>
             <a onClick={() => scrollToSection('pricing')} className="text-white hover:text-cyan-300 transition-colors cursor-pointer">Pricing</a>
             <a onClick={() => scrollToSection('education')} className="text-white hover:text-cyan-300 transition-colors cursor-pointer">About Us</a>
-            <a onClick={() => scrollToSection('contact')} className="text-white hover:text-cyan-300 transition-colors cursor-pointer">Contact Us</a>
-            <a onClick={() => scrollToSection('pricing')} className="text-white hover:text-cyan-300 transition-colors cursor-pointer">Book a Demo</a>
+            <a onClick={() => router.push('/contact-us')} className="text-white hover:text-cyan-300 transition-colors cursor-pointer">Contact Us</a>
+            <a onClick={() => router.push('/book-demo')} className="text-white hover:text-cyan-300 transition-colors cursor-pointer">Book a Demo</a>
             <a
               href="/faq"
               className="text-white hover:text-pink-400 transition-colors font-medium px-4"
@@ -74,8 +74,8 @@ const Navigation = () => {
               <a onClick={() => scrollToSection('features')} className="text-white hover:text-cyan-300 transition-colors px-3 py-2 cursor-pointer">Features</a>
               <a onClick={() => scrollToSection('pricing')} className="text-white hover:text-cyan-300 transition-colors px-3 py-2 cursor-pointer">Pricing</a>
               <a onClick={() => scrollToSection('education')} className="text-white hover:text-cyan-300 transition-colors px-3 py-2 cursor-pointer">About Us</a>
-              <a onClick={() => scrollToSection('contact')} className="text-white hover:text-cyan-300 transition-colors px-3 py-2 cursor-pointer">Contact Us</a>
-              <a onClick={() => scrollToSection('pricing')} className="text-white hover:text-cyan-300 transition-colors px-3 py-2 cursor-pointer">Book a Demo</a>
+              <a onClick={() => router.push('/contact-us')} className="text-white hover:text-cyan-300 transition-colors px-3 py-2 cursor-pointer">Contact Us</a>
+              <a onClick={() => router.push('/book-demo')} className="text-white hover:text-cyan-300 transition-colors px-3 py-2 cursor-pointer">Book a Demo</a>
               <a
                 href="/faq"
                 className="text-white hover:text-pink-400 transition-colors font-medium px-4"

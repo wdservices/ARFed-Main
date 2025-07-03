@@ -43,6 +43,25 @@ const Pricing = () => {
       planId: 142602
     },
     {
+      id: "weekly",
+      name: "Weekly Plan",
+      price: "₦1,500",
+      usdPrice: "$1.10",
+      period: "/week",
+      description: "All access to premium AR lessons & AI tutoring for one week.",
+      features: [
+        "Unlimited AR lessons",
+        "Advanced AI chat tutor",
+        "Progress tracking",
+        "Priority support"
+      ],
+      icon: <Smartphone className="text-purple-500" size={24} />,
+      popular: false,
+      cta: "Choose Weekly Plan",
+      amount: 1500,
+      planId: 143575
+    },
+    {
       id: "monthly",
       name: "Monthly Plan",
       price: "₦10,500",
@@ -182,6 +201,7 @@ const Pricing = () => {
             variant="outline" 
             size="lg" 
             className="border-2 border-purple-500 text-purple-500 hover:bg-purple-500 hover:text-white"
+            onClick={() => router.push('/book-demo')}
           >
             Book a Demo
           </Button>
