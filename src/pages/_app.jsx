@@ -45,7 +45,7 @@ function MyApp({ Component, pageProps, router }) {
             <Component {...pageProps} />
             <Script
               type="module"
-              src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"
+              src="https://unpkg.com/@google/model-viewer@3.4.0/dist/model-viewer.min.js"
               strategy="beforeInteractive"
             />
           {/* </motion.div> */}
