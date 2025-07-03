@@ -14,9 +14,14 @@ const HeaderNav = () => {
                 <a href="#features">
                     <div>Features</div>
                 </a>
-                {/* <Link href={`/subjects`}>
-                    <div>Subjects</div>
-                </Link> */}
+                <div className="relative group">
+                  <button className="focus:outline-none">Subjects</button>
+                  <div className="absolute left-0 mt-2 w-40 bg-white rounded shadow-lg opacity-0 group-hover:opacity-100 transition pointer-events-none group-hover:pointer-events-auto z-10">
+                    <Link href="/subject/biology"><div className="px-4 py-2 hover:bg-gray-100">Biology</div></Link>
+                    <Link href="/subject/chemistry"><div className="px-4 py-2 hover:bg-gray-100">Chemistry</div></Link>
+                    <Link href="/subject/physics"><div className="px-4 py-2 hover:bg-gray-100">Physics</div></Link>
+                  </div>
+                </div>
                 <a href="#pricing">
                     <div>Pricing</div>
                 </a>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { getCookie } from "cookies-next";
+import { getCookie, deleteCookie } from "cookies-next";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/pagination";
@@ -33,6 +33,12 @@ const Subjects = () => {
     if (hour < 12) return "Good Morning";
     if (hour < 18) return "Good Afternoon";
     return "Good Evening";
+  };
+
+  const logout = () => {
+    deleteCookie("token");
+    deleteCookie("id");
+    router.push("/");
   };
 
   useEffect(() => {
@@ -172,6 +178,11 @@ const Subjects = () => {
           </div>
         </div>
       </header>
+
+      {/* Logout Button */}
+      <div className="flex justify-end p-4">
+        <button onClick={logout} className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition">Logout</button>
+      </div>
 
       {/* Mobile Menu */}
       {menuOpen && user && (

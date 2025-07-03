@@ -24,25 +24,6 @@ const Pricing = () => {
 
   const plans = [
     {
-      id: "daily",
-      name: "Daily Plan",
-      price: "₦250",
-      usdPrice: "$0.30",
-      period: "/day",
-      description: "All access to premium AR lessons & AI tutoring for one day.",
-      features: [
-        "Unlimited AR lessons",
-        "Advanced AI chat tutor",
-        "Progress tracking",
-        "Priority support"
-      ],
-      icon: <Smartphone className="text-purple-500" size={24} />,
-      popular: false,
-      cta: "Choose Daily Plan",
-      amount: 250,
-      planId: 142602
-    },
-    {
       id: "weekly",
       name: "Weekly Plan",
       price: "₦1,500",
@@ -139,7 +120,7 @@ const Pricing = () => {
         </div>
 
         <div className="grid lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
-          {plans.map((plan, index) => (
+          {plans.filter(plan => plan.id !== "daily").map((plan, index) => (
             <Card key={index} className={`relative overflow-hidden ${plan.popular ? 'ring-2 ring-purple-500 shadow-2xl scale-105' : 'shadow-lg'} transition-all duration-300 hover:shadow-xl`}>
               {plan.popular && (
                 <div className="absolute top-0 right-0 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-1 text-sm font-medium rounded-bl-lg">

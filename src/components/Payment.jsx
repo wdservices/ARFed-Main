@@ -73,21 +73,6 @@ const Payment = ({ open, closeModal, user, refreshUser = () => {} }) => {
 
   const plans = [
     {
-      id: "daily",
-      name: "Daily Plan",
-      price: "₦250",
-      period: "per day",
-      icon: <FaCalendarDay className="text-yellow-500" size={24} />,
-      features: [
-        "Full access to all AR lessons",
-        "AI tutor assistance",
-        "Basic progress tracking",
-        "24-hour support"
-      ],
-      amount: 250,
-      planId: 142602
-    },
-    {
       id: "weekly",
       name: "Weekly Plan",
       price: "₦1,500",
@@ -284,7 +269,7 @@ const Payment = ({ open, closeModal, user, refreshUser = () => {} }) => {
       className="subscription-modal"
     >
       <div className={`grid ${isMobile() ? 'grid-cols-1 gap-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'} p-4`}>
-        {plans.map((plan) => (
+        {plans.filter(plan => plan.id !== "daily").map((plan, index) => (
           <div
             key={plan.id}
             className={`relative bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-2 ${
