@@ -5,7 +5,7 @@ import axios from "axios";
 import { toast } from "@/components/ui/use-toast";
 import { FaCrown, FaCheck, FaCalendarAlt, FaCalendarDay, FaCalendarWeek } from "react-icons/fa";
 
-const Payment = ({ open, closeModal, user }) => {
+const Payment = ({ open, closeModal, user, refreshUser }) => {
   const id = getCookie("id");
   const token = getCookie("token");
   const [selectedPlan, setSelectedPlan] = useState(null);
@@ -209,6 +209,9 @@ const Payment = ({ open, closeModal, user }) => {
             );
             console.log(result.data);
             toast.success("Payment Successful! Your subscription is now active.");
+            if (typeof refreshUser === "function") {
+              await refreshUser();
+            }
             closeModal();
           } catch (e) {
             console.error("Payment verification failed:", e);

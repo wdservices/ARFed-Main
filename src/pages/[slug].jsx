@@ -457,6 +457,8 @@ function Single() {
                 field-of-view="30deg"
                 style={{ width: '100%', height: '100%' }}
               >
+                {/* Hidden AR button for programmatic triggering */}
+                <button slot="ar-button" style={{ display: 'none' }} />
                 {model.annotations && model.annotations.map((annotation, index) => (
                   <button
                     key={index}

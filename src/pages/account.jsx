@@ -49,6 +49,23 @@ const account = () => {
     router.push("/");
   };
 
+  const refreshUser = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`https://arfed-api.onrender.com/api/user/${id}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "auth-token": token,
+        },
+      });
+      setUser(response.data[0]);
+    } catch (e) {
+      console.log(e);
+    }
+    setLoading(false);
+  };
+
   return (
     <div>
       <Head>
@@ -125,7 +142,7 @@ const account = () => {
         )}
       </Layout>
       <ToastContainer />
-      <Payment closeModal={() => openModal(!open)} open={open} user={user} />
+      <Payment closeModal={() => openModal(!open)} open={open} user={user} refreshUser={refreshUser} />
     </div>
   );
 };
