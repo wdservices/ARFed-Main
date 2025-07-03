@@ -91,14 +91,9 @@ const account = () => {
               <img src={image} alt="" className="w-40 h-40 mx-auto" />
             </div>
             <div className="p-4">
-              <div className="p-3 w-[90%] mx-auto border my-4 rounded-md capitalize">
-                {user?.name}
-              </div>
-              <div className="p-3 w-[90%] mx-auto border my-4 rounded-md">
-                {user?.email}
-              </div>
-              <div className="p-3 w-[90%] mx-auto border cursor-pointer my-4 rounded-md capitalize flex justify-between">
+              <div className="p-3 w-[90%] mx-auto border my-4 rounded-md capitalize flex items-center justify-between">
                 <div> Plan: {user?.plan}</div>
+                <button onClick={refreshUser} className="ml-2 px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition">Refresh</button>
                 <div onClick={() => openModal(!open)}>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"

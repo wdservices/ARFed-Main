@@ -58,7 +58,7 @@ export const UserProvider = ({ children }) => {
   }, [token, id]); // Depend on token and id from the component's scope
 
   return (
-    <UserContext.Provider value={{ user, loading, logoutUser }}>
+    <UserContext.Provider value={{ user, loading, logoutUser, setUser, fetchUser }}>
       {children}
     </UserContext.Provider>
   );

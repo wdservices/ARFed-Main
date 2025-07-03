@@ -5,8 +5,10 @@ import axios from "axios";
 import { toast } from "@/components/ui/use-toast";
 import { FaCrown, FaCheck, FaCalendarAlt, FaCalendarDay, FaCalendarWeek } from "react-icons/fa";
 import PropTypes from "prop-types";
+import { useUser } from "../context/UserContext";
 
 const Payment = ({ open, closeModal, user, refreshUser = () => {} }) => {
+  const { fetchUser } = useUser();
   const id = getCookie("id");
   const token = getCookie("token");
   const [selectedPlan, setSelectedPlan] = useState(null);
@@ -197,6 +199,9 @@ const Payment = ({ open, closeModal, user, refreshUser = () => {} }) => {
             toast.success("Payment Successful! Your subscription is now active.");
             if (refreshUser) {
               await refreshUser();
+            }
+            if (fetchUser) {
+              await fetchUser();
             }
             closeModal();
           } catch (e) {
