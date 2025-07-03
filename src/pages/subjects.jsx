@@ -112,7 +112,7 @@ const Subjects = () => {
   }, [darkMode]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1E3A8A] via-[#2563EB] to-[#3B82F6] relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-[#1E3A8A] via-[#2563EB] to-[#3B82F6] relative overflow-x-hidden overflow-y-auto">
       {/* Decorative background elements */}
       <div className="absolute top-10 left-10 w-32 h-32 bg-indigo-400 opacity-30 rounded-full blur-2xl animate-pulse" />
       <div className="absolute bottom-20 right-20 w-40 h-40 bg-blue-300 opacity-20 rounded-full blur-3xl animate-pulse" />
@@ -179,18 +179,12 @@ const Subjects = () => {
         </div>
       </header>
 
-      {/* Logout Button */}
-      <div className="flex justify-end p-4">
-        <button onClick={logout} className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition">Logout</button>
-      </div>
-
       {/* Mobile Menu */}
       {menuOpen && user && (
         <div className="fixed inset-0 z-40 flex justify-end">
           <div className="fixed inset-0 bg-black/30 backdrop-blur-sm transition-opacity" onClick={() => setMenuOpen(false)}></div>
-          <nav className="relative w-72 max-w-full h-full bg-white/10 backdrop-blur-lg shadow-2xl border-l border-white/20 p-8 flex flex-col gap-4 animate-slide-in-right z-50">
+          <nav className="relative w-72 max-w-full h-full bg-white/10 backdrop-blur-lg shadow-2xl border-l border-white/20 p-8 flex flex-col gap-4 animate-slide-in-right z-50 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
             <button onClick={() => setMenuOpen(false)} className="absolute top-4 right-4 text-white text-xl font-bold">×</button>
-            
             {/* User Profile Info */}
             <div className="text-xl font-bold text-white mb-2">
                Hello {user?.accountType === "group" ? user?.organizationName : user?.name || "Guest"}
@@ -199,7 +193,6 @@ const Subjects = () => {
               <p>Email: {user?.email || "N/A"}</p>
               <p>Plan: {user?.plan || "N/A"}</p>
             </div>
-
             {/* Subjects Section */}
             <div className="text-lg font-bold text-white mt-4">Subjects</div>
             <div className="flex flex-col gap-2 mb-6 pb-4 border-b border-white/20">
@@ -209,7 +202,6 @@ const Subjects = () => {
                 </Link>
               ))}
             </div>
-
             {/* Navigation Links */}
             <Link href="/" className="text-white/80 hover:text-white transition-colors py-2">
               Home
@@ -226,6 +218,8 @@ const Subjects = () => {
             <Link href="/faq" className="text-white/80 hover:text-white transition-colors py-2">
               FAQ
             </Link>
+            {/* Logout Button at the bottom of the menu */}
+            <button onClick={logout} className="mt-auto px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition w-full">Logout</button>
           </nav>
         </div>
       )}
