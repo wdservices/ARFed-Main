@@ -322,14 +322,12 @@ const Subjects = () => {
                       
                       {/* Image Container with Bezel */}
                       <div className="relative mb-2">
-                        <div className="w-full h-40 bg-gradient-to-br from-white/20 to-white/10 rounded-xl p-1 shadow-inner">
-                          <div className="w-full h-full bg-white/10 rounded-lg flex items-center justify-center">
-                            <img
-                              src={subject.image}
-                              alt={subject.title}
-                              className="w-24 h-24 object-contain drop-shadow-lg"
-                            />
-                          </div>
+                        <div className="w-full aspect-[3/4] bg-gradient-to-br from-white/20 to-white/10 rounded-xl p-1 shadow-inner flex items-center justify-center">
+                          <img
+                            src={subject.image}
+                            alt={subject.title}
+                            className="w-full h-full object-cover rounded-lg drop-shadow-lg"
+                          />
                         </div>
                       </div>
                       

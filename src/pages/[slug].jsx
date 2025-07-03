@@ -28,6 +28,13 @@ function Single() {
   const [error, setError] = useState(null);
   const modelViewerRef = useRef(null);
   const [showAnnotations, setShowAnnotations] = useState(true);
+  const [isSpeechSynthesisAvailable, setIsSpeechSynthesisAvailable] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      setIsSpeechSynthesisAvailable(true);
+    }
+  }, []);
 
   useEffect(() => {
     const url = router.query.slug;
@@ -393,9 +400,9 @@ function Single() {
         </div>
 
         {/* Speech Controls */}
-        {typeof window !== 'undefined' && window.speechSynthesis && (
+        {isSpeechSynthesisAvailable && (
           <div className="flex items-center gap-2">
-            {window.speechSynthesis.paused ? (
+            {typeof window !== 'undefined' && window.speechSynthesis && window.speechSynthesis.paused ? (
               // Resume button
               <div className="p-2 bg-green-500/20 backdrop-blur-lg border border-green-500/30 rounded-full cursor-pointer text-green-200 hover:bg-green-500/30 transition-colors" onClick={resume} title="Resume">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
