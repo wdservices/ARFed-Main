@@ -24,6 +24,7 @@ function Single() {
     modelCustomizations: {}
   });
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [currentUtterance, setCurrentUtterance] = useState(null);
   const [error, setError] = useState(null);
   const modelViewerRef = useRef(null);
@@ -93,12 +94,14 @@ function Single() {
     
     const onEnd = () => {
       setIsSpeaking(false);
+      setIsPaused(false);
       setCurrentUtterance(null);
     };
     
     const onError = (event) => {
       console.error('Speech synthesis error:', event.error);
       setIsSpeaking(false);
+      setIsPaused(false);
       setCurrentUtterance(null);
     };
     
@@ -213,10 +216,12 @@ function Single() {
           }
           clearInterval(intervalId);
           setIsSpeaking(true);
+          setIsPaused(false);
           window.speechSynthesis.speak(utterance);
         }, 100);
       } else {
         setIsSpeaking(true);
+        setIsPaused(false);
         window.speechSynthesis.speak(utterance);
       }
     };
@@ -234,7 +239,7 @@ function Single() {
     
     if (isSpeaking) {
       window.speechSynthesis.pause();
-      setIsSpeaking(false);
+      setIsPaused(true);
     }
   };
 
@@ -243,7 +248,7 @@ function Single() {
     
     if (window.speechSynthesis.paused) {
       window.speechSynthesis.resume();
-      setIsSpeaking(true);
+      setIsPaused(false);
     }
   };
 
@@ -252,6 +257,7 @@ function Single() {
     
     window.speechSynthesis.cancel();
     setIsSpeaking(false);
+    setIsPaused(false);
     setCurrentUtterance(null);
   };
 
@@ -402,7 +408,7 @@ function Single() {
         {/* Speech Controls */}
         {isSpeechSynthesisAvailable && (
           <div className="flex items-center gap-2">
-            {typeof window !== 'undefined' && window.speechSynthesis && window.speechSynthesis.paused ? (
+            {isPaused ? (
               // Resume button
               <div className="p-2 bg-green-500/20 backdrop-blur-lg border border-green-500/30 rounded-full cursor-pointer text-green-200 hover:bg-green-500/30 transition-colors" onClick={resume} title="Resume">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">

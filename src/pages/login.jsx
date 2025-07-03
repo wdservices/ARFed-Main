@@ -45,8 +45,8 @@ const Login = () => {
           // Always redirect admin to /admin first
           if (response.data.role === "admin") {
             router.replace("/admin");
-          } else if (isMobile === false) {
-            // Only check device for non-admins
+          } else if (!isMobile) {
+            // If not mobile (desktop site requested), redirect to UseMobile page
             router.replace("/UseMobile");
           } else {
             router.replace("/subjects");
