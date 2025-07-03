@@ -21,7 +21,7 @@ import {
   FaAd,
   FaVrCardboard
 } from "react-icons/fa";
-import { toast } from "react-hot-toast";
+import { toast } from "@/components/ui/use-toast";
 import { useUser } from "../../context/UserContext";
 import Index3DConfigurator from "@/components/Configurator3D/Index";
 
@@ -39,25 +39,34 @@ const Admin = () => {
 
   useEffect(() => {
     const checkAdminAccess = async () => {
-      if (!loading) {
-        if (!user) {
-          router.replace('/login');
-          return;
-        }
-        
-        if (user.role !== "admin") {
-          toast.error("Access denied. Admin privileges required.");
+      // If still loading, wait
+      if (loading) {
+        return;
+      }
+      
+      // If no user after loading is complete, redirect to login
+      if (!user) {
+        router.replace('/login');
+        return;
+      }
+      
+      // If user is not admin, redirect to subjects
+              if (user.role !== "admin") {
+          toast({
+            title: "Access Denied",
+            description: "Admin privileges required.",
+            variant: "destructive",
+          });
           router.replace('/subjects');
           return;
         }
 
-        // Only fetch data if user is admin
-        await fetchData();
-      }
+      // Only fetch data if user is admin
+      await fetchData();
     };
 
     checkAdminAccess();
-  }, [loading, user]);
+  }, [loading, user, router]);
 
   const fetchData = async () => {
     try {
@@ -98,7 +107,11 @@ const Admin = () => {
       setMonthlyUsers(monthlyUsers);
     } catch (error) {
       console.error("Error fetching data:", error);
-      toast.error("Failed to fetch data");
+      toast({
+        title: "Error",
+        description: "Failed to fetch data",
+        variant: "destructive",
+      });
     }
   };
 
@@ -110,7 +123,10 @@ const Admin = () => {
   const copyAllEmails = () => {
     const emails = users.map(user => user.email).join(", ");
     navigator.clipboard.writeText(emails);
-    toast.success("All emails copied to clipboard!");
+    toast({
+      title: "Success",
+      description: "All emails copied to clipboard!",
+    });
   };
 
   const filteredUsers = users.filter(u => 
@@ -131,8 +147,14 @@ const Admin = () => {
     );
   }
 
+  // Don't render anything while redirecting or if user is not admin
   if (!user || user.role !== "admin") {
-    return null; // Don't render anything while redirecting
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#1E3A8A] via-[#2563EB] to-[#3B82F6]">
+        <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+        <p className="ml-4 text-white text-lg">Redirecting...</p>
+      </div>
+    );
   }
 
   return (

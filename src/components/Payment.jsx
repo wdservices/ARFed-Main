@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { getCookie } from "cookies-next";
 import { Modal } from "antd";
 import axios from "axios";
-import { toast } from "react-hot-toast";
+import { toast } from "@/components/ui/use-toast";
 import { FaCrown, FaCheck, FaCalendarAlt, FaCalendarDay, FaCalendarWeek } from "react-icons/fa";
 
 const Payment = ({ open, closeModal, user }) => {

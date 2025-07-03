@@ -40,15 +40,18 @@ const Login = () => {
         
         console.log("Login successful. Response data:", response.data);
 
-        // Always redirect admin to /admin first
-        if (response.data.role === "admin") {
-          router.replace("/admin");
-        } else if (isMobile === false) {
-          // Only check device for non-admins
-          router.replace("/UseMobile");
-        } else {
-          router.replace("/subjects");
-        }
+        // Add a small delay to ensure cookies are set before redirect
+        setTimeout(() => {
+          // Always redirect admin to /admin first
+          if (response.data.role === "admin") {
+            router.replace("/admin");
+          } else if (isMobile === false) {
+            // Only check device for non-admins
+            router.replace("/UseMobile");
+          } else {
+            router.replace("/subjects");
+          }
+        }, 100);
       }
     } catch (error) {
       console.error("Login error:", error);

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Script from "next/script";
 import { ErrorBoundary } from 'react-error-boundary';
 import { UserProvider } from "../context/UserContext";
-import { Toaster } from 'react-hot-toast';
+import { Toaster } from '@/components/ui/toaster';
 
 function ErrorFallback({ error }) {
   return (

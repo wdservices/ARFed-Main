@@ -8,6 +8,7 @@ import { FaArrowLeft, FaMicrophone, FaMapPin } from "react-icons/fa";
 import { message } from 'antd';
 import { useRef } from 'react';
 import FloatingChat from "../components/FloatingChat";
+import { motion } from "framer-motion";
 
 function Single() {
   const token = getCookie("token");
@@ -80,14 +81,34 @@ function Single() {
   }, [router.query.slug, token]);
 
   useEffect(() => {
+    // Only run on client side
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+    
     const onEnd = () => {
       setIsSpeaking(false);
       setCurrentUtterance(null);
     };
-    speechSynthesis.addEventListener('end', onEnd);
+    
+    const onError = (event) => {
+      console.error('Speech synthesis error:', event.error);
+      setIsSpeaking(false);
+      setCurrentUtterance(null);
+    };
+    
+    window.speechSynthesis.addEventListener('end', onEnd);
+    window.speechSynthesis.addEventListener('error', onError);
+    
+    // Preload voices for better performance
+    if (window.speechSynthesis.getVoices().length === 0) {
+      window.speechSynthesis.addEventListener('voiceschanged', () => {
+        console.log('Available voices:', window.speechSynthesis.getVoices().map(v => v.name));
+      }, { once: true });
+    }
+    
     return () => {
-      speechSynthesis.removeEventListener('end', onEnd);
-      speechSynthesis.cancel();
+      window.speechSynthesis.removeEventListener('end', onEnd);
+      window.speechSynthesis.removeEventListener('error', onError);
+      window.speechSynthesis.cancel();
       if (modelViewerRef.current) {
         const audioElement = modelViewerRef.current.querySelector('audio');
         if (audioElement) {
@@ -99,36 +120,206 @@ function Single() {
   }, [modelViewerRef]);
 
   const speak = (text) => {
-    if (currentUtterance) {
-      speechSynthesis.cancel();
+    // Check if we're on the client side and speech synthesis is available
+    if (typeof window === 'undefined' || !window.speechSynthesis) {
+      console.warn('Speech synthesis not available');
+      return;
     }
+
+    if (currentUtterance) {
+      window.speechSynthesis.cancel();
+    }
+    
     const utterance = new SpeechSynthesisUtterance(text);
-    setCurrentUtterance(utterance);
-    if (speechSynthesis.speaking || speechSynthesis.pending) {
-      // Wait for the `speechSynthesis` object to become ready before speaking.
-      const intervalId = setInterval(() => {
-        if (speechSynthesis.speaking || speechSynthesis.pending) {
-          return;
+    
+    // Enhanced voice configuration for a softer, more natural sound
+    utterance.rate = 0.85; // Slower rate for a calmer, more soothing feel
+    utterance.pitch = 0.7; // Lower pitch for a softer, warmer tone
+    utterance.volume = 0.75; // Lower volume for gentleness
+    
+    // Wait for voices to load if they haven't already
+    const configureVoice = () => {
+      const voices = window.speechSynthesis.getVoices();
+      
+      // Priority list for soft, natural-sounding voices
+      const voicePriority = [
+        'Samantha', // macOS - very natural
+        'Victoria', // macOS - soft and clear
+        'Karen', // macOS - gentle
+        'Google UK English Female', // Chrome - natural
+        'Google US English Female', // Chrome - clear
+        'Microsoft Zira', // Windows - soft
+        'Microsoft Eva', // Windows - natural
+        'Alex', // macOS - clear
+        'Google UK English Male', // Chrome - warm
+        'Google US English Male' // Chrome - natural
+      ];
+      
+      // Find the best available voice
+      let selectedVoice = null;
+      
+      // First, try to find voices from our priority list
+      for (const voiceName of voicePriority) {
+        const voice = voices.find(v => 
+          v.name.includes(voiceName) && 
+          (v.lang.includes('en-US') || v.lang.includes('en-GB') || v.lang.includes('en'))
+        );
+        if (voice) {
+          selectedVoice = voice;
+          break;
         }
-        clearInterval(intervalId);
+      }
+      
+      // If no priority voice found, look for any natural-sounding English voice
+      if (!selectedVoice) {
+        const naturalVoices = voices.filter(voice => 
+          (voice.lang.includes('en-US') || voice.lang.includes('en-GB') || voice.lang.includes('en')) &&
+          !voice.name.toLowerCase().includes('robot') &&
+          !voice.name.toLowerCase().includes('monotone')
+        );
+        
+        if (naturalVoices.length > 0) {
+          // Prefer female voices for softer sound
+          const femaleVoices = naturalVoices.filter(voice => 
+            voice.name.toLowerCase().includes('female') ||
+            voice.name.toLowerCase().includes('samantha') ||
+            voice.name.toLowerCase().includes('victoria') ||
+            voice.name.toLowerCase().includes('karen')
+          );
+          
+          selectedVoice = femaleVoices.length > 0 ? femaleVoices[0] : naturalVoices[0];
+        }
+      }
+      
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+        console.log('Using voice:', selectedVoice.name);
+      }
+      
+      setCurrentUtterance(utterance);
+      
+      if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+        // Wait for the `speechSynthesis` object to become ready before speaking.
+        const intervalId = setInterval(() => {
+          if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+            return;
+          }
+          clearInterval(intervalId);
+          setIsSpeaking(true);
+          window.speechSynthesis.speak(utterance);
+        }, 100);
+      } else {
         setIsSpeaking(true);
-        speechSynthesis.speak(utterance);
-      }, 100);
+        window.speechSynthesis.speak(utterance);
+      }
+    };
+    
+    // Handle voice loading
+    if (window.speechSynthesis.getVoices().length > 0) {
+      configureVoice();
     } else {
-      setIsSpeaking(true);
-      speechSynthesis.speak(utterance);
+      window.speechSynthesis.addEventListener('voiceschanged', configureVoice, { once: true });
     }
   }
 
   const pause = () => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+    
     if (isSpeaking) {
-      speechSynthesis.pause();
+      window.speechSynthesis.pause();
       setIsSpeaking(false);
     }
   };
 
+  const resume = () => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+    
+    if (window.speechSynthesis.paused) {
+      window.speechSynthesis.resume();
+      setIsSpeaking(true);
+    }
+  };
+
+  const stop = () => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+    
+    window.speechSynthesis.cancel();
+    setIsSpeaking(false);
+    setCurrentUtterance(null);
+  };
+
+  // Handle AR session events to control audio and annotations
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleARStart = () => {
+      // Audio will be started by the button click
+      console.log('AR session started');
+    };
+
+    const handleAREnd = () => {
+      // Stop audio when AR session ends
+      stop();
+      console.log('AR session ended, audio stopped');
+    };
+
+    // Listen for AR session events
+    const modelViewer = modelViewerRef.current;
+    if (modelViewer) {
+      modelViewer.addEventListener('ar-status', (event) => {
+        if (event.detail.status === 'failed') {
+          // AR failed to start, stop audio
+          stop();
+        }
+      });
+
+      // Listen for AR session end (when user exits AR)
+      modelViewer.addEventListener('ar-tracking', (event) => {
+        if (event.detail.status === 'not-tracking') {
+          // AR tracking lost, might indicate session end
+          setTimeout(() => {
+            if (!modelViewer.arSession) {
+              stop();
+            }
+          }, 2000);
+        }
+      });
+
+      // Handle annotation visibility
+      modelViewer.addEventListener('load', () => {
+        // Ensure annotations are visible when model loads
+        if (model.annotations) {
+          model.annotations.forEach((annotation, index) => {
+            const hotspot = modelViewer.querySelector(`[slot="hotspot-${index}"]`);
+            const annotationElement = modelViewer.querySelector(`[slot="annotation-${index}"]`);
+            
+            if (hotspot && annotationElement) {
+              // Show annotation on hotspot click
+              hotspot.addEventListener('click', () => {
+                const isVisible = annotationElement.style.display !== 'none';
+                annotationElement.style.display = isVisible ? 'none' : 'block';
+              });
+            }
+          });
+        }
+      });
+    }
+
+    return () => {
+      if (modelViewer) {
+        modelViewer.removeEventListener('ar-status', handleARStart);
+        modelViewer.removeEventListener('ar-tracking', handleAREnd);
+      }
+    };
+  }, [model.annotations]);
+
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-[#1E3A8A] via-[#2563EB] to-[#3B82F6] overflow-hidden">
+      {/* Decorative background elements */}
+      <div className="absolute top-10 left-10 w-32 h-32 bg-indigo-400 opacity-30 rounded-full blur-2xl animate-pulse" />
+      <div className="absolute bottom-20 right-20 w-40 h-40 bg-blue-300 opacity-20 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute top-1/2 left-1/2 w-24 h-24 bg-indigo-200 opacity-20 rounded-full blur-2xl animate-pulse" style={{transform: 'translate(-50%, -50%)'}} />
+      
       <Head>
         <script src="https://www.gstatic.com/draco/versioned/decoders/1.5.6/draco_decoder.js"></script>
         <script src="https://www.gstatic.com/draco/versioned/decoders/1.5.6/draco_wasm_wrapper.js"></script>
@@ -136,24 +327,48 @@ function Single() {
         <style jsx global>{`
           .hotspot {
             display: block;
-            width: 20px;
-            height: 20px;
-            border-radius: 10px;
-            border: none;
-            background-color: blue;
+            width: 24px;
+            height: 24px;
+            border-radius: 12px;
+            border: 2px solid white;
+            background-color: #3B82F6;
             box-sizing: border-box;
             pointer-events: auto;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+          }
+          .hotspot:hover {
+            background-color: #2563EB;
+            transform: scale(1.1);
           }
           .annotation {
-            background-color: #888888;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.95), rgba(37, 99, 235, 0.95));
+            backdrop-filter: blur(10px);
             position: absolute;
-            transform: translate(10px, 10px);
-            border-radius: 10px;
-            padding: 10px;
-            color: #fff;
+            transform: translate(12px, 12px);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: white;
             z-index: 1000;
-            min-width: 120px;
-            font-size: 13px;
+            min-width: 140px;
+            max-width: 200px;
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 1.4;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.3s ease-in-out;
+          }
+          @keyframes fadeIn {
+            from {
+              opacity: 0;
+              transform: translate(12px, 12px) scale(0.8);
+            }
+            to {
+              opacity: 1;
+              transform: translate(12px, 12px) scale(1);
+            }
           }
           :not(:defined)>* {
             display: none;
@@ -162,12 +377,12 @@ function Single() {
       </Head>
 
       {/* Fixed Header: Back Button, Subject Title, and Microphone Icon */}
-      <div className="fixed top-0 left-0 right-0 z-10 flex justify-between items-center p-4 bg-white/20 backdrop-blur-lg border-b border-white/30">
+      <div className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center p-4 bg-white/10 backdrop-blur-lg border-b border-white/20">
         {/* Back Button and Subject Title */}
         <div className="flex items-center">
           <button
             onClick={() => router.back()}
-            className="flex items-center text-white font-semibold hover:text-gray-200 transition-colors mr-4"
+            className="flex items-center text-white font-semibold hover:text-white/80 transition-colors mr-4"
           >
             <FaArrowLeft className="mr-2" />
             Back
@@ -177,19 +392,37 @@ function Single() {
           </span>
         </div>
 
-        {/* Microphone Icon */}
-        <div className="flex items-center gap-4">
-          {isSpeaking ? (
-            <div className="p-2 bg-white/20 backdrop-blur-lg border border-white/30 rounded-full cursor-pointer text-white" onClick={() => pause()}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="bi bi-pause-circle-fill" viewBox="0 0 16 16">
-                <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM6.25 5C5.56 5 5 5.56 5 6.25v3.5a1.25 1.25 0 1 0 2.5 0v-3.5C7.5 5.56 6.94 5 6.25 5zm3.5 0c-.69 0-1.25.56-1.25 1.25v3.5a1.25 1.25 0 1 0 2.5 0v-3.5C11 5.56 10.44 5 9.75 5z" />
+        {/* Speech Controls */}
+        <div className="flex items-center gap-2">
+          {typeof window !== 'undefined' && window.speechSynthesis && window.speechSynthesis.paused ? (
+            // Resume button
+            <div className="p-2 bg-green-500/20 backdrop-blur-lg border border-green-500/30 rounded-full cursor-pointer text-green-200 hover:bg-green-500/30 transition-colors" onClick={resume} title="Resume Audio">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm3.844-8.791a.5.5 0 0 0-.876-.482L7.348 8.396a.5.5 0 0 0 .348.788l3.148.5z"/>
+              </svg>
+            </div>
+          ) : isSpeaking ? (
+            // Pause button
+            <div className="p-2 bg-yellow-500/20 backdrop-blur-lg border border-yellow-500/30 rounded-full cursor-pointer text-yellow-200 hover:bg-yellow-500/30 transition-colors" onClick={pause} title="Pause Audio">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zM5 6.25a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5A.75.75 0 0 1 5 6.25zm3.5 0a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5A.75.75 0 0 1 8.5 6.25z"/>
               </svg>
             </div>
           ) : (
-            <div className="p-2 bg-white/20 backdrop-blur-lg border border-white/30 rounded-full cursor-pointer text-white" onClick={() => { speak(model.description) }}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="bi bi-mic-fill" viewBox="0 0 16 16">
-                <path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z" />
-                <path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z" />
+            // Play button with microphone icon
+            <div className="p-2 bg-white/20 backdrop-blur-lg border border-white/30 rounded-full cursor-pointer text-white hover:bg-white/30 transition-colors" onClick={() => speak(model.description)} title="Listen to Description">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/>
+                <path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/>
+              </svg>
+            </div>
+          )}
+          
+          {/* Stop button (always visible when speaking or paused) */}
+          {(isSpeaking || (typeof window !== 'undefined' && window.speechSynthesis && window.speechSynthesis.paused)) && (
+            <div className="p-2 bg-red-500/20 backdrop-blur-lg border border-red-500/30 rounded-full cursor-pointer text-red-200 hover:bg-red-500/30 transition-colors" onClick={stop} title="Stop Audio">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zM5 4a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1H5z"/>
               </svg>
             </div>
           )}
@@ -197,120 +430,145 @@ function Single() {
       </div>
 
       {/* Main Content Area (starts below fixed header) */}
-      <main className=" overflow-y-auto">
-        {/* Model Viewer */}
-        <div className="w-full h-[90vh] mb-4">
-          <div className={styles.single}>
-            <model-viewer
-              ref={modelViewerRef}
-              src={model.model}
-              auto-rotate
-              ar
-              ar-modes="webxr scene-viewer quick-look"
-              camera-controls
-              poster={model.image}
-              environment-imag={model?.iosModel}
-              shadow-intensity="1"
-              autoplay
-              alt={model.description}
-              touch-action="pan-y"
-              style={{
-                '--model-color': model.modelColor || '#ffffff',
-                width: '100%',
-                height: '100%'
+      <main className="pt-16 overflow-y-auto">
+        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Model Viewer Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="mb-8"
+          >
+            <div className="w-full h-[500px] rounded-2xl overflow-hidden bg-gradient-to-br from-white/10 to-white/5 relative">
+              <model-viewer
+                ref={modelViewerRef}
+                src={model.model}
+                alt={model.title}
+                camera-controls
+                auto-rotate
+                shadow-intensity="1"
+                environment-image="neutral"
+                exposure="1"
+                ar
+                ar-modes="webxr scene-viewer quick-look"
+                camera-orbit="0deg 75deg 2.5m"
+                min-camera-orbit="auto auto 1m"
+                max-camera-orbit="auto auto 10m"
+                field-of-view="30deg"
+                style={{ width: '100%', height: '100%' }}
+              >
+                {model.annotations && model.annotations.map((annotation, index) => (
+                  <button
+                    key={index}
+                    className="hotspot"
+                    slot={`hotspot-${index}`}
+                    data-position={annotation.position}
+                    data-normal={annotation.normal}
+                    data-visibility-attribute="visible"
+                  >
+                    <div className="annotation" slot={`annotation-${index}`}>
+                      {annotation.text}
+                    </div>
+                  </button>
+                ))}
+              </model-viewer>
+            </div>
+          </motion.div>
+
+          {/* AR Button Section - Between Model and Info Cards */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="mb-8 flex justify-center"
+          >
+            <button
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-full px-6 py-3 transition-all duration-300 shadow-xl flex items-center gap-2 border-2 border-white/30 backdrop-blur-sm transform hover:scale-105"
+              onClick={() => {
+                // Start audio automatically when AR is activated
+                speak(model.description);
+                
+                // Try to trigger AR if available
+                const arButton = document.querySelector('[slot="ar-button"]');
+                if (arButton) {
+                  arButton.click();
+                } else {
+                  // Fallback message
+                  alert('AR functionality requires a compatible device and browser. Please try on a mobile device with AR support.');
+                }
               }}
-              id="model-viewer"
             >
-              {/* Add custom styles for model color */}
-              <style jsx global>{`
-                #model-viewer {
-                  --exposure: 0.5;
-                }
-                #model-viewer model-viewer::part(default) {
-                  background-color: transparent;
-                }
-                #model-viewer::part(model) {
-                  color: ${model.modelColor || '#ffffff'};
-                }
-              `}</style>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M8 0C3.582 0 0 3.582 0 8s3.582 8 8 8 8-3.582 8-8-3.582-8-8-8zM7 12.5c0 .276-.224.5-.5.5s-.5-.224-.5-.5.224-.5.5-.5.5.224.5.5zm3.5-6.5c0 .276-.224.5-.5.5h-6c-.276 0-.5-.224-.5-.5s.224-.5.5-.5h6c.276 0 .5.224.5.5z"/>
+              </svg>
+              View in your space
+            </button>
+          </motion.div>
 
-              <button id="ar-failure">AR is not tracking the floor!</button>
-              <div id="ar-prompt">
-                <img src="https://cdn.glitch.global/529f750b-7ad0-41f0-95f4-66cd14b039de/hand.png?v=1681597153624" />
-              </div>
-              
-              {/* Annotation Hotspots */}
-              {showAnnotations && model.annotations && model.annotations.map((annotation, index) => (
-                <button
-                  key={annotation.id || index}
-                  className="hotspot"
-                  slot={`hotspot-annotation-${index}`}
-                  data-position={`${annotation.position?.x || 0} ${annotation.position?.y || 0} ${annotation.position?.z || 0}`}
-                  data-normal="0 0 1"
-                >
-                  <div className="annotation">
-                    <div className="font-semibold">{annotation.title}</div>
-                    <div className="text-xs">{annotation.content}</div>
+          {/* Model Information Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+          >
+            {/* Model Details */}
+            <div className="bg-white/15 backdrop-blur-lg rounded-2xl p-6 shadow-2xl border border-white/20">
+              <h3 className="text-2xl font-bold text-white mb-4">Model Details</h3>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-lg font-semibold text-white mb-2">Title</h4>
+                  <p className="text-white/80">{model.title}</p>
+                </div>
+                <div>
+                  <h4 className="text-lg font-semibold text-white mb-2">Description</h4>
+                  <p className="text-white/80">{model.description}</p>
+                </div>
+                {model.modelColor && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-white mb-2">Model Color</h4>
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="w-6 h-6 rounded-full border-2 border-white/30" 
+                        style={{ backgroundColor: model.modelColor }}
+                      ></div>
+                      <span className="text-white/80">{model.modelColor}</span>
+                    </div>
                   </div>
-                </button>
-              ))}
-              
-              {/* AR Button - Positioned as in the image */}
-              <div
-                slot="ar-button"
-                id="ar-button"
-                className="p-3 absolute bottom-10 left-1/2 transform -translate-x-1/2"
-              >
-                <img
-                  className="cursor-pointer w-32 md:w-40"
-                  src="/images/space.png"
-                  alt="View in your space"
-                />
-              </div>
-              <audio slot="audio" src={model.audio} loop></audio>
-            </model-viewer>
-            
-            {/* Annotation Toggle Button */}
-            {model.annotations && model.annotations.length > 0 && (
-              <button
-                onClick={() => setShowAnnotations(!showAnnotations)}
-                className="absolute top-4 right-4 bg-white/20 backdrop-blur-lg border border-white/30 rounded-full p-2 text-white hover:bg-white/30 transition-colors z-10"
-                title={showAnnotations ? "Hide Annotations" : "Show Annotations"}
-              >
-                <FaMapPin size={16} />
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Title */}
-        <div className="bg-white/20 backdrop-blur-lg border border-white/30 rounded-lg p-4">
-          <h1 className="text-2xl text-white my-4 text-center">{model.title}</h1>
-
-          {/* Description */}
-          <div className="text-white mb-4">
-            {model.description}
-          </div>
-
-          {/* Customization Info - Only show if there are customizations */}
-          {model.annotations && model.annotations.length > 0 && (
-            <div className="bg-blue-500/10 border border-blue-300/20 rounded-lg p-3 mt-4">
-              <div className="flex items-center gap-2 text-blue-200 text-sm">
-                <FaMapPin size={14} />
-                <span>{model.annotations.length} annotation{model.annotations.length !== 1 ? 's' : ''} available</span>
-                {model.modelColor && model.modelColor !== "#ffffff" && (
-                  <span>• Custom color applied</span>
                 )}
               </div>
             </div>
+
+            {/* Model Customizations */}
+            {model.modelCustomizations && Object.keys(model.modelCustomizations).length > 0 && (
+              <div className="bg-white/15 backdrop-blur-lg rounded-2xl p-6 shadow-2xl border border-white/20">
+                <h3 className="text-2xl font-bold text-white mb-4">Customizations</h3>
+                <div className="space-y-4">
+                  {Object.entries(model.modelCustomizations).map(([key, value]) => (
+                    <div key={key}>
+                      <h4 className="text-lg font-semibold text-white mb-2 capitalize">{key.replace(/([A-Z])/g, ' $1')}</h4>
+                      <p className="text-white/80">{value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </motion.div>
+
+          {/* Error Display */}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="mt-8 bg-red-500/20 backdrop-blur-lg rounded-2xl p-6 shadow-2xl border border-red-500/30"
+            >
+              <h3 className="text-xl font-bold text-red-200 mb-2">Error</h3>
+              <p className="text-red-100">{error}</p>
+            </motion.div>
           )}
         </div>
-        {/* Add some padding at the bottom to ensure content isn't hidden by the chathead */}
-        {/* <div className="h-20"></div> */}
-
       </main>
 
-      {/* Add the FloatingChat component */}
       <FloatingChat />
     </div>
   );

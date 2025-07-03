@@ -19,7 +19,7 @@ const App = () => {
     // document.documentElement.classList.remove('light'); 
   }, []);
 
-  return (
+    return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />

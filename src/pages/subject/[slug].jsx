@@ -14,6 +14,7 @@ import { Modal } from 'antd'; // Import Modal from antd
 import { useRef } from 'react';
 import FloatingChat from "../../components/FloatingChat";
 import { useIsMobile } from "../../hooks/use-mobile";
+import { motion } from "framer-motion";
 
 const SingleSubject = () => {
   const router = useRouter();
@@ -153,7 +154,7 @@ const SingleSubject = () => {
            <script src="https://www.gstatic.com/draco/versioned/decoders/1.5.6/draco_wasm_wrapper.js"></script>
            <script src="https://www.gstatic.com/draco/versioned/decoders/1.5.6/draco_decoder.wasm"></script>
          </Head>
-        <p className="text-black dark:text-white">No models found for this subject or an error occurred.</p> 
+        <p className="text-white">No models found for this subject or an error occurred.</p> 
       </div>
     );
   }
@@ -163,6 +164,11 @@ const SingleSubject = () => {
     <Layout>
       {/* Applied gradient background to the main container */}
       <div className="relative min-h-screen bg-gradient-to-br from-[#1E3A8A] via-[#2563EB] to-[#3B82F6] overflow-hidden">
+        {/* Decorative background elements */}
+        <div className="absolute top-10 left-10 w-32 h-32 bg-indigo-400 opacity-30 rounded-full blur-2xl animate-pulse" />
+        <div className="absolute bottom-20 right-20 w-40 h-40 bg-blue-300 opacity-20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute top-1/2 left-1/2 w-24 h-24 bg-indigo-200 opacity-20 rounded-full blur-2xl animate-pulse" style={{transform: 'translate(-50%, -50%)'}} />
+        
         <Head>
           <script src="https://www.gstatic.com/draco/versioned/decoders/1.5.6/draco_decoder.js"></script>
           <script src="https://www.gstatic.com/draco/versioned/decoders/1.5.6/draco_wasm_wrapper.js"></script>
@@ -170,10 +176,10 @@ const SingleSubject = () => {
         </Head>
 
         {/* Fixed Header: Back Button, Subject Title, and Microphone Icon */}
-        <div className="fixed top-0 left-0 right-0 z-10 flex justify-between items-center p-4 bg-white/20 backdrop-blur-lg border-b border-white/30">
+        <div className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center p-4 bg-white/10 backdrop-blur-lg border-b border-white/20">
           <button
             onClick={() => router.back()}
-            className="flex items-center text-white font-semibold hover:text-gray-200 transition-colors"
+            className="flex items-center text-white font-semibold hover:text-white/80 transition-colors"
           >
             <FaArrowLeft className="mr-2" />
             Back
@@ -182,89 +188,94 @@ const SingleSubject = () => {
 
         {/* Main Content Area (starts below fixed header) */}
         <main className="pt-16 p-4 overflow-y-auto">
-          <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-3 gap-6">
-            {loading ? (
-              <div className="flex justify-center mt-8">
-                <div className="w-8 h-8 border-4 border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
-              </div>
-            ) : (
-              models.map((model, index) => (
-                <div
-                  key={index}
-                  onClick={() => router.push(`/${model._id}`)} // Link to the individual model page
-                  className="relative bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow cursor-pointer flex flex-col items-center p-4 group border border-gray-200 dark:border-gray-700"
-                >
-                  {/* Premium Crown Badge */}
-                  {/* Assuming model data has a property like isPremium */}
-                  {/* You might need to adjust this condition based on your actual data structure and logic */}
-                  {model.isPremium && user?.plan !== "premium" && (
-                     <span className="absolute top-3 left-3 bg-yellow-400 text-white px-2 py-1 rounded-full text-xs flex items-center gap-1 shadow">
-                       <FaCrown className="text-white" /> Premium
-                     </span>
-                  )}
-                  <div className="pt-4 flex flex-col items-center">
-                    <img
-                      src={model.image}
-                      alt={model.title}
-                      className="w-20 h-20 object-contain mb-4 drop-shadow-lg"
-                    />
-                    <div className="font-bold text-lg capitalize text-gray-900 dark:text-gray-900 text-center mb-2">
-                      {model.title}
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-          {/* Add some padding at the bottom to ensure content isn't hidden by the chathead */}
-          <div className="h-20"></div>
+          <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {/* Welcome Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="text-center mb-12"
+            >
+              <h2 className="text-4xl font-bold text-white mb-4">
+                Explore Models
+              </h2>
+              <p className="text-white/80 text-lg max-w-2xl mx-auto">
+                Discover interactive 3D models and AR experiences for this subject.
+              </p>
+            </motion.div>
 
+            {/* Models Grid */}
+            <div className="max-w-6xl mx-auto">
+              {loading ? (
+                <div className="flex justify-center items-center h-64">
+                  <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {models.map((model, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                      whileHover={{ 
+                        scale: 1.05,
+                        y: -8,
+                        transition: { duration: 0.2 }
+                      }}
+                      onClick={() => router.push(`/${model._id}`)} // Link to the individual model page
+                      className="group cursor-pointer"
+                    >
+                      <div className="relative bg-white/15 backdrop-blur-lg rounded-2xl p-6 shadow-2xl hover:shadow-3xl transition-all duration-300 border border-white/20 hover:border-white/30">
+                        {/* Premium Crown Badge */}
+                        {model.isPremium && user?.plan !== "premium" && (
+                          <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-lg z-10">
+                            <FaCrown className="text-white" size={10} />
+                            Premium
+                          </div>
+                        )}
+                        
+                        {/* Image Container with Bezel */}
+                        <div className="relative mb-4">
+                          <div className="w-full h-32 bg-gradient-to-br from-white/20 to-white/10 rounded-xl p-3 shadow-inner">
+                            <div className="w-full h-full bg-white/10 rounded-lg p-2 flex items-center justify-center">
+                              <img
+                                src={model.image}
+                                alt={model.title}
+                                className="w-16 h-16 object-contain drop-shadow-lg"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Model Title */}
+                        <div className="text-center">
+                          <h3 className="font-bold text-lg text-white capitalize mb-2 group-hover:text-white/90 transition-colors">
+                            {model.title}
+                          </h3>
+                          <div className="w-8 h-1 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full mx-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </main>
 
-        <FloatingChat />
-
-        {/* Quiz Modal (Placeholder) */}
-        {/* This modal is a placeholder for the quiz functionality */}
-        {/* The actual quiz UI and logic would need to be implemented here or in a separate component */}
-         <Modal
-          title="Quick Quiz!"
-          centered
+        {/* Quiz Modal */}
+        <Modal
+          title="Quiz"
           open={quizOpen}
-          onCancel={handleQuizModalClose} // Use the new handler
-          footer={[]}
+          onCancel={handleQuizModalClose}
+          footer={null}
+          width={600}
         >
-           {/* Quiz content goes here */}
-           {quizScore !== null ? (
-               <div>
-                   <h2 className="text-xl font-bold mb-4">Your Score: {quizScore} / {quizQuestions.length}</h2>
-                   {/* Display results or feedback */}
-               </div>
-           ) : (
-               <div>
-                   {quizQuestions.map((question, index) => (
-                       <div key={index} className="mb-4">
-                           <p className="font-semibold text-gray-800 mb-2">{question.question}</p>
-                           {/* Assuming answer options are provided, render them as radio buttons or similar */}
-                           {/* For simplicity, using a text input for now. Adapt based on actual question structure. */}
-                           <input
-                              type="text"
-                              value={userAnswers[index] || ''}
-                              onChange={(e) => handleAnswerChange(index, e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-800 bg-white" // Ensure input fields are visible
-                           />
-                           {/* Add feedback based on userAnswers and correctAnswers after submission */}
-                       </div>
-                   ))}
-                   <button
-                       onClick={submitQuiz}
-                       className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                   >
-                       Submit Quiz
-                   </button>
-               </div>
-           )}
+          {/* Quiz content here */}
         </Modal>
 
+        <FloatingChat />
       </div>
     </Layout>
   );

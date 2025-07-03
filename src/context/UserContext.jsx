@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { getCookie, removeCookies } from 'cookies-next';
-import { toast } from 'react-hot-toast';
+import { toast } from '@/components/ui/use-toast';
 
 const UserContext = createContext(null);
 
@@ -26,7 +26,14 @@ export const UserProvider = ({ children }) => {
         setUser(userRes.data[0] || null); // Set to null if no data, or the user object
       } catch (error) {
         console.error('Error fetching user data in UserProvider:', error);
-        toast.error('Failed to load user data.');
+        // Don't show toast error on initial load to avoid spam
+        if (user) {
+          toast({
+          title: "Error",
+          description: "Failed to load user data.",
+          variant: "destructive",
+        });
+        }
         setUser(null); // Ensure user is null on error
       } finally {
         setLoading(false);
