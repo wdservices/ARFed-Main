@@ -393,40 +393,40 @@ function Single() {
         </div>
 
         {/* Speech Controls */}
-        <div className="flex items-center gap-2">
-          {typeof window !== 'undefined' && window.speechSynthesis && window.speechSynthesis.paused ? (
-            // Resume button
-            <div className="p-2 bg-green-500/20 backdrop-blur-lg border border-green-500/30 rounded-full cursor-pointer text-green-200 hover:bg-green-500/30 transition-colors" onClick={resume} title="Resume Audio">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm3.844-8.791a.5.5 0 0 0-.876-.482L7.348 8.396a.5.5 0 0 0 .348.788l3.148.5z"/>
-              </svg>
-            </div>
-          ) : isSpeaking ? (
-            // Pause button
-            <div className="p-2 bg-yellow-500/20 backdrop-blur-lg border border-yellow-500/30 rounded-full cursor-pointer text-yellow-200 hover:bg-yellow-500/30 transition-colors" onClick={pause} title="Pause Audio">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zM5 6.25a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5A.75.75 0 0 1 5 6.25zm3.5 0a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5A.75.75 0 0 1 8.5 6.25z"/>
-              </svg>
-            </div>
-          ) : (
-            // Play button with microphone icon
-            <div className="p-2 bg-white/20 backdrop-blur-lg border border-white/30 rounded-full cursor-pointer text-white hover:bg-white/30 transition-colors" onClick={() => speak(model.description)} title="Listen to Description">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/>
-                <path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/>
-              </svg>
-            </div>
-          )}
-          
-          {/* Stop button (always visible when speaking or paused) */}
-          {(isSpeaking || (typeof window !== 'undefined' && window.speechSynthesis && window.speechSynthesis.paused)) && (
-            <div className="p-2 bg-red-500/20 backdrop-blur-lg border border-red-500/30 rounded-full cursor-pointer text-red-200 hover:bg-red-500/30 transition-colors" onClick={stop} title="Stop Audio">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zM5 4a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1H5z"/>
-              </svg>
-            </div>
-          )}
-        </div>
+        {typeof window !== 'undefined' && window.speechSynthesis && (
+          <div className="flex items-center gap-2">
+            {window.speechSynthesis.paused ? (
+              // Resume button
+              <div className="p-2 bg-green-500/20 backdrop-blur-lg border border-green-500/30 rounded-full cursor-pointer text-green-200 hover:bg-green-500/30 transition-colors" onClick={resume} title="Resume">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm3.844-8.791a.5.5 0 0 0-.876-.482L7.348 8.396a.5.5 0 0 0 .348.788l3.148.5z"/>
+                </svg>
+              </div>
+            ) : isSpeaking ? (
+              // Pause button
+              <div className="p-2 bg-yellow-500/20 backdrop-blur-lg border border-yellow-500/30 rounded-full cursor-pointer text-yellow-200 hover:bg-yellow-500/30 transition-colors" onClick={pause} title="Pause">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M5.5 3.5A.5.5 0 0 1 6 4v8a.5.5 0 0 1-1 0V4a.5.5 0 0 1 .5-.5zm5 0A.5.5 0 0 1 11 4v8a.5.5 0 0 1-1 0V4a.5.5 0 0 1 .5-.5z"/>
+                </svg>
+              </div>
+            ) : (
+              // Play button
+              <div className="p-2 bg-blue-500/20 backdrop-blur-lg border border-blue-500/30 rounded-full cursor-pointer text-blue-200 hover:bg-blue-500/30 transition-colors" onClick={() => speak(model.description)} title="Listen to Description">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M8 3.993c-2.21 0-4 1.79-4 4 0 2.21 1.79 4 4 4s4-1.79 4-4c0-2.21-1.79-4-4-4zm0 7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/>
+                </svg>
+              </div>
+            )}
+            {/* Stop button */}
+            {isSpeaking && (
+              <div className="p-2 bg-red-500/20 backdrop-blur-lg border border-red-500/30 rounded-full cursor-pointer text-red-200 hover:bg-red-500/30 transition-colors" onClick={stop} title="Stop">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M5.5 5.5A.5.5 0 0 1 6 6v4a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm5 0A.5.5 0 0 1 11 6v4a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5z"/>
+                </svg>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Main Content Area (starts below fixed header) */}

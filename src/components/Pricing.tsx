@@ -213,6 +213,7 @@ const Pricing = () => {
         open={isPaymentOpen} 
         closeModal={() => setIsPaymentOpen(false)} 
         user={selectedPlan}
+        refreshUser={() => {}}
       />
     </section>
   );

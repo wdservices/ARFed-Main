@@ -4,6 +4,7 @@ import { Modal } from "antd";
 import axios from "axios";
 import { toast } from "@/components/ui/use-toast";
 import { FaCrown, FaCheck, FaCalendarAlt, FaCalendarDay, FaCalendarWeek } from "react-icons/fa";
+import PropTypes from "prop-types";
 
 const Payment = ({ open, closeModal, user, refreshUser }) => {
   const id = getCookie("id");
@@ -209,7 +210,7 @@ const Payment = ({ open, closeModal, user, refreshUser }) => {
             );
             console.log(result.data);
             toast.success("Payment Successful! Your subscription is now active.");
-            if (typeof refreshUser === "function") {
+            if (refreshUser) {
               await refreshUser();
             }
             closeModal();
@@ -354,6 +355,13 @@ const Payment = ({ open, closeModal, user, refreshUser }) => {
       </div>
     </Modal>
   );
+};
+
+Payment.propTypes = {
+  open: PropTypes.bool.isRequired,
+  closeModal: PropTypes.func.isRequired,
+  user: PropTypes.object,
+  refreshUser: PropTypes.func,
 };
 
 export default Payment;
