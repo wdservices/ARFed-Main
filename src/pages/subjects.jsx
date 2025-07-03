@@ -282,52 +282,68 @@ const Subjects = () => {
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {subjects.map((subject, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  whileHover={{ 
-                    scale: 1.05,
-                    y: -8,
-                    transition: { duration: 0.2 }
-                  }}
-                  onClick={() => single(subject._id)}
-                  className="group cursor-pointer"
-                >
-                  <div className="relative bg-white/15 backdrop-blur-lg rounded-2xl p-6 shadow-2xl hover:shadow-3xl transition-all duration-300 border border-white/20 hover:border-white/30">
-                    {/* Premium Badge */}
-                    {user && subject._id !== "63dace7d1b0974f12c03d419" && user.plan === "free" && (
-                      <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-lg z-10">
-                        <FaCrown className="text-white" size={10} />
-                        Premium
-                      </div>
-                    )}
-                    
-                    {/* Image Container with Bezel */}
-                    <div className="relative mb-4">
-                      <div className="w-full h-32 bg-gradient-to-br from-white/20 to-white/10 rounded-xl p-3 shadow-inner">
-                        <div className="w-full h-full bg-white/10 rounded-lg p-2 flex items-center justify-center">
-                          <img
-                            src={subject.image}
-                            alt={subject.title}
-                            className="w-16 h-16 object-contain drop-shadow-lg"
-                          />
+              {subjects.map((subject, index) => {
+                // Calculate margins for first and last card in each row
+                const isFirstInRow = (index % 2 === 0);
+                const isLastInRowMd = ((index + 1) % 2 === 0);
+                const isFirstInRowLg = (index % 3 === 0);
+                const isLastInRowLg = ((index + 1) % 3 === 0);
+                const isFirstInRowXl = (index % 4 === 0);
+                const isLastInRowXl = ((index + 1) % 4 === 0);
+                let marginClass = '';
+                if (isFirstInRow) marginClass += ' md:ml-4';
+                if (isLastInRowMd) marginClass += ' md:mr-4';
+                if (isFirstInRowLg) marginClass += ' lg:ml-4';
+                if (isLastInRowLg) marginClass += ' lg:mr-4';
+                if (isFirstInRowXl) marginClass += ' xl:ml-4';
+                if (isLastInRowXl) marginClass += ' xl:mr-4';
+                return (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                    whileHover={{ 
+                      scale: 1.05,
+                      y: -8,
+                      transition: { duration: 0.2 }
+                    }}
+                    onClick={() => single(subject._id)}
+                    className={`group cursor-pointer${marginClass}`}
+                  >
+                    <div className="relative bg-white/15 backdrop-blur-lg rounded-2xl p-3 shadow-2xl hover:shadow-3xl transition-all duration-300 border border-white/20 hover:border-white/30">
+                      {/* Premium Badge */}
+                      {user && subject._id !== "63dace7d1b0974f12c03d419" && user.plan === "free" && (
+                        <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-lg z-10">
+                          <FaCrown className="text-white" size={10} />
+                          Premium
+                        </div>
+                      )}
+                      
+                      {/* Image Container with Bezel */}
+                      <div className="relative mb-2">
+                        <div className="w-full h-40 bg-gradient-to-br from-white/20 to-white/10 rounded-xl p-1 shadow-inner">
+                          <div className="w-full h-full bg-white/10 rounded-lg flex items-center justify-center">
+                            <img
+                              src={subject.image}
+                              alt={subject.title}
+                              className="w-24 h-24 object-contain drop-shadow-lg"
+                            />
+                          </div>
                         </div>
                       </div>
+                      
+                      {/* Subject Title */}
+                      <div className="text-center">
+                        <h3 className="font-bold text-xs text-white capitalize mb-2 group-hover:text-white/90 transition-colors subject-title">
+                          {subject.title}
+                        </h3>
+                        <div className="w-8 h-1 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full mx-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      </div>
                     </div>
-                    
-                    {/* Subject Title */}
-                    <div className="text-center">
-                      <h3 className="font-bold text-sm text-white capitalize mb-2 group-hover:text-white/90 transition-colors subject-title">
-                        {subject.title}
-                      </h3>
-                      <div className="w-8 h-1 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full mx-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                );
+              })}
             </div>
           )}
         </div>

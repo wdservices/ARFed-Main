@@ -6,7 +6,7 @@ import { toast } from "@/components/ui/use-toast";
 import { FaCrown, FaCheck, FaCalendarAlt, FaCalendarDay, FaCalendarWeek } from "react-icons/fa";
 import PropTypes from "prop-types";
 
-const Payment = ({ open, closeModal, user, refreshUser }) => {
+const Payment = ({ open, closeModal, user, refreshUser = () => {} }) => {
   const id = getCookie("id");
   const token = getCookie("token");
   const [selectedPlan, setSelectedPlan] = useState(null);

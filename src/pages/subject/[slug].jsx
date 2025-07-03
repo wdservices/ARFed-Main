@@ -9,7 +9,7 @@ import Layout from "../../components/Layout";
 import axios from "axios";
 import { getCookie } from "cookies-next";
 import { useRouter } from "next/router";
-import { FaCrown, FaMicrophone, FaArrowLeft } from "react-icons/fa"; 
+import { FaCrown, FaMicrophone, FaArrowLeft, FaSearch } from "react-icons/fa"; 
 import { Modal } from 'antd'; // Import Modal from antd
 import { useRef } from 'react';
 import FloatingChat from "../../components/FloatingChat";
@@ -28,6 +28,9 @@ const SingleSubject = () => {
   const [userAnswers, setUserAnswers] = useState({});
   const [currentModel, setCurrentModel] = useState(null);
   const [chatOpen, setChatOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
+  const searchInputRef = useRef(null);
 
   const token = getCookie("token");
   const id = getCookie("id");
@@ -159,6 +162,18 @@ const SingleSubject = () => {
     );
   }
 
+  // Add a click-away listener to close the search input when clicking outside
+  useEffect(() => {
+    if (!showSearch) return;
+    function handleClick(e) {
+      if (searchInputRef.current && !searchInputRef.current.parentNode.contains(e.target)) {
+        setShowSearch(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [showSearch]);
+
   return (
     // Re-wrapped with Layout component
     <Layout>
@@ -184,6 +199,38 @@ const SingleSubject = () => {
             <FaArrowLeft className="mr-2" />
             Back
           </button>
+          <div className="flex items-center gap-4">
+            {/* Search Icon */}
+            <button
+              onClick={() => {
+                setShowSearch((v) => !v);
+                setTimeout(() => {
+                  if (searchInputRef.current) searchInputRef.current.focus();
+                }, 100);
+              }}
+              className="text-white hover:text-cyan-300 transition-colors text-xl"
+              aria-label="Search"
+            >
+              <FaSearch />
+            </button>
+          </div>
+          {/* Pop-out Search Input */}
+          {showSearch && (
+            <div className="absolute left-1/2 top-full mt-2 -translate-x-1/2 w-full max-w-md px-4">
+              <div className="flex items-center bg-white/20 rounded-full px-4 py-2 shadow-lg animate-fade-in">
+                <FaSearch className="text-white/80 mr-2" />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Search models..."
+                  className="bg-transparent outline-none text-white placeholder-white/60 flex-1"
+                />
+                <button onClick={() => setShowSearch(false)} className="ml-2 text-white/60 hover:text-white">✕</button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Main Content Area (starts below fixed header) */}
@@ -212,52 +259,66 @@ const SingleSubject = () => {
                 </div>
               ) : (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                  {models.map((model, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.5, delay: index * 0.1 }}
-                      whileHover={{ 
-                        scale: 1.05,
-                        y: -8,
-                        transition: { duration: 0.2 }
-                      }}
-                      onClick={() => router.push(`/${model._id}`)} // Link to the individual model page
-                      className="group cursor-pointer"
-                    >
-                      <div className="relative bg-white/15 backdrop-blur-lg rounded-2xl p-6 shadow-2xl hover:shadow-3xl transition-all duration-300 border border-white/20 hover:border-white/30">
-                        {/* Premium Crown Badge */}
-                        {model.isPremium && user?.plan !== "premium" && (
-                          <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-lg z-10">
-                            <FaCrown className="text-white" size={10} />
-                            Premium
-                          </div>
-                        )}
-                        
-                        {/* Image Container with Bezel */}
-                        <div className="relative mb-4">
-                          <div className="w-full h-32 bg-gradient-to-br from-white/20 to-white/10 rounded-xl p-3 shadow-inner">
-                            <div className="w-full h-full bg-white/10 rounded-lg p-2 flex items-center justify-center">
-                              <img
-                                src={model.image}
-                                alt={model.title}
-                                className="w-16 h-16 object-contain drop-shadow-lg"
-                              />
+                  {models.filter(model => model.title.toLowerCase().includes(search.toLowerCase())).map((model, index) => {
+                    // Calculate margins for first and last card in each row
+                    const isFirstInRow = (index % 2 === 0);
+                    const isLastInRowMd = ((index + 1) % 2 === 0);
+                    const isFirstInRowLg = (index % 3 === 0);
+                    const isLastInRowLg = ((index + 1) % 3 === 0);
+                    const isFirstInRowXl = (index % 4 === 0);
+                    const isLastInRowXl = ((index + 1) % 4 === 0);
+                    let marginClass = '';
+                    if (isFirstInRow) marginClass += ' md:ml-4';
+                    if (isLastInRowMd) marginClass += ' md:mr-4';
+                    if (isFirstInRowLg) marginClass += ' lg:ml-4';
+                    if (isLastInRowLg) marginClass += ' lg:mr-4';
+                    if (isFirstInRowXl) marginClass += ' xl:ml-4';
+                    if (isLastInRowXl) marginClass += ' xl:mr-4';
+                    return (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.5, delay: index * 0.1 }}
+                        whileHover={{ 
+                          scale: 1.05,
+                          y: -8,
+                          transition: { duration: 0.2 }
+                        }}
+                        onClick={() => router.push(`/${model._id}`)}
+                        className={`group cursor-pointer${marginClass}`}
+                      >
+                        <div className="relative bg-white/15 backdrop-blur-lg rounded-2xl p-3 shadow-2xl hover:shadow-3xl transition-all duration-300 border border-white/20 hover:border-white/30">
+                          {/* Premium Crown Badge */}
+                          {model.isPremium && user?.plan !== "premium" && (
+                            <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-lg z-10">
+                              <FaCrown className="text-white" size={10} />
+                              Premium
+                            </div>
+                          )}
+                          {/* Image Container with Bezel */}
+                          <div className="relative mb-2">
+                            <div className="w-full h-40 bg-gradient-to-br from-white/20 to-white/10 rounded-xl p-1 shadow-inner">
+                              <div className="w-full h-full bg-white/10 rounded-lg flex items-center justify-center">
+                                <img
+                                  src={model.image}
+                                  alt={model.title}
+                                  className="w-24 h-24 object-contain drop-shadow-lg"
+                                />
+                              </div>
                             </div>
                           </div>
+                          {/* Model Title */}
+                          <div className="text-center">
+                            <h3 className="font-bold text-xs text-white capitalize mb-2 group-hover:text-white/90 transition-colors line-clamp-2">
+                              {model.title}
+                            </h3>
+                            <div className="w-8 h-1 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full mx-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                          </div>
                         </div>
-                        
-                        {/* Model Title */}
-                        <div className="text-center">
-                          <h3 className="font-bold text-lg text-white capitalize mb-2 group-hover:text-white/90 transition-colors">
-                            {model.title}
-                          </h3>
-                          <div className="w-8 h-1 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full mx-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
+                      </motion.div>
+                    );
+                  })}
                 </div>
               )}
             </div>
