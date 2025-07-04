@@ -2,7 +2,6 @@ import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
-import { deleteCookie } from 'cookies-next';
 import { 
   FaUsers, 
   FaBook, 
@@ -18,7 +17,7 @@ const AdminLayout = ({ children, title }) => {
   const router = useRouter();
 
   const logout = () => {
-    deleteCookie("token");
+    document.cookie = "token=; Max-Age=0; path=/";
     router.push("/login");
   };
 

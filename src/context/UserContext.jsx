@@ -23,7 +23,7 @@ export const UserProvider = ({ children }) => {
             'auth-token': token,
           },
         });
-        setUser(userRes.data[0] || null); // Set to null if no data, or the user object
+        setUser(userRes.data || null); // Accepts either an object or null
       } catch (error) {
         console.error('Error fetching user data in UserProvider:', error);
         // Don't show toast error on initial load to avoid spam
