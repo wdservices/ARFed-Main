@@ -14,6 +14,7 @@ const Payment = ({ open, closeModal, user, refreshUser = () => {} }) => {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isScriptLoaded, setIsScriptLoaded] = useState(false);
+  const [currency, setCurrency] = useState("NGN");
 
   useEffect(() => {
     let script = null;
@@ -74,10 +75,27 @@ const Payment = ({ open, closeModal, user, refreshUser = () => {} }) => {
   }
 
   const plans = [
+    // Daily Plan (conditionally included)
+    ...(currency === "USD"
+      ? [{
+          id: "daily",
+          name: "Daily Plan",
+          price: "$0.30",
+          period: "per day",
+          icon: <FaCalendarDay className="text-orange-500" size={24} />,
+          features: [
+            "Full access to all AR lessons for 24 hours",
+            "AI tutor assistance",
+            "Basic progress tracking"
+          ],
+          amount: 0.30,
+          planId: 143605
+        }]
+      : []),
     {
       id: "weekly",
       name: "Weekly Plan",
-      price: "₦1,500",
+      price: currency === "NGN" ? "₦1,500" : "$1.10",
       period: "per week",
       icon: <FaCalendarWeek className="text-pink-500" size={24} />,
       features: [
@@ -86,13 +104,13 @@ const Payment = ({ open, closeModal, user, refreshUser = () => {} }) => {
         "Basic progress tracking",
         "24-hour support"
       ],
-      amount: 1500,
-      planId: 143575
+      amount: currency === "NGN" ? 1500 : 1.10,
+      planId: currency === "NGN" ? 143575 : 143598
     },
     {
       id: "monthly",
       name: "Monthly Plan",
-      price: "₦10,500",
+      price: currency === "NGN" ? "₦10,500" : "$7.99",
       period: "per month",
       icon: <FaCalendarAlt className="text-blue-500" size={24} />,
       features: [
@@ -102,14 +120,14 @@ const Payment = ({ open, closeModal, user, refreshUser = () => {} }) => {
         "Priority support",
         "Custom lesson plans"
       ],
-      amount: 10500,
-      planId: 142599,
+      amount: currency === "NGN" ? 10500 : 7.99,
+      planId: currency === "NGN" ? 142599 : 143599,
       popular: true
     },
     {
       id: "termly",
       name: "Termly Plan",
-      price: "₦31,000",
+      price: currency === "NGN" ? "₦31,000" : "$23.99",
       period: "per 3 months",
       icon: <FaCalendarWeek className="text-green-500" size={24} />,
       features: [
@@ -119,13 +137,13 @@ const Payment = ({ open, closeModal, user, refreshUser = () => {} }) => {
         "Dedicated support",
         "Early access to new features"
       ],
-      amount: 31000,
-      planId: 142601
+      amount: currency === "NGN" ? 31000 : 23.99,
+      planId: currency === "NGN" ? 142601 : 143601
     },
     {
       id: "yearly",
       name: "Yearly Plan",
-      price: "₦126,000",
+      price: currency === "NGN" ? "₦126,000" : "$99.99",
       period: "per year",
       icon: <FaCrown className="text-purple-500" size={24} />,
       features: [
@@ -136,8 +154,8 @@ const Payment = ({ open, closeModal, user, refreshUser = () => {} }) => {
         "Priority feature requests",
         "2 months free"
       ],
-      amount: 126000,
-      planId: 142600
+      amount: currency === "NGN" ? 126000 : 99.99,
+      planId: currency === "NGN" ? 142600 : 143602
     }
   ];
 
@@ -161,7 +179,7 @@ const Payment = ({ open, closeModal, user, refreshUser = () => {} }) => {
         tx_ref: generateReferenceKey(25),
         amount: plan.amount,
         payment_plan: plan.planId,
-        currency: "NGN",
+        currency: currency,
         payment_options: "card,banktransfer,ussd",
         customer: {
           email: user?.email,
@@ -264,6 +282,22 @@ const Payment = ({ open, closeModal, user, refreshUser = () => {} }) => {
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Choose Your Plan</h2>
           <p className="text-gray-600 dark:text-gray-400 mt-2">Select a plan that works best for you</p>
+          <div className="flex justify-center mt-4">
+            <button
+              className={`px-4 py-2 rounded-l-lg border ${currency === "NGN" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"}`}
+              onClick={() => setCurrency("NGN")}
+              disabled={currency === "NGN"}
+            >
+              Pay in Naira (₦)
+            </button>
+            <button
+              className={`px-4 py-2 rounded-r-lg border -ml-px ${currency === "USD" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"}`}
+              onClick={() => setCurrency("USD")}
+              disabled={currency === "USD"}
+            >
+              Pay in USD ($)
+            </button>
+          </div>
         </div>
       }
       centered
@@ -274,7 +308,7 @@ const Payment = ({ open, closeModal, user, refreshUser = () => {} }) => {
       className="subscription-modal"
     >
       <div className={`grid ${isMobile() ? 'grid-cols-1 gap-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'} p-4`}>
-        {plans.filter(plan => plan.id !== "daily").map((plan, index) => (
+        {plans.map((plan, index) => (
           <div
             key={plan.id}
             className={`relative bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-2 ${

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link.js";
 import axios from "axios";
 import { motion } from "framer-motion";
