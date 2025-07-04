@@ -37,7 +37,7 @@ const Users = () => {
 
   const deleteUser = async (id) => {
     try {
-      await axios.delete(`https://arfed-api.onrender.com/api/user/${id}`, {
+      await axios.delete(`https://arfed-api.onrender.com/api/users/${id}`, {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
@@ -47,8 +47,9 @@ const Users = () => {
       toast.success("User deleted successfully");
       fetchData();
     } catch (error) {
-      console.error(error);
-      toast.error("Failed to delete user");
+      console.error('Delete user error:', error, error?.response?.data);
+      const message = error?.response?.data?.message || error?.message || 'Failed to delete user';
+      toast.error(`Failed to delete user: ${message}`);
     }
   };
 
@@ -78,7 +79,7 @@ const Users = () => {
     if (!window.confirm(`Delete ${selectedUsers.length} selected user(s)? This cannot be undone.`)) return;
     try {
       await Promise.all(selectedUsers.map((id) =>
-        axios.delete(`https://arfed-api.onrender.com/api/user/${id}`, {
+        axios.delete(`https://arfed-api.onrender.com/api/users/${id}`, {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
@@ -91,8 +92,9 @@ const Users = () => {
       setSelectAll(false);
       fetchData();
     } catch (error) {
-      console.error(error);
-      toast.error("Failed to delete selected users");
+      console.error('Bulk delete error:', error, error?.response?.data);
+      const message = error?.response?.data?.message || error?.message || 'Failed to delete selected users';
+      toast.error(`Failed to delete selected users: ${message}`);
     }
   };
 

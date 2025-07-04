@@ -32,8 +32,7 @@ const Signup = () => {
               name: name,
               email: email,
               password: password,
-              accountType: accountType,
-              organizationName: accountType === "group" ? organizationName : null,
+              ...(accountType === "group" ? { organizationName } : {}),
             },
             {
               headers: {
