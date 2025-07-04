@@ -37,7 +37,7 @@ const Users = () => {
 
   const deleteUser = async (id) => {
     try {
-      await axios.delete(`https://arfed-api.onrender.com/api/users/${id}`, {
+      await axios.delete(`https://arfed-api.onrender.com/api/user/${id}`, {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
@@ -79,7 +79,7 @@ const Users = () => {
     if (!window.confirm(`Delete ${selectedUsers.length} selected user(s)? This cannot be undone.`)) return;
     try {
       await Promise.all(selectedUsers.map((id) =>
-        axios.delete(`https://arfed-api.onrender.com/api/users/${id}`, {
+        axios.delete(`https://arfed-api.onrender.com/api/user/${id}`, {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
