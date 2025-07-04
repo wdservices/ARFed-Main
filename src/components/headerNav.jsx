@@ -22,6 +22,9 @@ const HeaderNav = () => {
                     <Link href="/subject/physics"><div className="px-4 py-2 hover:bg-gray-100">Physics</div></Link>
                   </div>
                 </div>
+                <Link href="/how-to-use" className="text-white hover:text-white/80 px-3 py-2 rounded-md text-sm font-medium">
+                  How to Use
+                </Link>
                 <a href="#pricing">
                     <div>Pricing</div>
                 </a>

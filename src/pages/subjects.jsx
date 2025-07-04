@@ -218,6 +218,9 @@ const Subjects = () => {
             <Link href="/faq" className="text-white/80 hover:text-white transition-colors py-2">
               FAQ
             </Link>
+            <Link href="/how-to-use" className="text-white/80 hover:text-white transition-colors py-2">
+              How to Use
+            </Link>
             {/* Logout Button at the bottom of the menu */}
             <button onClick={logout} className="mt-auto px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition w-full">Logout</button>
           </nav>

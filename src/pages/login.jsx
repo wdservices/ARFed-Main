@@ -19,6 +19,21 @@ const Login = () => {
   const router = useRouter();
   const isMobile = useIsMobile();
 
+  // Load saved email from localStorage on component mount
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('arfed_email');
+    if (savedEmail) {
+      setEmail(savedEmail);
+    }
+  }, []);
+
+  // Save email to localStorage when it changes
+  const handleEmailChange = (e) => {
+    const newEmail = e.target.value;
+    setEmail(newEmail);
+    localStorage.setItem('arfed_email', newEmail);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -109,7 +124,7 @@ const Login = () => {
           >
             <input
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={handleEmailChange}
               type="email"
               required
               className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-gray-300 focus:border-white/40 focus:ring-2 focus:ring-white/20 outline-none transition-all duration-200"
