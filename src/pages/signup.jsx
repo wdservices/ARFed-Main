@@ -226,7 +226,7 @@ const Signup = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
-          className="mt-6 text-center text-gray-200"
+          className="mt-6 mb-8 text-center text-gray-200"
         >
           Already have an account?{" "}
           <Link href="/login" className="text-white font-medium hover:underline">
@@ -234,8 +234,8 @@ const Signup = () => {
           </Link>
         </motion.div>
       </div>
-      <div className="absolute bottom-6 left-0 w-full flex justify-center z-10">
-        <span className="text-white/80 text-sm">From Waves Digital Services</span>
+      <div className="absolute left-0 w-full flex justify-center z-10" style={{ bottom: 24, pointerEvents: 'none' }}>
+        <span className="text-white/80 text-sm" style={{ marginTop: 32, marginBottom: 0 }}>From Waves Digital Services</span>
       </div>
       <ToastContainer position="top-center" theme="dark" />
     </div>
