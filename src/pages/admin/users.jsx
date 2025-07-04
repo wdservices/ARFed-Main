@@ -12,6 +12,8 @@ const Users = () => {
   const token = getCookie("token");
   const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -56,6 +58,44 @@ const Users = () => {
     toast.success("All emails copied to clipboard!");
   };
 
+  const handleSelectUser = (id) => {
+    setSelectedUsers((prev) =>
+      prev.includes(id) ? prev.filter((uid) => uid !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedUsers([]);
+    } else {
+      setSelectedUsers(filteredUsers.map((user) => user._id));
+    }
+    setSelectAll(!selectAll);
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedUsers.length === 0) return;
+    if (!window.confirm(`Delete ${selectedUsers.length} selected user(s)? This cannot be undone.`)) return;
+    try {
+      await Promise.all(selectedUsers.map((id) =>
+        axios.delete(`https://arfed-api.onrender.com/api/user/${id}`, {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            "auth-token": token,
+          },
+        })
+      ));
+      toast.success("Selected users deleted successfully");
+      setSelectedUsers([]);
+      setSelectAll(false);
+      fetchData();
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete selected users");
+    }
+  };
+
   const filteredUsers = users.filter(user =>
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
@@ -69,24 +109,44 @@ const Users = () => {
       </Head>
 
       {/* Search and Actions */}
-      <div className="flex justify-between items-center mb-6">
-        <div className="relative w-96">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
+        <div className="flex-1 flex gap-2 items-center">
           <input
-            type="text"
-            placeholder="Search users..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 pl-10 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/60 focus:outline-none focus:border-white/40"
+            type="checkbox"
+            checked={selectAll && filteredUsers.length > 0 && selectedUsers.length === filteredUsers.length}
+            onChange={handleSelectAll}
+            className="accent-indigo-600 w-5 h-5"
+            title="Select All"
           />
-          <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-white/60 w-3 h-3" />
+          <span className="text-white/80 text-sm">Select All</span>
+          <div className="relative w-96 ml-4">
+            <input
+              type="text"
+              placeholder="Search users..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-4 py-2 pl-10 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/60 focus:outline-none focus:border-white/40"
+            />
+            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-white/60 w-3 h-3" />
+          </div>
         </div>
-        <button
-          onClick={copyAllEmails}
-          className="flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
-        >
-          <FaCopy className="mr-2 w-3 h-3" />
-          Copy All Emails
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={copyAllEmails}
+            className="flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+          >
+            <FaCopy className="mr-2 w-3 h-3" />
+            Copy All Emails
+          </button>
+          <button
+            onClick={handleBulkDelete}
+            disabled={selectedUsers.length === 0}
+            className={`flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl ${selectedUsers.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            <FaTrash className="mr-2 w-3 h-3" />
+            Delete Selected
+          </button>
+        </div>
       </div>
 
       {/* Users Grid */}
@@ -101,6 +161,13 @@ const Users = () => {
           >
             <div className="flex">
               <div className="w-16 bg-white/5 p-4 flex flex-col items-center justify-center gap-4">
+                <input
+                  type="checkbox"
+                  checked={selectedUsers.includes(user._id)}
+                  onChange={() => handleSelectUser(user._id)}
+                  className="accent-indigo-600 w-5 h-5 mb-2"
+                  title="Select user"
+                />
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(user.email);
