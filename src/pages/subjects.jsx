@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { getCookie, deleteCookie } from "cookies-next";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/pagination";
@@ -18,13 +17,14 @@ import { motion } from "framer-motion";
 
 const Subjects = () => {
   const { user } = useUser();
-  const token = getCookie("token");
+  const [token, setToken] = useState(null);
+  const [id, setId] = useState(null);
+  const [cookiesLoaded, setCookiesLoaded] = useState(false);
   const [subjects, setSubjects] = useState([]);
   const [ads, setAds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [open, openModal] = useState(false);
   const router = useRouter();
-  const id = getCookie("id");
   const [darkMode, setDarkMode] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -36,12 +36,23 @@ const Subjects = () => {
   };
 
   const logout = () => {
-    deleteCookie("token");
-    deleteCookie("id");
+    document.cookie = "token=; Max-Age=0; path=/";
+    document.cookie = "id=; Max-Age=0; path=/";
     router.push("/");
   };
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const tokenValue = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+      const idValue = document.cookie.split('; ').find(row => row.startsWith('id='))?.split('=')[1];
+      setToken(tokenValue);
+      setId(idValue);
+      setCookiesLoaded(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!cookiesLoaded) return;
     const fetchSubjectsAndAds = async () => {
       try {
         const [adsRes, subjectsRes] = await Promise.all([
@@ -73,21 +84,16 @@ const Subjects = () => {
     };
 
     if (token && id) {
-      Promise.all([
-        fetchSubjectsAndAds()
-      ])
-        .finally(() => {
-          setLoading(false);
-        });
+      fetchSubjectsAndAds().finally(() => setLoading(false));
     } else {
+      setLoading(false);
       toast({
         title: "Authentication Required",
         description: "Please log in to continue.",
         variant: "destructive",
       });
     }
-
-  }, [token, id]);
+  }, [token, id, cookiesLoaded]);
 
   const single = (subjectId) => {
     if (user && (subjectId === "63dace7d1b0974f12c03d419" || user.plan === "premium")) {
