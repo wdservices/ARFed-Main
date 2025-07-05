@@ -24,6 +24,7 @@ const Models = () => {
   const [model, setModel] = useState("");
   const [single, setSingle] = useState("");
   const [iosModel, setIos] = useState("");
+  const [selectedSubject, setSelectedSubject] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [show3DConfig, setShow3DConfig] = useState(false);
   const [modelUrl, setModelUrl] = useState("");
@@ -70,6 +71,7 @@ const Models = () => {
     setModel(model.model);
     setSingle(model._id);
     setIos(model?.iosModel);
+    setSelectedSubject(model.subjectId || "");
   };
 
   const editModel = async () => {
@@ -82,7 +84,8 @@ const Models = () => {
           description,
           image,
           model,
-          iosModel
+          iosModel,
+          subjectId: selectedSubject
         },
         {
           headers: {
@@ -120,9 +123,11 @@ const Models = () => {
     }
   };
 
-  const filteredModels = models.filter(model =>
-    model.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredModels = models.filter(model => {
+    const matchesSearch = model.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSubject = !subject || model.subjectId === subject;
+    return matchesSearch && matchesSubject;
+  });
 
   return (
     <AdminLayout title="Models">
@@ -145,8 +150,9 @@ const Models = () => {
         </div>
         <div className="flex gap-4">
           <select
+            value={subject}
             onChange={(e) => setSubject(e.target.value)}
-            className="px-4 py-2 bg-[#232946] border border-indigo-400 rounded-lg text-white focus:outline-none focus:border-indigo-500 shadow-md"
+            className="px-4 py-2 bg-[#232946] border border-indigo-400 rounded-lg text-white focus:outline-none focus:border-indigo-500 shadow-md min-w-[200px]"
           >
             <option value="">All Subjects</option>
             {subjects.map((subject, index) => (
@@ -155,12 +161,41 @@ const Models = () => {
               </option>
             ))}
           </select>
+          {(subject || searchTerm) && (
+            <button
+              onClick={() => {
+                setSubject("");
+                setSearchTerm("");
+              }}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all duration-200 shadow-md"
+            >
+              Clear Filters
+            </button>
+          )}
         </div>
       </div>
 
       {/* Models Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredModels.map((model, index) => (
+      {filteredModels.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="text-white/60 text-lg mb-4">
+            {searchTerm || subject ? "No models found matching your filters." : "No models found."}
+          </div>
+          {(searchTerm || subject) && (
+            <button
+              onClick={() => {
+                setSubject("");
+                setSearchTerm("");
+              }}
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all duration-200"
+            >
+              Clear Filters
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredModels.map((model, index) => (
           <motion.div
             key={index}
             initial={{ y: 20, opacity: 0 }}
@@ -193,14 +228,20 @@ const Models = () => {
                 <div className="text-white/60 text-sm mb-4 max-h-16 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-indigo-400 scrollbar-track-transparent">
                   {model.description}
                 </div>
-                <span className="text-white/60 text-xs">
-                  {new Date(model.date).toLocaleDateString()}
-                </span>
+                <div className="flex justify-between items-center text-white/60 text-xs">
+                  <span>{new Date(model.date).toLocaleDateString()}</span>
+                  {model.subjectId && (
+                    <span className="bg-indigo-600/20 text-indigo-300 px-2 py-1 rounded-full text-xs">
+                      {subjects.find(s => s._id === model.subjectId)?.title || 'Unknown Subject'}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </motion.div>
         ))}
-      </div>
+        </div>
+      )}
 
       {/* Edit/Add Modal */}
       <Modal
@@ -232,6 +273,21 @@ const Models = () => {
               placeholder="Enter model description"
               rows={4}
             />
+          </div>
+          <div>
+            <label className="block text-indigo-200 mb-2">Subject</label>
+            <select
+              value={selectedSubject}
+              onChange={(e) => setSelectedSubject(e.target.value)}
+              className="w-full px-4 py-2 bg-[#181f2a] border border-indigo-400 rounded-lg text-white focus:outline-none focus:border-indigo-500 shadow-md"
+            >
+              <option value="">Select a Subject</option>
+              {subjects.map((subject, index) => (
+                <option key={index} value={subject._id}>
+                  {subject.title}
+                </option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="block text-indigo-200 mb-2">Image URL</label>

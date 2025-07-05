@@ -24,10 +24,28 @@ const Pricing = () => {
 
   const plans = [
     {
+      id: "daily",
+      name: "Daily Plan",
+      price: "₦500",
+      usdPrice: "$1",
+      period: "/day",
+      description: "All access to premium AR lessons & AI tutoring for one day.",
+      features: [
+        "Unlimited AR lessons",
+        "Advanced AI chat tutor",
+        "Progress tracking"
+      ],
+      icon: <Smartphone className="text-purple-500" size={24} />,
+      popular: false,
+      cta: "Choose Daily Plan",
+      amount: 500,
+      planId: 143651
+    },
+    {
       id: "weekly",
       name: "Weekly Plan",
-      price: "₦1,500",
-      usdPrice: "$1.10",
+      price: "₦2,200",
+      usdPrice: "$2.99",
       period: "/week",
       description: "All access to premium AR lessons & AI tutoring for one week.",
       features: [
@@ -39,8 +57,8 @@ const Pricing = () => {
       icon: <Smartphone className="text-purple-500" size={24} />,
       popular: false,
       cta: "Choose Weekly Plan",
-      amount: 1500,
-      planId: 143575
+      amount: 2200,
+      planId: 143652
     },
     {
       id: "monthly",

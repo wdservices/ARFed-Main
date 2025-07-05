@@ -80,7 +80,7 @@ const Payment = ({ open, closeModal, user, refreshUser = () => {} }) => {
       ? [{
           id: "daily",
           name: "Daily Plan",
-          price: "$0.30",
+          price: "$1",
           period: "per day",
           icon: <FaCalendarDay className="text-orange-500" size={24} />,
           features: [
@@ -88,14 +88,14 @@ const Payment = ({ open, closeModal, user, refreshUser = () => {} }) => {
             "AI tutor assistance",
             "Basic progress tracking"
           ],
-          amount: 0.30,
-          planId: 143605
+          amount: 1.00,
+          planId: 143651
         }]
       : []),
     {
       id: "weekly",
       name: "Weekly Plan",
-      price: currency === "NGN" ? "₦1,500" : "$1.10",
+      price: currency === "NGN" ? "₦1,500" : "$2.99",
       period: "per week",
       icon: <FaCalendarWeek className="text-pink-500" size={24} />,
       features: [
@@ -104,8 +104,8 @@ const Payment = ({ open, closeModal, user, refreshUser = () => {} }) => {
         "Basic progress tracking",
         "24-hour support"
       ],
-      amount: currency === "NGN" ? 1500 : 1.10,
-      planId: currency === "NGN" ? 143575 : 143598
+      amount: currency === "NGN" ? 1500 : 2.99,
+      planId: currency === "NGN" ? 143575 : 143652
     },
     {
       id: "monthly",
