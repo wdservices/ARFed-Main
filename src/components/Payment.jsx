@@ -280,8 +280,8 @@ const Payment = ({ open, closeModal, user, refreshUser = () => {} }) => {
     <Modal
       title={
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Choose Your Plan</h2>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">Select a plan that works best for you</p>
+          <h2 className="text-2xl font-bold text-gray-800">Choose Your Plan</h2>
+          <p className="text-gray-600 mt-2">Select a plan that works best for you</p>
           <div className="flex justify-center mt-4">
             <button
               className={`px-4 py-2 rounded-l-lg border ${currency === "NGN" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"}`}
@@ -305,14 +305,14 @@ const Payment = ({ open, closeModal, user, refreshUser = () => {} }) => {
       footer={null}
       onCancel={closeModal}
       width={isMobile() ? "95%" : 800}
-      className="subscription-modal"
+      className="subscription-modal bg-white text-gray-800"
     >
       <div className={`grid ${isMobile() ? 'grid-cols-1 gap-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'} p-4`}>
         {plans.map((plan, index) => (
           <div
             key={plan.id}
-            className={`relative bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-2 ${
-              plan.popular ? 'border-purple-500 scale-105' : 'border-gray-200 dark:border-gray-700'
+            className={`relative bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-2 ${
+              plan.popular ? 'border-purple-500 scale-105' : 'border-gray-200'
             }`}
           >
             {plan.popular && (
@@ -323,20 +323,20 @@ const Payment = ({ open, closeModal, user, refreshUser = () => {} }) => {
             
             <div className="p-6">
               <div className="flex justify-center mb-4">
-                <div className="p-3 rounded-full bg-gray-100 dark:bg-gray-700">
+                <div className="p-3 rounded-full bg-gray-100">
                   {plan.icon}
                 </div>
               </div>
               
-              <h3 className="text-xl font-bold text-center text-gray-800 dark:text-white mb-2">
+              <h3 className="text-xl font-bold text-center text-gray-800 mb-2">
                 {plan.name}
               </h3>
               
               <div className="text-center mb-4">
-                <div className="text-3xl font-bold text-gray-900 dark:text-white">
+                <div className="text-3xl font-bold text-gray-900">
                   {plan.price}
                 </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">
+                <div className="text-sm text-gray-500">
                   {plan.period}
                 </div>
               </div>
@@ -345,7 +345,7 @@ const Payment = ({ open, closeModal, user, refreshUser = () => {} }) => {
                 {plan.features.map((feature, index) => (
                   <li key={index} className="flex items-start space-x-3">
                     <FaCheck className="text-green-500 mt-1 flex-shrink-0" size={14} />
-                    <span className="text-sm text-gray-600 dark:text-gray-300">{feature}</span>
+                    <span className="text-sm text-gray-600">{feature}</span>
                   </li>
                 ))}
               </ul>
@@ -373,7 +373,7 @@ const Payment = ({ open, closeModal, user, refreshUser = () => {} }) => {
         ))}
       </div>
 
-      <div className="text-center mt-6 text-sm text-gray-500 dark:text-gray-400">
+      <div className="text-center mt-6 text-sm text-gray-500">
         <p>All subscriptions start immediately upon payment and end at the same time on the expiration date.</p>
         <p className="mt-2">Need help? Contact our support team.</p>
       </div>

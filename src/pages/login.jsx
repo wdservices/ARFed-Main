@@ -64,6 +64,10 @@ const Login = () => {
             // If not mobile (desktop site requested), redirect to UseMobile page
             router.replace("/UseMobile");
           } else {
+            // If coming from landing payment, show a message and redirect to /subjects
+            if (router.query.from === "landing-payment") {
+              toast.info("Now click the premium button on the subject page to subscribe.");
+            }
             router.replace("/subjects");
           }
         }, 100);

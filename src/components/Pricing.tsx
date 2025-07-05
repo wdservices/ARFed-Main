@@ -14,8 +14,8 @@ const Pricing = () => {
 
   const handlePlanSelect = (plan) => {
     if (!token) {
-      // If user is not logged in, redirect to login page
-      router.push("/login");
+      // If user is not logged in, redirect to login page with a query param
+      router.push("/login?from=landing-payment");
       return;
     }
     setSelectedPlan(plan);
@@ -44,7 +44,7 @@ const Pricing = () => {
     {
       id: "weekly",
       name: "Weekly Plan",
-      price: "₦2,200",
+      price: "₦1,500",
       usdPrice: "$2.99",
       period: "/week",
       description: "All access to premium AR lessons & AI tutoring for one week.",
@@ -57,7 +57,7 @@ const Pricing = () => {
       icon: <Smartphone className="text-purple-500" size={24} />,
       popular: false,
       cta: "Choose Weekly Plan",
-      amount: 2200,
+      amount: 1500,
       planId: 143652
     },
     {
