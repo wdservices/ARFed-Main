@@ -199,61 +199,61 @@ const Models = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredModels.map((model, index) => (
-          <motion.div
-            key={index}
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: index * 0.1 }}
-            className="bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 overflow-hidden"
-          >
-            <img
-              src={`https://arfed-api.onrender.com/${model.image}`}
-              alt={model.title}
-              className="w-full h-48 object-contain bg-[#181f2a]"
-            />
-            <div className="flex">
-              <div className="w-16 bg-white/5 p-4 flex flex-col items-center justify-center gap-4">
-                <button
-                  onClick={() => setOpenModal(model)}
-                  className="p-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
-                >
-                  <FaEdit className="w-3 h-3" />
-                </button>
-                <button
-                  onClick={() => deleteModel(model._id)}
-                  className="p-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
-                >
-                  <FaTrash className="w-3 h-3" />
-                </button>
-                <button
-                  onClick={() => {
-                    setModelToDuplicate(model);
-                    setDuplicateTargetSubject("");
-                    setDuplicateModalOpen(true);
-                  }}
-                  className="p-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
-                  title="Duplicate to another subject"
-                >
-                  <FaCopy className="w-3 h-3" />
-                </button>
-              </div>
-              <div className="flex-1 p-4">
-                <h3 className="text-lg font-semibold text-white mb-2">{model.title}</h3>
-                <div className="text-white/60 text-sm mb-4 max-h-16 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-indigo-400 scrollbar-track-transparent">
-                  {model.description}
+            <motion.div
+              key={index}
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: index * 0.1 }}
+              className="bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 overflow-hidden"
+            >
+              <img
+                src={`https://arfed-api.onrender.com/${model.image}`}
+                alt={model.title}
+                className="w-full h-48 object-contain bg-[#181f2a]"
+              />
+              <div className="flex">
+                <div className="w-16 bg-white/5 p-4 flex flex-col items-center justify-center gap-4">
+                  <button
+                    onClick={() => setOpenModal(model)}
+                    className="p-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
+                  >
+                    <FaEdit className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={() => deleteModel(model._id)}
+                    className="p-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
+                  >
+                    <FaTrash className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setModelToDuplicate(model);
+                      setDuplicateTargetSubject("");
+                      setDuplicateModalOpen(true);
+                    }}
+                    className="p-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
+                    title="Duplicate to another subject"
+                  >
+                    <FaCopy className="w-3 h-3" />
+                  </button>
                 </div>
-                <div className="flex justify-between items-center text-white/60 text-xs">
-                  <span>{new Date(model.date).toLocaleDateString()}</span>
-                  {model.subjectId && (
-                    <span className="bg-indigo-600/20 text-indigo-300 px-2 py-1 rounded-full text-xs">
-                      {subjects.find(s => s._id === model.subjectId)?.title || 'Unknown Subject'}
-                    </span>
-                  )}
+                <div className="flex-1 p-4">
+                  <h3 className="text-lg font-semibold text-white mb-2">{model.title}</h3>
+                  <div className="text-white/60 text-sm mb-4 max-h-16 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-indigo-400 scrollbar-track-transparent">
+                    {model.description}
+                  </div>
+                  <div className="flex justify-between items-center text-white/60 text-xs">
+                    <span>{new Date(model.date).toLocaleDateString()}</span>
+                    {model.subjectId && (
+                      <span className="bg-indigo-600/20 text-indigo-300 px-2 py-1 rounded-full text-xs">
+                        {subjects.find(s => s._id === model.subjectId)?.title || 'Unknown Subject'}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          </motion.div>
-        ))}
+            </motion.div>
+          ))}
         </div>
       )}
 
@@ -265,7 +265,7 @@ const Models = () => {
         onCancel={() => openModal(false)}
         footer={null}
         className="!bg-white !rounded-xl"
-        bodyStyle={{ background: '#fff', borderRadius: '0.75rem', boxShadow: '0 4px 32px rgba(0,0,0,0.10)' }}
+        styles={{ body: { background: '#fff', borderRadius: '0.75rem', boxShadow: '0 4px 32px rgba(0,0,0,0.10)' } }}
       >
         <div className="space-y-4">
           <div>
@@ -353,62 +353,65 @@ const Models = () => {
         onCancel={() => setDuplicateModalOpen(false)}
         footer={null}
         className="!bg-white !rounded-xl"
-        bodyStyle={{ background: '#fff', borderRadius: '0.75rem', boxShadow: '0 4px 32px rgba(0,0,0,0.10)' }}
+        styles={{ body: { background: '#fff', borderRadius: '0.75rem', boxShadow: '0 4px 32px rgba(0,0,0,0.10)' } }}
       >
-        <div className="space-y-4">
-          <div>
-            <label className="block text-gray-700 mb-2">Select Subject</label>
-            <select
-              value={duplicateTargetSubject}
-              onChange={e => setDuplicateTargetSubject(e.target.value)}
-              className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:border-indigo-500 shadow-md"
-            >
-              <option value="">Choose a subject</option>
-              {subjects.filter(s => s._id !== modelToDuplicate?.subjectId).map(subject => (
-                <option key={subject._id} value={subject._id}>{subject.title}</option>
-              ))}
-            </select>
-          </div>
-          <div className="flex justify-end">
-            <button
-              onClick={async () => {
-                if (!duplicateTargetSubject || !modelToDuplicate) return;
-                try {
-                  await axios.post(
-                    "https://arfed-api.onrender.com/api/models",
-                    {
-                      title: modelToDuplicate.title,
-                      description: modelToDuplicate.description,
-                      image: modelToDuplicate.image,
-                      model: modelToDuplicate.model,
-                      iosModel: modelToDuplicate.iosModel,
-                      subjectId: duplicateTargetSubject,
-                      // Add other fields as needed
-                    },
-                    {
-                      headers: {
-                        "Content-Type": "application/json",
-                        Accept: "application/json",
-                        "auth-token": token,
+        {modelToDuplicate ? (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-gray-700 mb-2">Select Subject</label>
+              <select
+                value={duplicateTargetSubject}
+                onChange={e => setDuplicateTargetSubject(e.target.value)}
+                className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:border-indigo-500 shadow-md"
+              >
+                <option value="">Choose a subject</option>
+                {subjects.filter(s => s._id !== modelToDuplicate.subjectId).map(subject => (
+                  <option key={subject._id} value={subject._id}>{subject.title}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex justify-end">
+              <button
+                onClick={async () => {
+                  if (!duplicateTargetSubject || !modelToDuplicate) return;
+                  try {
+                    await axios.post(
+                      "https://arfed-api.onrender.com/api/models",
+                      {
+                        title: modelToDuplicate.title,
+                        description: modelToDuplicate.description,
+                        image: modelToDuplicate.image,
+                        model: modelToDuplicate.model,
+                        iosModel: modelToDuplicate.iosModel,
+                        subjectId: duplicateTargetSubject,
                       },
-                    }
-                  );
-                  toast.success("Model duplicated successfully!");
-                  setDuplicateModalOpen(false);
-                  setModelToDuplicate(null);
-                  setDuplicateTargetSubject("");
-                  fetchData();
-                } catch (err) {
-                  toast.error("Failed to duplicate model");
-                }
-              }}
-              disabled={!duplicateTargetSubject}
-              className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all duration-200 disabled:opacity-50 shadow-lg hover:shadow-xl"
-            >
-              Duplicate
-            </button>
+                      {
+                        headers: {
+                          "Content-Type": "application/json",
+                          Accept: "application/json",
+                          "auth-token": token,
+                        },
+                      }
+                    );
+                    toast.success("Model duplicated successfully!");
+                    setDuplicateModalOpen(false);
+                    setModelToDuplicate(null);
+                    setDuplicateTargetSubject("");
+                    fetchData();
+                  } catch (err) {
+                    toast.error("Failed to duplicate model");
+                  }
+                }}
+                disabled={!duplicateTargetSubject}
+                className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all duration-200 disabled:opacity-50 shadow-lg hover:shadow-xl"
+              >
+                Duplicate
+              </button>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="p-8 text-center text-gray-400">No model selected for duplication.</div>
+        )}
       </Modal>
 
       {/* 3D Configurator Modal */}
