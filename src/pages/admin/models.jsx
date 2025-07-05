@@ -7,7 +7,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import AdminLayout from "../../components/AdminLayout";
 import { motion } from "framer-motion";
-import { FaSearch, FaEdit, FaTrash, FaPlus } from "react-icons/fa";
+import { FaSearch, FaEdit, FaTrash, FaPlus, FaCopy } from "react-icons/fa";
 import ModelCanvas from "@/components/ModelViewer/ModelCanvas";
 
 const Models = () => {
@@ -30,6 +30,9 @@ const Models = () => {
   const [modelUrl, setModelUrl] = useState("");
   const [isModelLoading, setIsModelLoading] = useState(false);
   const [isModelLoaded, setIsModelLoaded] = useState(false);
+  const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
+  const [modelToDuplicate, setModelToDuplicate] = useState(null);
+  const [duplicateTargetSubject, setDuplicateTargetSubject] = useState("");
 
   useEffect(() => {
     fetchData();
@@ -144,7 +147,7 @@ const Models = () => {
             placeholder="Search models..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 pl-10 bg-[#232946] border border-indigo-400 rounded-lg text-white placeholder-indigo-200 focus:outline-none focus:border-indigo-500 shadow-md"
+            className="w-full px-4 py-2 pl-10 bg-white border border-gray-300 rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:border-indigo-500 shadow-md"
           />
           <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-300 w-3 h-3" />
         </div>
@@ -152,7 +155,7 @@ const Models = () => {
           <select
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
-            className="px-4 py-2 bg-[#232946] border border-indigo-400 rounded-lg text-white focus:outline-none focus:border-indigo-500 shadow-md min-w-[200px]"
+            className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:border-indigo-500 shadow-md min-w-[200px]"
           >
             <option value="">All Subjects</option>
             {subjects.map((subject, index) => (
@@ -222,6 +225,17 @@ const Models = () => {
                 >
                   <FaTrash className="w-3 h-3" />
                 </button>
+                <button
+                  onClick={() => {
+                    setModelToDuplicate(model);
+                    setDuplicateTargetSubject("");
+                    setDuplicateModalOpen(true);
+                  }}
+                  className="p-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
+                  title="Duplicate to another subject"
+                >
+                  <FaCopy className="w-3 h-3" />
+                </button>
               </div>
               <div className="flex-1 p-4">
                 <h3 className="text-lg font-semibold text-white mb-2">{model.title}</h3>
@@ -250,36 +264,36 @@ const Models = () => {
         open={open}
         onCancel={() => openModal(false)}
         footer={null}
-        className="!bg-[#181f2a] !rounded-xl"
-        bodyStyle={{ background: '#232946', borderRadius: '0.75rem', boxShadow: '0 4px 32px rgba(0,0,0,0.25)' }}
+        className="!bg-white !rounded-xl"
+        bodyStyle={{ background: '#fff', borderRadius: '0.75rem', boxShadow: '0 4px 32px rgba(0,0,0,0.10)' }}
       >
         <div className="space-y-4">
           <div>
-            <label className="block text-indigo-200 mb-2">Title</label>
+            <label className="block text-gray-700 mb-2">Title</label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-4 py-2 bg-[#181f2a] border border-indigo-400 rounded-lg text-white placeholder-indigo-200 focus:outline-none focus:border-indigo-500 shadow-md"
+              className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:border-indigo-500 shadow-md"
               placeholder="Enter model title"
             />
           </div>
           <div>
-            <label className="block text-indigo-200 mb-2">Description</label>
+            <label className="block text-gray-700 mb-2">Description</label>
             <textarea
               value={description}
               onChange={(e) => setDesc(e.target.value)}
-              className="w-full px-4 py-2 bg-[#181f2a] border border-indigo-400 rounded-lg text-white placeholder-indigo-200 focus:outline-none focus:border-indigo-500 shadow-md"
+              className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:border-indigo-500 shadow-md"
               placeholder="Enter model description"
               rows={4}
             />
           </div>
           <div>
-            <label className="block text-indigo-200 mb-2">Subject</label>
+            <label className="block text-gray-700 mb-2">Subject</label>
             <select
               value={selectedSubject}
               onChange={(e) => setSelectedSubject(e.target.value)}
-              className="w-full px-4 py-2 bg-[#181f2a] border border-indigo-400 rounded-lg text-white focus:outline-none focus:border-indigo-500 shadow-md"
+              className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:border-indigo-500 shadow-md"
             >
               <option value="">Select a Subject</option>
               {subjects.map((subject, index) => (
@@ -290,32 +304,32 @@ const Models = () => {
             </select>
           </div>
           <div>
-            <label className="block text-indigo-200 mb-2">Image URL</label>
+            <label className="block text-gray-700 mb-2">Image URL</label>
             <input
               type="text"
               value={image}
               onChange={(e) => setImage(e.target.value)}
-              className="w-full px-4 py-2 bg-[#181f2a] border border-indigo-400 rounded-lg text-white placeholder-indigo-200 focus:outline-none focus:border-indigo-500 shadow-md"
+              className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:border-indigo-500 shadow-md"
               placeholder="Enter image URL"
             />
           </div>
           <div>
-            <label className="block text-indigo-200 mb-2">Model URL</label>
+            <label className="block text-gray-700 mb-2">Model URL</label>
             <input
               type="text"
               value={model}
               onChange={(e) => setModel(e.target.value)}
-              className="w-full px-4 py-2 bg-[#181f2a] border border-indigo-400 rounded-lg text-white placeholder-indigo-200 focus:outline-none focus:border-indigo-500 shadow-md"
+              className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:border-indigo-500 shadow-md"
               placeholder="Enter model URL"
             />
           </div>
           <div>
-            <label className="block text-indigo-200 mb-2">iOS Model URL</label>
+            <label className="block text-gray-700 mb-2">iOS Model URL</label>
             <input
               type="text"
               value={iosModel}
               onChange={(e) => setIos(e.target.value)}
-              className="w-full px-4 py-2 bg-[#181f2a] border border-indigo-400 rounded-lg text-white placeholder-indigo-200 focus:outline-none focus:border-indigo-500 shadow-md"
+              className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:border-indigo-500 shadow-md"
               placeholder="Enter iOS model URL"
             />
           </div>
@@ -326,6 +340,72 @@ const Models = () => {
               className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all duration-200 disabled:opacity-50 shadow-lg hover:shadow-xl"
             >
               {loading ? "Saving..." : "Save Changes"}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Duplicate Modal */}
+      <Modal
+        title="Duplicate Model to Another Subject"
+        centered
+        open={duplicateModalOpen}
+        onCancel={() => setDuplicateModalOpen(false)}
+        footer={null}
+        className="!bg-white !rounded-xl"
+        bodyStyle={{ background: '#fff', borderRadius: '0.75rem', boxShadow: '0 4px 32px rgba(0,0,0,0.10)' }}
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-gray-700 mb-2">Select Subject</label>
+            <select
+              value={duplicateTargetSubject}
+              onChange={e => setDuplicateTargetSubject(e.target.value)}
+              className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:border-indigo-500 shadow-md"
+            >
+              <option value="">Choose a subject</option>
+              {subjects.filter(s => s._id !== modelToDuplicate?.subjectId).map(subject => (
+                <option key={subject._id} value={subject._id}>{subject.title}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex justify-end">
+            <button
+              onClick={async () => {
+                if (!duplicateTargetSubject || !modelToDuplicate) return;
+                try {
+                  await axios.post(
+                    "https://arfed-api.onrender.com/api/models",
+                    {
+                      title: modelToDuplicate.title,
+                      description: modelToDuplicate.description,
+                      image: modelToDuplicate.image,
+                      model: modelToDuplicate.model,
+                      iosModel: modelToDuplicate.iosModel,
+                      subjectId: duplicateTargetSubject,
+                      // Add other fields as needed
+                    },
+                    {
+                      headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                        "auth-token": token,
+                      },
+                    }
+                  );
+                  toast.success("Model duplicated successfully!");
+                  setDuplicateModalOpen(false);
+                  setModelToDuplicate(null);
+                  setDuplicateTargetSubject("");
+                  fetchData();
+                } catch (err) {
+                  toast.error("Failed to duplicate model");
+                }
+              }}
+              disabled={!duplicateTargetSubject}
+              className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all duration-200 disabled:opacity-50 shadow-lg hover:shadow-xl"
+            >
+              Duplicate
             </button>
           </div>
         </div>
