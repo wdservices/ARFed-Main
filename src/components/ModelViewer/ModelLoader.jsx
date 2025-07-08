@@ -44,6 +44,9 @@ const ModelLoader = forwardRef(({
             },
             (error) => {
               console.error("GLTFLoader error:", error);
+              if (error && error.target && error.target.status) {
+                console.error("HTTP status:", error.target.status);
+              }
               reject(error);
             }
           );
@@ -117,10 +120,13 @@ const ModelLoader = forwardRef(({
         
       } catch (error) {
         console.error("Error in loadModel:", error);
+        if (error instanceof ProgressEvent && error.target) {
+          console.error("Network/HTTP error:", error.target.status, error.target.statusText);
+        }
         if (!hasNotifiedRef.current) {
           hasNotifiedRef.current = true;
           const errorMessage = error instanceof Error ? error.message : 'Unknown error loading model';
-          onError(new Error(`Failed to load model: ${errorMessage}. Please check the URL and ensure the model is accessible.`));
+          onError(new Error(`Failed to load model: ${errorMessage}. Please check the URL, CORS headers, and ensure the model is accessible.`));
         }
       }
     };

@@ -75,7 +75,24 @@ const Payment = ({ open, closeModal, user, refreshUser = () => {} }) => {
   }
 
   const plans = [
-    // Daily Plan (conditionally included)
+    // Daily Plan for NGN
+    ...(currency === "NGN"
+      ? [{
+          id: "daily",
+          name: "Daily Plan",
+          price: "₦250",
+          period: "per day",
+          icon: <FaCalendarDay className="text-orange-500" size={24} />,
+          features: [
+            "Full access to all AR lessons for 24 hours",
+            "AI tutor assistance",
+            "Basic progress tracking"
+          ],
+          amount: 250,
+          planId: 142602
+        }]
+      : []),
+    // Daily Plan for USD
     ...(currency === "USD"
       ? [{
           id: "daily",
@@ -188,7 +205,7 @@ const Payment = ({ open, closeModal, user, refreshUser = () => {} }) => {
         customizations: {
           title: "ARFed",
           description: `ARFed ${plan.name} Subscription`,
-          logo: "https://arfed-main.vercel.app/images/logo.svg",
+          logo: "/arfed.png",
         },
         onClose: () => {
           toast.error("Payment cancelled");
