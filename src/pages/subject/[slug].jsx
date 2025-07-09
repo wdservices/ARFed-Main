@@ -35,6 +35,8 @@ const SingleSubject = () => {
   const token = getCookie("token");
   const id = getCookie("id");
 
+  const validPaidPlans = ["daily", "weekly", "monthly", "termly", "yearly", "premium"];
+
   // Device check: if not mobile and not admin, redirect to /UseMobile
   useEffect(() => {
     if (user && user.role !== "admin" && isMobile === false) {
@@ -294,7 +296,7 @@ const SingleSubject = () => {
                           >
                             <div className="relative bg-white/15 backdrop-blur-lg rounded-2xl p-3 shadow-2xl hover:shadow-3xl transition-all duration-300 border border-white/20 hover:border-white/30">
                               {/* Premium Crown Badge */}
-                              {model.isPremium && user?.plan !== "premium" && (
+                              {model.isPremium && !validPaidPlans.includes(user?.plan) && (
                                 <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-lg z-10">
                                   <FaCrown className="text-white" size={10} />
                                   Premium

@@ -139,13 +139,6 @@ const Subjects = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#1E3A8A] via-[#2563EB] to-[#3B82F6] relative overflow-x-hidden overflow-y-auto">
-      {/* Debug Banner for User Plan */}
-      {user && showDebug && (
-        <div style={{ background: '#fff', color: '#000', padding: 8, borderRadius: 8, margin: 8, zIndex: 1000, position: 'relative' }}>
-          <strong>Debug:</strong> Your current plan is: <span style={{ color: '#2563EB', fontWeight: 'bold' }}>{user.plan ? user.plan : 'N/A'}</span>
-          <button style={{ float: 'right', background: 'none', border: 'none', color: '#2563EB', fontWeight: 'bold', fontSize: 16 }} onClick={() => setShowDebug(false)}>×</button>
-        </div>
-      )}
       {/* Decorative background elements */}
       <div className="absolute top-10 left-10 w-32 h-32 bg-indigo-400 opacity-30 rounded-full blur-2xl animate-pulse" />
       <div className="absolute bottom-20 right-20 w-40 h-40 bg-blue-300 opacity-20 rounded-full blur-3xl animate-pulse" />
