@@ -48,6 +48,16 @@ const Subjects = () => {
       setToken(tokenValue);
       setId(idValue);
       setCookiesLoaded(true);
+
+      // Show post-login payment message if needed
+      if (localStorage.getItem('showPostLoginPaymentMsg') === 'true') {
+        toast({
+          title: 'Continue to Premium',
+          description: 'Now click any premium card below to subscribe.',
+          variant: 'premium', // custom variant for app color
+        });
+        localStorage.removeItem('showPostLoginPaymentMsg');
+      }
     }
   }, []);
 
@@ -95,8 +105,10 @@ const Subjects = () => {
     }
   }, [token, id, cookiesLoaded]);
 
+  const validPaidPlans = ["daily", "weekly", "monthly", "termly", "yearly", "premium"];
+
   const single = (subjectId) => {
-    if (user && (subjectId === "63dace7d1b0974f12c03d419" || user.plan === "premium")) {
+    if (user && (subjectId === "63dace7d1b0974f12c03d419" || validPaidPlans.includes(user.plan))) {
       router.push(`/subject/${subjectId}`);
     } else if (user) {
       openModal(true);

@@ -66,7 +66,7 @@ const Login = () => {
           } else {
             // If coming from landing payment, show a message and redirect to /subjects
             if (router.query.from === "landing-payment") {
-              toast.info("Now click the premium button on the subject page to subscribe.");
+              localStorage.setItem('showPostLoginPaymentMsg', 'true');
             }
             router.replace("/subjects");
           }
