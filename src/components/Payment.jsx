@@ -232,13 +232,21 @@ const Payment = ({ open, closeModal, user, refreshUser = () => {} }) => {
             );
             console.log(result.data);
             toast.success("Payment Successful! Your subscription is now active.");
-            if (refreshUser) {
-              await refreshUser();
-            }
+            // Always use context's fetchUser
             if (fetchUser) {
               await fetchUser();
+              // Optionally, show the new plan in a toast for debugging
+              setTimeout(() => {
+                toast({
+                  title: "Subscription Updated",
+                  description: `Your new plan is: ${result.data.user?.plan || "unknown"}`,
+                  variant: "premium"
+                });
+              }, 500);
             }
             closeModal();
+            // Optionally, reload the page to force update
+            // window.location.reload();
           } catch (e) {
             console.error("Payment verification failed:", e);
             toast.error("Payment verification failed. Please contact support.");
