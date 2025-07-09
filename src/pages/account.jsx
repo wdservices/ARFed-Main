@@ -34,7 +34,7 @@ const account = () => {
         })
         .then((response) => {
           console.log(response.data);
-          setUser(response.data[0]);
+          setUser(response.data[0] || response.data || null);
           setLoading(false);
         });
     } catch (e) {
@@ -59,7 +59,7 @@ const account = () => {
           "auth-token": token,
         },
       });
-      setUser(response.data[0]);
+      setUser(response.data[0] || response.data || null);
     } catch (e) {
       console.log(e);
     }
