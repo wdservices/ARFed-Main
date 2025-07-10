@@ -214,13 +214,25 @@ const Payment = ({ open, closeModal, user, refreshUser = () => {} }) => {
         },
         callback: async (response) => {
           try {
+            console.log("Payment callback received:", response);
+            
+            // Store payment info in localStorage as backup
+            const paymentInfo = {
+              transaction_id: response.transaction_id,
+              plan: plan.id,
+              timestamp: new Date().toISOString(),
+              status: 'pending_verification'
+            };
+            localStorage.setItem('pending_payment', JSON.stringify(paymentInfo));
+            
             const result = await axios.put(
               `https://arfed-api.onrender.com/api/user/suscribe/${id}`,
               {
                 plan: plan.id,
                 startDate: new Date().toISOString(),
                 endDate: calculateEndDate(plan.id),
-                paymentId: response.transaction_id
+                paymentId: response.transaction_id,
+                flw_ref: response.flw_ref || null
               },
               {
                 headers: {
@@ -230,12 +242,18 @@ const Payment = ({ open, closeModal, user, refreshUser = () => {} }) => {
                 },
               }
             );
-            console.log(result.data);
+            
+            console.log("Subscription update result:", result.data);
+            
+            // Remove pending payment from localStorage
+            localStorage.removeItem('pending_payment');
+            
             toast.success("Payment Successful! Your subscription is now active.");
+            
             // Always use context's fetchUser
             if (fetchUser) {
               await fetchUser();
-              // Optionally, show the new plan in a toast for debugging
+              // Show the new plan in a toast for confirmation
               setTimeout(() => {
                 toast({
                   title: "Subscription Updated",
@@ -244,12 +262,30 @@ const Payment = ({ open, closeModal, user, refreshUser = () => {} }) => {
                 });
               }, 500);
             }
+            
             closeModal();
-            // Optionally, reload the page to force update
-            // window.location.reload();
+            
           } catch (e) {
             console.error("Payment verification failed:", e);
-            toast.error("Payment verification failed. Please contact support.");
+            
+            // Show more specific error messages
+            if (e.response?.status === 401) {
+              toast.error("Authentication failed. Please log in again.");
+            } else if (e.response?.status === 404) {
+              toast.error("User not found. Please contact support.");
+            } else if (e.response?.status >= 500) {
+              toast.error("Server error. Your payment was successful but verification is pending. Please contact support with transaction ID: " + response.transaction_id);
+            } else {
+              toast.error("Payment verification failed. Please contact support with transaction ID: " + response.transaction_id);
+            }
+            
+            // Keep payment info in localStorage for manual verification
+            toast({
+              title: "Payment Info Saved",
+              description: "Your payment information has been saved. Contact support if access is not granted within 24 hours.",
+              variant: "default"
+            });
+            
           } finally {
             setIsProcessing(false);
             setSelectedPlan(null);

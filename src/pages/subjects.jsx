@@ -8,6 +8,7 @@ import { Pagination, Scrollbar, Autoplay } from "swiper";
 import { useRouter } from "next/router";
 import Payment from "../components/Payment";
 import FloatingChat from "../components/FloatingChat";
+import PaymentStatusCheck from "../components/PaymentStatusCheck";
 import Head from "next/head";
 import { FaBars, FaMoon, FaSun, FaCrown } from "react-icons/fa";
 import Link from "next/link";
@@ -383,6 +384,7 @@ const Subjects = () => {
 
       <Payment user={user} closeModal={() => openModal(!open)} open={open} />
       <FloatingChat />
+      <PaymentStatusCheck />
     </div>
   );
 };
