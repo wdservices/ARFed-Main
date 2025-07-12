@@ -25,7 +25,7 @@ const Ads = () => {
 
   const fetchAds = async () => {
     try {
-      const response = await axios.get("https://arfed-api.onrender.com/api/ads", {
+      const response = await axios.get("/api/ads", {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
@@ -40,10 +40,16 @@ const Ads = () => {
   };
 
   const addAd = async () => {
+    // Validate required fields
+    if (!img.trim()) {
+      toast.error("Please enter an image URL");
+      return;
+    }
+
     setLoading(true);
     try {
       await axios.post(
-        "https://arfed-api.onrender.com/api/ads",
+        "/api/ads",
         {
           image: img,
           link: link,
@@ -71,7 +77,7 @@ const Ads = () => {
 
   const deleteAd = async (id) => {
     try {
-      await axios.delete(`https://arfed-api.onrender.com/api/ads/${id}`, {
+      await axios.delete(`/api/ads?id=${id}`, {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
@@ -97,9 +103,15 @@ const Ads = () => {
   };
 
   const updateAd = async () => {
+    // Validate required fields
+    if (!newAdData.image.trim()) {
+      toast.error("Please enter an image URL");
+      return;
+    }
+
     setLoading(true);
     try {
-      await axios.put(`https://arfed-api.onrender.com/api/ads/${editingAd._id}`, newAdData, {
+      await axios.put(`/api/ads?id=${editingAd._id}`, newAdData, {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
@@ -188,13 +200,14 @@ const Ads = () => {
       >
         <div className="space-y-4 bg-white p-6 rounded-lg text-gray-800"> 
           <div>
-            <label className="block text-gray-700 mb-2">Image URL</label> 
+            <label className="block text-gray-700 mb-2">Image URL *</label> 
             <input
               type="text"
               value={img}
               onChange={(e) => setImg(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:border-blue-500 bg-white" 
               placeholder="Enter image URL"
+              required
             />
           </div>
           <div>
@@ -230,7 +243,7 @@ const Ads = () => {
         >
            <div className="space-y-4 bg-white p-6 rounded-lg text-gray-800"> 
             <div>
-              <label className="block text-gray-700 mb-2">Image URL</label> 
+              <label className="block text-gray-700 mb-2">Image URL *</label> 
               <input
                 type="text"
                 name="image"
@@ -238,17 +251,18 @@ const Ads = () => {
                 onChange={handleEditInputChange}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:border-blue-500 bg-white" 
                 placeholder="Image URL"
+                required
               />
             </div>
             <div>
-              <label className="block text-gray-700 mb-2">Link</label> 
+              <label className="block text-gray-700 mb-2">Link (optional)</label> 
               <input
                 type="text"
                 name="link"
                 value={newAdData.link}
                 onChange={handleEditInputChange}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:border-blue-500 bg-white" 
-                placeholder="Link"
+                placeholder="Enter link (e.g. https://example.com)"
               />
             </div>
             <div className="flex justify-end">
