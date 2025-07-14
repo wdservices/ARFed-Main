@@ -25,7 +25,9 @@ export default async function handler(req, res) {
 
       case 'POST':
         // Create new ad
+        console.log('POST - Creating new ad with data:', req.body);
         const postResponse = await axios.post('https://arfed-api.onrender.com/api/ads', req.body, { headers });
+        console.log('POST - Response from external API:', postResponse.data);
         return res.status(201).json(postResponse.data);
 
       case 'PUT':
@@ -35,14 +37,20 @@ export default async function handler(req, res) {
           return res.status(400).json({ error: 'Ad ID is required' });
         }
         
+        console.log('PUT - Updating ad with ID:', id);
+        console.log('PUT - Request body:', req.body);
+        
         // Since the external API doesn't support PUT, we'll implement a workaround
         // by deleting the old ad and creating a new one with the updated data
         try {
           // First, delete the existing ad
+          console.log('PUT - Deleting old ad...');
           await axios.delete(`https://arfed-api.onrender.com/api/ads/${id}`, { headers });
           
           // Then create a new ad with the updated data
+          console.log('PUT - Creating new ad with updated data...');
           const updateResponse = await axios.post('https://arfed-api.onrender.com/api/ads', req.body, { headers });
+          console.log('PUT - Response from external API:', updateResponse.data);
           
           return res.status(200).json({
             ...updateResponse.data,

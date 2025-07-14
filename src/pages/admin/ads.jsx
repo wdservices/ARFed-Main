@@ -40,20 +40,19 @@ const Ads = () => {
   };
 
   const addAd = async () => {
-    // Validate required fields
     if (!img.trim()) {
       toast.error("Please enter an image URL");
       return;
     }
-
+    const dataToSend = {
+      image: img,
+      link: link,
+    };
     setLoading(true);
     try {
-      await axios.post(
+      const response = await axios.post(
         "/api/ads",
-        {
-          image: img,
-          link: link,
-        },
+        dataToSend,
         {
           headers: {
             "Content-Type": "application/json",
@@ -70,7 +69,7 @@ const Ads = () => {
       fetchAds();
     } catch (error) {
       setLoading(false);
-      console.error(error);
+      console.error('Add error:', error);
       toast.error("Failed to add ad");
     }
   };
@@ -94,7 +93,10 @@ const Ads = () => {
 
   const handleEditClick = (ad) => {
     setEditingAd(ad);
-    setNewAdData({ image: ad.image, link: ad.link });
+    setNewAdData({ 
+      image: ad.image, 
+      link: ad.link || '' 
+    });
   };
 
   const handleEditInputChange = (e) => {
@@ -103,15 +105,13 @@ const Ads = () => {
   };
 
   const updateAd = async () => {
-    // Validate required fields
     if (!newAdData.image.trim()) {
       toast.error("Please enter an image URL");
       return;
     }
-
     setLoading(true);
     try {
-      await axios.put(`/api/ads?id=${editingAd._id}`, newAdData, {
+      await axios.put(`/api/ads?id=${editingAd._id}`, { image: newAdData.image, link: newAdData.link }, {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
@@ -122,10 +122,10 @@ const Ads = () => {
       setLoading(false);
       setEditingAd(null);
       setNewAdData({ image: "", link: "" });
-      fetchAds();
+      await fetchAds();
     } catch (error) {
       setLoading(false);
-      console.error(error);
+      console.error('Update error:', error);
       toast.error("Failed to update ad");
     }
   };
@@ -150,44 +150,52 @@ const Ads = () => {
 
       {/* Ads Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {ads.map((ad, index) => (
-          <motion.div
-            key={index}
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: index * 0.1 }}
-            className="bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 overflow-hidden group"
-          >
-            <div className="relative">
-              <a href={ad.link} target="_blank" rel="noopener noreferrer"> 
-                <img
-                  src={ad.image}
-                  alt={`Ad ${index + 1}`}
-                  className="w-full h-48 object-cover"
-                />
-              </a>
-              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-4"> 
-                <button
-                  onClick={() => handleEditClick(ad)} 
-                  className="p-2 text-white hover:bg-white/10 rounded-lg transition-all duration-200"
-                >
-                  <FaEdit />
-                </button>
-                <button
-                  onClick={() => deleteAd(ad._id)}
-                  className="p-2 text-white hover:bg-white/10 rounded-lg transition-all duration-200"
-                >
-                  <FaTrash />
-                </button>
+        {ads.map((ad, index) => {
+          console.log(`Ad ${index}:`, ad._id, 'Link:', ad.link);
+          return (
+            <motion.div
+              key={index}
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: index * 0.1 }}
+              className="bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 overflow-hidden group"
+            >
+              <div className="relative">
+                <a href={ad.link} target="_blank" rel="noopener noreferrer"> 
+                  <img
+                    src={ad.image}
+                    alt={`Ad ${index + 1}`}
+                    className="w-full h-48 object-cover"
+                  />
+                </a>
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-4"> 
+                  <button
+                    onClick={() => handleEditClick(ad)} 
+                    className="p-2 text-white hover:bg-white/10 rounded-lg transition-all duration-200"
+                  >
+                    <FaEdit />
+                  </button>
+                  <button
+                    onClick={() => deleteAd(ad._id)}
+                    className="p-2 text-white hover:bg-white/10 rounded-lg transition-all duration-200"
+                  >
+                    <FaTrash />
+                  </button>
+                </div>
               </div>
-            </div>
-            <div className="p-4">
-              <p className="text-white/60 text-sm">
-                Added {new Date(ad.date).toLocaleDateString()}
-              </p>
-            </div>
-          </motion.div>
-        ))}
+              <div className="p-4">
+                <p className="text-white/60 text-sm">
+                  Added {new Date(ad.date).toLocaleDateString()}
+                </p>
+                {ad.link && (
+                  <p className="text-white/60 text-xs mt-1">
+                    Link: {ad.link}
+                  </p>
+                )}
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
 
       {/* Add Modal */}

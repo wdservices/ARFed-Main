@@ -226,7 +226,7 @@ const Payment = ({ open, closeModal, user, refreshUser = () => {} }) => {
             localStorage.setItem('pending_payment', JSON.stringify(paymentInfo));
             
             const result = await axios.put(
-              `https://arfed-api.onrender.com/api/user/suscribe/${id}`,
+              `/api/user/suscribe/${id}`,
               {
                 plan: plan.id,
                 startDate: new Date().toISOString(),

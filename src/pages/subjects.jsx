@@ -101,7 +101,6 @@ const Subjects = () => {
         });
       }
     };
-
     if (token && id) {
       fetchSubjectsAndAds().finally(() => setLoading(false));
     } else {
@@ -130,37 +129,7 @@ const Subjects = () => {
     }
   };
 
-  const handleAdClick = (ad) => {
-    console.log('Ad clicked:', ad);
-    alert('Ad clicked! Link: ' + (ad.link || 'No link'));
-    
-    if (ad.link && ad.link.trim()) {
-      console.log('Opening link:', ad.link);
-      const link = ad.link.startsWith('http') ? ad.link : `https://${ad.link}`;
-      
-      // Try multiple methods for mobile compatibility
-      try {
-        // Method 1: window.open
-        const newWindow = window.open(link, '_blank');
-        if (!newWindow) {
-          // Method 2: location.href (fallback)
-          window.location.href = link;
-        }
-      } catch (error) {
-        console.error('Error opening link:', error);
-        // Method 3: Create and click a temporary link
-        const tempLink = document.createElement('a');
-        tempLink.href = link;
-        tempLink.target = '_blank';
-        tempLink.rel = 'noopener noreferrer';
-        document.body.appendChild(tempLink);
-        tempLink.click();
-        document.body.removeChild(tempLink);
-      }
-    } else {
-      console.log('No link found for ad');
-    }
-  };
+
 
   useEffect(() => {
     if (darkMode) {
@@ -302,7 +271,7 @@ const Subjects = () => {
               slidesPerView={1}
               pagination={{ clickable: true }}
               scrollbar={{ draggable: true }}
-              autoplay={{ delay: 5000 }}
+              autoplay={{ delay: 5000, disableOnInteraction: false }}
               allowTouchMove={true}
               touchRatio={1}
               touchAngle={45}
@@ -319,63 +288,58 @@ const Subjects = () => {
               {ads.map((ad, index) => (
                 <SwiperSlide key={index}>
                   {ad.link ? (
-                    <button
-                      className="w-full bg-white/15 backdrop-blur-lg rounded-2xl p-3 shadow-2xl border border-white/20 transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-3xl active:scale-95 active:bg-white/20 text-left"
-                      onClick={() => handleAdClick(ad)}
-                      onTouchStart={(e) => e.stopPropagation()}
-                      onTouchEnd={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleAdClick(ad);
-                      }}
+                    <a
+                      href={ad.link.startsWith('http') ? ad.link : `https://${ad.link}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-full bg-white/15 backdrop-blur-lg rounded-2xl p-3 shadow-2xl border border-white/20 transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-3xl text-left"
                       style={{ 
                         touchAction: 'manipulation',
-                        WebkitTapHighlightColor: 'transparent',
-                        WebkitTouchCallout: 'none',
-                        WebkitUserSelect: 'none',
-                        userSelect: 'none'
+                        WebkitTapHighlightColor: 'transparent'
+                      }}
+                      onClick={(e) => {
+                        console.log('Ad card clicked:', ad.title);
+                        console.log('Ad link:', ad.link);
+                        console.log('Event target:', e.target);
                       }}
                     >
-                    {/* Image Container with Bezel */}
-                    <div className="relative mb-3">
-                      <div className="w-full h-40 bg-gradient-to-br from-white/20 to-white/10 rounded-xl p-1 shadow-inner overflow-hidden">
-                        <img
-                          src={ad.image}
-                          alt={ad.title}
-                          className="w-full h-full object-cover rounded-lg"
-                        />
-                      </div>
-                      {ad.link && (
+                      {/* Image Container with Bezel */}
+                      <div className="relative mb-3">
+                        <div className="w-full h-40 bg-gradient-to-br from-white/20 to-white/10 rounded-xl p-1 shadow-inner overflow-hidden">
+                          <img
+                            src={ad.image}
+                            alt={ad.title}
+                            className="w-full h-full object-cover rounded-lg"
+                            style={{ pointerEvents: 'none' }}
+                          />
+                        </div>
                         <div className="absolute top-2 right-2 bg-white/20 backdrop-blur-sm rounded-full p-1">
                           <FaExternalLinkAlt className="text-white text-xs" />
                         </div>
-                      )}
-                    </div>
-                    <h4 className="text-lg font-semibold text-white mb-2">{ad.title}</h4>
-                    <p className="text-white/80 text-sm mb-3">{ad.description}</p>
-                    {ad.link && (
+                      </div>
+                      <h4 className="text-lg font-semibold text-white mb-2">{ad.title}</h4>
+                      <p className="text-white/80 text-sm mb-3">{ad.description}</p>
                       <div className="mb-2 text-xs text-white/60 flex items-center justify-center">
                         <FaExternalLinkAlt className="mr-1" />
                         Click to view
                       </div>
-                    )}
-                  </button>
-                ) : (
-                  <div className="bg-white/15 backdrop-blur-lg rounded-2xl p-3 shadow-2xl border border-white/20">
-                    {/* Image Container with Bezel */}
-                    <div className="relative mb-3">
-                      <div className="w-full h-40 bg-gradient-to-br from-white/20 to-white/10 rounded-xl p-1 shadow-inner overflow-hidden">
-                        <img
-                          src={ad.image}
-                          alt={ad.title}
-                          className="w-full h-full object-cover rounded-lg"
-                        />
+                    </a>
+                  ) : (
+                    <div className="bg-white/15 backdrop-blur-lg rounded-2xl p-3 shadow-2xl border border-white/20">
+                      {/* Image Container with Bezel */}
+                      <div className="relative mb-3">
+                        <div className="w-full h-40 bg-gradient-to-br from-white/20 to-white/10 rounded-xl p-1 shadow-inner overflow-hidden">
+                          <img
+                            src={ad.image}
+                            alt={ad.title}
+                            className="w-full h-full object-cover rounded-lg"
+                          />
+                        </div>
                       </div>
+                      <h4 className="text-lg font-semibold text-white mb-2">{ad.title}</h4>
+                      <p className="text-white/80 text-sm mb-3">{ad.description}</p>
                     </div>
-                    <h4 className="text-lg font-semibold text-white mb-2">{ad.title}</h4>
-                    <p className="text-white/80 text-sm mb-3">{ad.description}</p>
-                  </div>
-                )}
+                  )}
                 </SwiperSlide>
               ))}
             </Swiper>
