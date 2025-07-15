@@ -529,14 +529,10 @@ function Single() {
           >
             {/* Model Details */}
             <div className="bg-white/15 backdrop-blur-lg rounded-2xl p-6 shadow-2xl border border-white/20">
-              <h3 className="text-2xl font-bold text-white mb-4">Model Details</h3>
+              <h3 className="text-2xl font-bold text-white mb-4">{model.title}</h3>
               <div className="space-y-4">
                 <div>
-                  <h4 className="text-lg font-semibold text-white mb-2">Title</h4>
-                  <p className="text-white/80">{model.title}</p>
-                </div>
-                <div>
-                  <h4 className="text-lg font-semibold text-white mb-2">Description</h4>
+                  {/* Only show the description, no label */}
                   <p className="text-white/80">{model.description}</p>
                 </div>
                 {model.modelColor && (

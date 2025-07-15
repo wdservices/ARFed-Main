@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 // Removed Nav component
 // import Nav from "../../components/MobileNav";
 // Removed ModelCard import as it seems the card is built directly in this file
@@ -15,6 +15,49 @@ import { useRef } from 'react';
 import FloatingChat from "../../components/FloatingChat";
 import { useIsMobile } from "../../hooks/use-mobile";
 import { motion } from "framer-motion";
+import { FixedSizeGrid as Grid } from 'react-window';
+
+// Memoized Model Card (simplified glassmorphism)
+const ModelCard = React.memo(function ModelCard({ model, index, user, validPaidPlans, onClick, marginClass }) {
+  return (
+    <motion.div
+      key={model._id}
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5, delay: index < 4 ? index * 0.1 : 0 }}
+      whileHover={{ scale: 1.05, y: -8, transition: { duration: 0.2 } }}
+      onClick={onClick}
+      className={`group cursor-pointer${marginClass}`}
+    >
+      <div className="relative bg-white/30 rounded-2xl p-3 border border-white/20" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+        {model.isPremium && !validPaidPlans.includes(user?.plan) && (
+          <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-lg z-10">
+            <FaCrown className="text-white" size={10} />
+            Premium
+          </div>
+        )}
+        <div className="relative mb-2">
+          <div className="w-full h-40 bg-gradient-to-br from-white/20 to-white/10 rounded-xl p-1 flex items-center justify-center">
+            <div className="w-full h-full bg-white/10 rounded-lg flex items-center justify-center">
+              <img
+                src={model.image}
+                alt={model.title}
+                className="w-24 h-24 object-contain drop-shadow-lg"
+                loading="lazy"
+              />
+            </div>
+          </div>
+        </div>
+        <div className="text-center">
+          <h3 className="font-bold text-xs text-white capitalize mb-2 group-hover:text-white/90 transition-colors line-clamp-2">
+            {model.title}
+          </h3>
+          <div className="w-8 h-1 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full mx-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        </div>
+      </div>
+    </motion.div>
+  );
+});
 
 const SingleSubject = () => {
   const router = useRouter();
@@ -281,48 +324,15 @@ const SingleSubject = () => {
                         if (isFirstInRowXl) marginClass += ' xl:ml-4';
                         if (isLastInRowXl) marginClass += ' xl:mr-4';
                         return (
-                          <motion.div
-                            key={index}
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 0.5, delay: index * 0.1 }}
-                            whileHover={{ 
-                              scale: 1.05,
-                              y: -8,
-                              transition: { duration: 0.2 }
-                            }}
+                          <ModelCard
+                            key={model._id}
+                            model={model}
+                            index={index}
+                            user={user}
+                            validPaidPlans={validPaidPlans}
                             onClick={() => router.push(`/${model._id}`)}
-                            className={`group cursor-pointer${marginClass}`}
-                          >
-                            <div className="relative bg-white/15 backdrop-blur-lg rounded-2xl p-3 shadow-2xl hover:shadow-3xl transition-all duration-300 border border-white/20 hover:border-white/30">
-                              {/* Premium Crown Badge */}
-                              {model.isPremium && !validPaidPlans.includes(user?.plan) && (
-                                <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-lg z-10">
-                                  <FaCrown className="text-white" size={10} />
-                                  Premium
-                                </div>
-                              )}
-                              {/* Image Container with Bezel */}
-                              <div className="relative mb-2">
-                                <div className="w-full h-40 bg-gradient-to-br from-white/20 to-white/10 rounded-xl p-1 shadow-inner">
-                                  <div className="w-full h-full bg-white/10 rounded-lg flex items-center justify-center">
-                                    <img
-                                      src={model.image}
-                                      alt={model.title}
-                                      className="w-24 h-24 object-contain drop-shadow-lg"
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                              {/* Model Title */}
-                              <div className="text-center">
-                                <h3 className="font-bold text-xs text-white capitalize mb-2 group-hover:text-white/90 transition-colors line-clamp-2">
-                                  {model.title}
-                                </h3>
-                                <div className="w-8 h-1 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full mx-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                              </div>
-                            </div>
-                          </motion.div>
+                            marginClass={marginClass}
+                          />
                         );
                       })}
                     </div>

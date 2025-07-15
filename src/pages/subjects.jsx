@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
@@ -287,59 +287,7 @@ const Subjects = () => {
             >
               {ads.map((ad, index) => (
                 <SwiperSlide key={index}>
-                  {ad.link ? (
-                    <a
-                      href={ad.link.startsWith('http') ? ad.link : `https://${ad.link}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block w-full bg-white/15 backdrop-blur-lg rounded-2xl p-3 shadow-2xl border border-white/20 transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-3xl text-left"
-                      style={{ 
-                        touchAction: 'manipulation',
-                        WebkitTapHighlightColor: 'transparent'
-                      }}
-                      onClick={(e) => {
-                        console.log('Ad card clicked:', ad.title);
-                        console.log('Ad link:', ad.link);
-                        console.log('Event target:', e.target);
-                      }}
-                    >
-                      {/* Image Container with Bezel */}
-                      <div className="relative mb-3">
-                        <div className="w-full h-40 bg-gradient-to-br from-white/20 to-white/10 rounded-xl p-1 shadow-inner overflow-hidden">
-                          <img
-                            src={ad.image}
-                            alt={ad.title}
-                            className="w-full h-full object-cover rounded-lg"
-                            style={{ pointerEvents: 'none' }}
-                          />
-                        </div>
-                        <div className="absolute top-2 right-2 bg-white/20 backdrop-blur-sm rounded-full p-1">
-                          <FaExternalLinkAlt className="text-white text-xs" />
-                        </div>
-                      </div>
-                      <h4 className="text-lg font-semibold text-white mb-2">{ad.title}</h4>
-                      <p className="text-white/80 text-sm mb-3">{ad.description}</p>
-                      <div className="mb-2 text-xs text-white/60 flex items-center justify-center">
-                        <FaExternalLinkAlt className="mr-1" />
-                        Click to view
-                      </div>
-                    </a>
-                  ) : (
-                    <div className="bg-white/15 backdrop-blur-lg rounded-2xl p-3 shadow-2xl border border-white/20">
-                      {/* Image Container with Bezel */}
-                      <div className="relative mb-3">
-                        <div className="w-full h-40 bg-gradient-to-br from-white/20 to-white/10 rounded-xl p-1 shadow-inner overflow-hidden">
-                          <img
-                            src={ad.image}
-                            alt={ad.title}
-                            className="w-full h-full object-cover rounded-lg"
-                          />
-                        </div>
-                      </div>
-                      <h4 className="text-lg font-semibold text-white mb-2">{ad.title}</h4>
-                      <p className="text-white/80 text-sm mb-3">{ad.description}</p>
-                    </div>
-                  )}
+                  <AdCard ad={ad} index={index} />
                 </SwiperSlide>
               ))}
             </Swiper>
@@ -385,48 +333,14 @@ const Subjects = () => {
                 if (isFirstInRowXl) marginClass += ' xl:ml-4';
                 if (isLastInRowXl) marginClass += ' xl:mr-4';
                 return (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                    whileHover={{ 
-                      scale: 1.05,
-                      y: -8,
-                      transition: { duration: 0.2 }
-                    }}
-                    onClick={() => single(subject._id)}
-                    className={`group cursor-pointer${marginClass}`}
-                  >
-                    <div className="relative bg-white/15 backdrop-blur-lg rounded-2xl p-3 shadow-2xl hover:shadow-3xl transition-all duration-300 border border-white/20 hover:border-white/30">
-                      {/* Premium Badge */}
-                      {user && subject._id !== "63dace7d1b0974f12c03d419" && user.plan === "free" && (
-                        <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-lg z-10">
-                          <FaCrown className="text-white" size={10} />
-                          Premium
-                        </div>
-                      )}
-                      
-                      {/* Image Container with Bezel */}
-                      <div className="relative mb-2">
-                        <div className="w-full aspect-[3/4] bg-gradient-to-br from-white/20 to-white/10 rounded-xl p-1 shadow-inner flex items-center justify-center">
-                          <img
-                            src={subject.image}
-                            alt={subject.title}
-                            className="w-full h-full object-cover rounded-lg drop-shadow-lg"
-                          />
-                        </div>
-                      </div>
-                      
-                      {/* Subject Title */}
-                      <div className="text-center">
-                        <h3 className="font-bold text-xs text-white capitalize mb-2 group-hover:text-white/90 transition-colors subject-title">
-                          {subject.title}
-                        </h3>
-                        <div className="w-8 h-1 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full mx-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      </div>
-                    </div>
-                  </motion.div>
+                  <SubjectCard
+                    key={subject._id}
+                    subject={subject}
+                    index={index}
+                    user={user}
+                    single={single}
+                    marginClass={marginClass}
+                  />
                 );
               })}
             </div>
@@ -440,5 +354,94 @@ const Subjects = () => {
     </div>
   );
 };
+
+// Memoized Subject Card (keep simplified glassmorphism)
+const SubjectCard = React.memo(function SubjectCard({ subject, index, user, single, marginClass }) {
+  return (
+    <motion.div
+      key={subject._id}
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5, delay: index < 4 ? index * 0.1 : 0 }}
+      whileHover={{ scale: 1.05, y: -8, transition: { duration: 0.2 } }}
+      onClick={() => single(subject._id)}
+      className={`group cursor-pointer${marginClass}`}
+    >
+      <div className="relative bg-white/30 rounded-2xl p-3 border border-white/20" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+        {user && subject._id !== "63dace7d1b0974f12c03d419" && user.plan === "free" && (
+          <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-lg z-10">
+            <FaCrown className="text-white" size={10} />
+            Premium
+          </div>
+        )}
+        <div className="relative mb-2">
+          <div className="w-full aspect-[3/4] bg-gradient-to-br from-white/20 to-white/10 rounded-xl p-1 flex items-center justify-center">
+            <img
+              src={subject.image}
+              alt={subject.title}
+              className="w-full h-full object-cover rounded-lg drop-shadow-lg"
+              loading="lazy"
+            />
+          </div>
+        </div>
+        <div className="text-center">
+          <h3 className="font-bold text-xs text-white capitalize mb-2 group-hover:text-white/90 transition-colors subject-title">
+            {subject.title}
+          </h3>
+          <div className="w-8 h-1 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full mx-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        </div>
+      </div>
+    </motion.div>
+  );
+});
+
+// Memoized Ad Card
+const AdCard = React.memo(function AdCard({ ad, index }) {
+  return ad.link ? (
+    <a
+      href={ad.link.startsWith('http') ? ad.link : `https://${ad.link}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block w-full bg-white/15 backdrop-blur-lg rounded-2xl p-3 shadow-2xl border border-white/20 transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-3xl text-left"
+      style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+    >
+      <div className="relative mb-3">
+        <div className="w-full h-40 bg-gradient-to-br from-white/20 to-white/10 rounded-xl p-1 shadow-inner overflow-hidden">
+          <img
+            src={ad.image}
+            alt={ad.title}
+            className="w-full h-full object-cover rounded-lg"
+            style={{ pointerEvents: 'none' }}
+            loading="lazy"
+          />
+        </div>
+        <div className="absolute top-2 right-2 bg-white/20 backdrop-blur-sm rounded-full p-1">
+          <FaExternalLinkAlt className="text-white text-xs" />
+        </div>
+      </div>
+      <h4 className="text-lg font-semibold text-white mb-2">{ad.title}</h4>
+      <p className="text-white/80 text-sm mb-3">{ad.description}</p>
+      <div className="mb-2 text-xs text-white/60 flex items-center justify-center">
+        <FaExternalLinkAlt className="mr-1" />
+        Click to view
+      </div>
+    </a>
+  ) : (
+    <div className="bg-white/15 backdrop-blur-lg rounded-2xl p-3 shadow-2xl border border-white/20">
+      <div className="relative mb-3">
+        <div className="w-full h-40 bg-gradient-to-br from-white/20 to-white/10 rounded-xl p-1 shadow-inner overflow-hidden">
+          <img
+            src={ad.image}
+            alt={ad.title}
+            className="w-full h-full object-cover rounded-lg"
+            loading="lazy"
+          />
+        </div>
+      </div>
+      <h4 className="text-lg font-semibold text-white mb-2">{ad.title}</h4>
+      <p className="text-white/80 text-sm mb-3">{ad.description}</p>
+    </div>
+  );
+});
 
 export default Subjects;
