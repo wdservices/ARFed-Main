@@ -30,6 +30,7 @@ function Single() {
   const modelViewerRef = useRef(null);
   const [showAnnotations, setShowAnnotations] = useState(true);
   const [isSpeechSynthesisAvailable, setIsSpeechSynthesisAvailable] = useState(false);
+  // Remove modelLoaded state
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.speechSynthesis) {
@@ -405,41 +406,16 @@ function Single() {
           </span>
         </div>
 
-        {/* Speech Controls */}
-        {isSpeechSynthesisAvailable && (
-          <div className="flex items-center gap-2">
-            {isPaused ? (
-              // Resume button
-              <div className="p-2 bg-green-500/20 backdrop-blur-lg border border-green-500/30 rounded-full cursor-pointer text-green-200 hover:bg-green-500/30 transition-colors" onClick={resume} title="Resume">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                  <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm3.844-8.791a.5.5 0 0 0-.876-.482L7.348 8.396a.5.5 0 0 0 .348.788l3.148.5z"/>
-                </svg>
-              </div>
-            ) : isSpeaking ? (
-              // Pause button
-              <div className="p-2 bg-yellow-500/20 backdrop-blur-lg border border-yellow-500/30 rounded-full cursor-pointer text-yellow-200 hover:bg-yellow-500/30 transition-colors" onClick={pause} title="Pause">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                  <path d="M5.5 3.5A.5.5 0 0 1 6 4v8a.5.5 0 0 1-1 0V4a.5.5 0 0 1 .5-.5zm5 0A.5.5 0 0 1 11 4v8a.5.5 0 0 1-1 0V4a.5.5 0 0 1 .5-.5z"/>
-                </svg>
-              </div>
-            ) : (
-              // Play button
-              <div className="p-2 bg-blue-500/20 backdrop-blur-lg border border-blue-500/30 rounded-full cursor-pointer text-blue-200 hover:bg-blue-500/30 transition-colors" onClick={() => speak(model.description)} title="Listen to Description">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                  <path d="M8 3.993c-2.21 0-4 1.79-4 4 0 2.21 1.79 4 4 4s4-1.79 4-4c0-2.21-1.79-4-4-4zm0 7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/>
-                </svg>
-              </div>
-            )}
-            {/* Stop button */}
-            {isSpeaking && (
-              <div className="p-2 bg-red-500/20 backdrop-blur-lg border border-red-500/30 rounded-full cursor-pointer text-red-200 hover:bg-red-500/30 transition-colors" onClick={stop} title="Stop">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                  <path d="M5.5 5.5A.5.5 0 0 1 6 6v4a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm5 0A.5.5 0 0 1 11 6v4a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5z"/>
-                </svg>
-              </div>
-            )}
-          </div>
-        )}
+        {/* Microphone Icon for Audio Description */}
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => speak(model.description)}
+            title="Listen to Description"
+            className="p-2 rounded-full bg-blue-500/20 hover:bg-blue-500/40 text-blue-200 border border-blue-500/30 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400"
+          >
+            <FaMicrophone size={22} />
+          </button>
+        </div>
       </div>
 
       {/* Main Content Area (starts below fixed header) */}
@@ -481,9 +457,7 @@ function Single() {
                     data-normal={annotation.normal}
                     data-visibility-attribute="visible"
                   >
-                    <div className="annotation" slot={`annotation-${index}`}>
-                      {annotation.text}
-                    </div>
+                    <div className="annotation" slot={`annotation-${index}`}>{annotation.text}</div>
                   </button>
                 ))}
               </model-viewer>
@@ -529,6 +503,7 @@ function Single() {
           >
             {/* Model Details */}
             <div className="bg-white/15 backdrop-blur-lg rounded-2xl p-6 shadow-2xl border border-white/20">
+              {/* Model name as bold header, no 'Model Details' or 'Title' label */}
               <h3 className="text-2xl font-bold text-white mb-4">{model.title}</h3>
               <div className="space-y-4">
                 <div>
