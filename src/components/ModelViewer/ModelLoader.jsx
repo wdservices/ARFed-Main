@@ -3,6 +3,7 @@ import { useThree, useFrame } from '@react-three/fiber';
 import { useLoader } from '@react-three/fiber';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as THREE from 'three';
+import MeshoptDecoder from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 
 const ModelLoader = forwardRef(({ 
   url, 
@@ -33,6 +34,8 @@ const ModelLoader = forwardRef(({
         
         // Use GLTFLoader directly with better error handling
         const gltfLoader = new GLTFLoader();
+        // Set the Meshopt decoder before loading
+        gltfLoader.setMeshoptDecoder(MeshoptDecoder);
         
         // Add a timeout to the loading process
         const loadPromise = new Promise((resolve, reject) => {
