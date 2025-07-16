@@ -1,4 +1,40 @@
-import React, { useState, useEffect } from "react";
+[16:11:37.621] Running build in Washington, D.C., USA (East) – iad1
+[16:11:37.624] Build machine configuration: 2 cores, 8 GB
+[16:11:37.651] Cloning github.com/wdservices/ARFed-Main (Branch: main, Commit: 320c04a)
+[16:11:39.363] Cloning completed: 1.711s
+[16:11:42.570] Restored build cache from previous deployment (9s5sqZJexw5DA6ckHBrBexzwt77p)
+[16:11:45.223] Running "vercel build"
+[16:11:45.739] Vercel CLI 44.3.0
+[16:11:46.074] Installing dependencies...
+[16:11:50.727] 
+[16:11:50.728] added 3 packages, and changed 1 package in 4s
+[16:11:50.728] 
+[16:11:50.728] 182 packages are looking for funding
+[16:11:50.729]   run `npm fund` for details
+[16:11:50.776] Detected Next.js version: 13.5.11
+[16:11:50.777] Running "next build"
+[16:11:52.098]    Linting and checking validity of types ...
+[16:11:52.316]  ⚠ No ESLint configuration detected. Run next lint to begin setup
+[16:12:03.051]    Creating an optimized production build ...
+[16:12:03.584] > [PWA] Compile server
+[16:12:03.586] > [PWA] Compile server
+[16:12:03.586] > [PWA] Compile client (static)
+[16:12:03.587] > [PWA] Auto register service worker with: /vercel/path0/node_modules/next-pwa/register.js
+[16:12:03.587] > [PWA] Service worker: /vercel/path0/public/sw.js
+[16:12:03.587] > [PWA]   url: /sw.js
+[16:12:03.588] > [PWA]   scope: /
+[16:12:09.145] Failed to compile.
+[16:12:09.145] 
+[16:12:09.146] ./src/pages/api/github-list.js
+[16:12:09.146] Module not found: Can't resolve 'node-fetch'
+[16:12:09.146] 
+[16:12:09.146] https://nextjs.org/docs/messages/module-not-found
+[16:12:09.146] 
+[16:12:09.146] 
+[16:12:09.147] > Build failed because of webpack errors
+[16:12:09.172] Error: Command "next build" exited with 1
+[16:12:09.910] 
+[16:12:12.670] Exiting build containerimport React, { useState, useEffect } from "react";
 import { Modal, Button } from "antd";
 import { getCookie } from "cookies-next";
 import axios from "axios";
