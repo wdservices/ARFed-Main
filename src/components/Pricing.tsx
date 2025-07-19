@@ -6,12 +6,19 @@ import Payment from "./Payment";
 import { useRouter } from "next/router";
 import { useUser } from "../context/UserContext";
 
+type UserContextType = {
+  user: any;
+  loading: boolean;
+  logoutUser: () => void;
+  setUser: (user: any) => void;
+  fetchUser: (firebaseUser: any) => Promise<void>;
+};
+
 const Pricing = () => {
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const router = useRouter();
-  const userContext = useUser();
-  const user = userContext ? userContext.user : null;
+  const { user } = useUser() as UserContextType;
 
   const handlePlanSelect = (plan) => {
     if (!user) {
