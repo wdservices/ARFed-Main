@@ -10,7 +10,7 @@ const Pricing = () => {
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const router = useRouter();
-  const { user } = useUser();
+  const { user } = useUser() || {};
 
   const handlePlanSelect = (plan) => {
     if (!user) {
