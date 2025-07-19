@@ -117,12 +117,13 @@ const ModelCanvas = ({
           gl.shadowMap.enabled = true;
           gl.shadowMap.type = THREE.PCFSoftShadowMap;
         }}
+        style={{ touchAction: 'none' }}
       >
         <Scene 
           isAddingAnnotation={isAddingAnnotation} 
           onModelClick={handleModelClick}
         />
-        <PerspectiveCamera makeDefault position={[0, 0, 5]} fov={50} />
+        <PerspectiveCamera makeDefault position={[0, 0, 12]} fov={45} />
         <OrbitControls
           ref={ref => {
             orbitControlsRef.current = ref;
@@ -131,7 +132,11 @@ const ModelCanvas = ({
           enableDamping
           dampingFactor={0.05}
           minDistance={1}
-          maxDistance={100}
+          maxDistance={50}
+          enableZoom={true}
+          enablePan={true}
+          enableRotate={true}
+          zoomSpeed={1.2}
         />
         <ambientLight intensity={1.2} />
         <directionalLight position={[10, 10, 5]} intensity={2} />

@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { getCookie } from "cookies-next";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import Head from "next/head";
+import { useUser } from "../context/UserContext";
 
 const Layout = ({ children }) => {
   const router = useRouter();
-  const token = getCookie("token");
+  const { user, loading } = useUser();
   const [open, openModal] = useState(false);
+  
   useEffect(() => {
-    if (token === undefined) {
+    // Only redirect if not loading and no user
+    if (!loading && !user) {
       router.push("/login");
     }
     // Commenting out desktop restriction for now to facilitate tablet optimization
@@ -17,7 +19,8 @@ const Layout = ({ children }) => {
     //   openModal(true);
     //   document.body.classList.add(`overflow-hidden`);
     // }
-  });
+  }, [user, loading, router]);
+  
   return (
     <div>
       <Head>

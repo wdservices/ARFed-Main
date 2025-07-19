@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
 import Layout from "../../components/Layout";
-import axios from "axios";
-import { getCookie, deleteCookie } from "cookies-next";
 import Head from "next/head";
 import SubjectModal from "../../components/SubjectModal";
 import Link from "next/link";
@@ -24,10 +22,17 @@ import {
 import { toast } from "@/components/ui/use-toast";
 import { useUser } from "../../context/UserContext";
 import Index3DConfigurator from "@/components/Configurator3D/Index";
+import app from "../../lib/firebaseClient";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+} from "firebase/firestore";
+
+const db = getFirestore(app);
 
 const Admin = () => {
   const { user, loading, logoutUser } = useUser();
-  const token = getCookie("token");
   const [users, setUsers] = useState([]);
   const [models, setModels] = useState([]);
   const [subject, openSubject] = useState(false);
@@ -39,69 +44,43 @@ const Admin = () => {
 
   useEffect(() => {
     const checkAdminAccess = async () => {
-      // If still loading, wait
-      if (loading) {
-        return;
-      }
-      
-      // If no user after loading is complete, redirect to login
+      if (loading) return;
       if (!user) {
         router.replace('/login');
         return;
       }
-      
-      // If user is not admin, redirect to subjects
-              if (user.role !== "admin") {
-          toast({
-            title: "Access Denied",
-            description: "Admin privileges required.",
-            variant: "destructive",
-          });
-          router.replace('/subjects');
-          return;
-        }
-
-      // Only fetch data if user is admin
+      if (user.role !== "admin") {
+        toast({
+          title: "Access Denied",
+          description: "Admin privileges required.",
+          variant: "destructive",
+        });
+        router.replace('/subjects');
+        return;
+      }
       await fetchData();
     };
-
     checkAdminAccess();
   }, [loading, user, router]);
 
   const fetchData = async () => {
     try {
-      const [usersRes, subjectsRes, modelsRes] = await Promise.all([
-        axios.get("https://arfed-api.onrender.com/api/user", {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            "auth-token": token,
-          },
-        }),
-        axios.get("https://arfed-api.onrender.com/api/subject", {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            "auth-token": token,
-          },
-        }),
-        axios.get("https://arfed-api.onrender.com/api/models", {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            "auth-token": token,
-          },
-        })
+      const [usersSnap, subjectsSnap, modelsSnap] = await Promise.all([
+        getDocs(collection(db, "users")),
+        getDocs(collection(db, "subjects")),
+        getDocs(collection(db, "models")),
       ]);
-
-      setUsers(usersRes.data);
-      setSubjects(subjectsRes.data);
-      setModels(modelsRes.data);
-
+      const usersArr = usersSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const subjectsArr = subjectsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const modelsArr = modelsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setUsers(usersArr);
+      setSubjects(subjectsArr);
+      setModels(modelsArr);
       // Calculate monthly users
       const currentMonth = new Date().getMonth();
-      const monthlyUsers = usersRes.data.filter(u => {
-        const userMonth = new Date(u.date).getMonth();
+      const monthlyUsers = usersArr.filter(u => {
+        if (!u.date?.toDate) return false;
+        const userMonth = u.date.toDate().getMonth();
         return userMonth === currentMonth;
       }).length;
       setMonthlyUsers(monthlyUsers);
@@ -130,12 +109,12 @@ const Admin = () => {
   };
 
   const filteredUsers = users.filter(u => 
-    u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.email.toLowerCase().includes(searchTerm.toLowerCase())
+    u.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const filteredModels = models.filter(model =>
-    model.title.toLowerCase().includes(searchTerm.toLowerCase())
+    model.title?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (loading) {
@@ -147,7 +126,6 @@ const Admin = () => {
     );
   }
 
-  // Don't render anything while redirecting or if user is not admin
   if (!user || user.role !== "admin") {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#1E3A8A] via-[#2563EB] to-[#3B82F6]">
@@ -366,15 +344,15 @@ const Admin = () => {
                 <div className="space-y-4">
                   {filteredUsers.length > 0 ? (
                     filteredUsers.slice(0, 5).map(u => (
-                      <div key={u._id} className="flex items-center bg-white/5 rounded-lg p-3">
+                      <div key={u.id} className="flex items-center bg-white/5 rounded-lg p-3">
                         <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center mr-3">
-                          <span className="text-white text-sm font-semibold">{u.name.charAt(0).toUpperCase()}</span>
+                          <span className="text-white text-sm font-semibold">{u.name?.charAt(0).toUpperCase()}</span>
                         </div>
                         <div>
                           <p className="text-white font-semibold">{u.name}</p>
                           <p className="text-white/60 text-sm">{u.email}</p>
                         </div>
-                        <Link href={`/admin/users?id=${u._id}`} className="ml-auto text-blue-300 hover:underline text-sm">
+                        <Link href={`/admin/users?id=${u.id}`} className="ml-auto text-blue-300 hover:underline text-sm">
                           View Details
                         </Link>
                       </div>
@@ -393,13 +371,13 @@ const Admin = () => {
                 <div className="space-y-4">
                   {filteredModels.length > 0 ? (
                     filteredModels.slice(0, 5).map(model => (
-                      <div key={model._id} className="flex items-center bg-white/5 rounded-lg p-3">
+                      <div key={model.id} className="flex items-center bg-white/5 rounded-lg p-3">
                         <img src={model.image} alt={model.title} className="w-10 h-10 object-cover rounded-md mr-3" />
                         <div>
                           <p className="text-white font-semibold">{model.title}</p>
                           <p className="text-white/60 text-sm">{model.subject}</p>
                         </div>
-                        <Link href={`/admin/models?id=${model._id}`} className="ml-auto text-blue-300 hover:underline text-sm">
+                        <Link href={`/admin/models?id=${model.id}`} className="ml-auto text-blue-300 hover:underline text-sm">
                           View Details
                         </Link>
                       </div>

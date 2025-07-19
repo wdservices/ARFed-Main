@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import app from "../lib/firebaseClient";
+import { getAuth, sendPasswordResetEmail } from "firebase/auth";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -7,21 +8,23 @@ export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const auth = getAuth(app);
+
+  const handleReset = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.post('/api/user/forgot-password', { email });
-      toast.success('Check your email for a password reset link.');
+      await sendPasswordResetEmail(auth, email);
+      toast.success("Password reset email sent!");
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Error sending reset email.');
+      toast.error(err.message || "Failed to send password reset email");
     }
     setLoading(false);
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-900 via-blue-700 to-blue-500">
-      <form onSubmit={handleSubmit} className="bg-white/10 p-8 rounded-xl shadow-lg w-full max-w-md">
+      <form onSubmit={handleReset} className="bg-white/10 p-8 rounded-xl shadow-lg w-full max-w-md">
         <h2 className="text-2xl font-bold mb-4 text-white">Forgot Password</h2>
         <input
           type="email"

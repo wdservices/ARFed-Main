@@ -20,7 +20,7 @@ export type Annotation = {
 const ModelViewer = ({ subjects = [] }) => {
   const [modelUrl, setModelUrl] = useState('');
   const [inputUrl, setInputUrl] = useState('');
-  const [modelScale, setModelScale] = useState(1.0);
+
   const [isLoading, setIsLoading] = useState(false);
   const [isModelLoaded, setIsModelLoaded] = useState(false);
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
@@ -295,7 +295,7 @@ const ModelViewer = ({ subjects = [] }) => {
         <ModelCanvas
           canvasRef={canvasRef}
           modelUrl={modelUrl}
-          modelScale={modelScale}
+          modelScale={1.0}
           isLoading={isLoading}
           isModelLoaded={isModelLoaded}
           annotations={annotations}

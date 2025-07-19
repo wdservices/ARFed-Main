@@ -1,21 +1,30 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Button } from "antd";
-import axios from "axios";
-import { getCookie } from "cookies-next";
 import Head from "next/head";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import AdminLayout from "../../components/AdminLayout";
 import { motion } from "framer-motion";
-import { FaSearch, FaEdit, FaTrash, FaPlus, FaCopy } from "react-icons/fa";
+import { FaSearch, FaEdit, FaTrash, FaPlus, FaCopy, FaCube } from "react-icons/fa";
 import ModelCanvas from "@/components/ModelViewer/ModelCanvas";
+import app from "../../lib/firebaseClient";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  serverTimestamp,
+} from "firebase/firestore";
+
+const db = getFirestore(app);
 
 const Models = () => {
   const [models, setModels] = useState([]);
-  const [newModels, setNewModels] = useState([]);
-  const token = getCookie("token");
-  const [subject, setSubject] = useState("");
   const [subjects, setSubjects] = useState([]);
+  const [subject, setSubject] = useState("");
   const [open, openModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
@@ -40,26 +49,14 @@ const Models = () => {
 
   const fetchData = async () => {
     try {
-      const [modelsRes, subjectsRes] = await Promise.all([
-        axios.get("https://arfed-api.onrender.com/api/models", {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            "auth-token": token,
-          },
-        }),
-        axios.get("https://arfed-api.onrender.com/api/subject", {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            "auth-token": token,
-          },
-        })
-      ]);
-
-      setModels(modelsRes.data);
-      setNewModels(modelsRes.data);
-      setSubjects(subjectsRes.data);
+      // Fetch models
+      const modelsSnap = await getDocs(collection(db, "models"));
+      const modelsArr = modelsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setModels(modelsArr);
+      // Fetch subjects
+      const subjectsSnap = await getDocs(collection(db, "subjects"));
+      const subjectsArr = subjectsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setSubjects(subjectsArr);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("Failed to fetch data");
@@ -68,39 +65,55 @@ const Models = () => {
 
   const setOpenModal = (model) => {
     openModal(true);
-    setDesc(model.description);
-    setImage(model.image);
-    setTitle(model.title);
-    setModel(model.model);
-    setSingle(model._id);
-    setIos(model?.iosModel);
+    setDesc(model.description || "");
+    setImage(model.image || "");
+    setTitle(model.title || "");
+    setModel(model.model || "");
+    setSingle(model.id || "");
+    setIos(model.iosModel || "");
     setSelectedSubject(model.subjectId || "");
+  };
+
+  const clearModal = () => {
+    setDesc("");
+    setImage("");
+    setTitle("");
+    setModel("");
+    setSingle("");
+    setIos("");
+    setSelectedSubject("");
   };
 
   const editModel = async () => {
     setLoading(true);
     try {
-      await axios.put(
-        `https://arfed-api.onrender.com/api/models/${single}`,
-        {
+      if (single) {
+        // Update existing model
+        await updateDoc(doc(db, "models", single), {
           title,
           description,
           image,
           model,
           iosModel,
-          subjectId: selectedSubject
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            "auth-token": token,
-          },
-        }
-      );
-      toast.success("Model Updated successfully");
+          subjectId: selectedSubject,
+        });
+        toast.success("Model updated successfully");
+      } else {
+        // Add new model
+        await addDoc(collection(db, "models"), {
+          title,
+          description,
+          image,
+          model,
+          iosModel,
+          subjectId: selectedSubject,
+          date: serverTimestamp(),
+        });
+        toast.success("Model created successfully");
+      }
       setLoading(false);
       openModal(false);
+      clearModal();
       fetchData();
     } catch (error) {
       setLoading(false);
@@ -111,13 +124,7 @@ const Models = () => {
 
   const deleteModel = async (id) => {
     try {
-      await axios.delete(`https://arfed-api.onrender.com/api/models/${id}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "auth-token": token,
-        },
-      });
+      await deleteDoc(doc(db, "models", id));
       toast.success("Model deleted successfully");
       fetchData();
     } catch (error) {
@@ -126,8 +133,8 @@ const Models = () => {
     }
   };
 
-  const filteredModels = models.filter(model => {
-    const matchesSearch = model.title.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredModels = models.filter((model) => {
+    const matchesSearch = model.title?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesSubject = !subject || model.subjectId === subject;
     return matchesSearch && matchesSubject;
   });
@@ -159,7 +166,7 @@ const Models = () => {
           >
             <option value="">All Subjects</option>
             {subjects.map((subject, index) => (
-              <option key={index} value={subject._id}>
+              <option key={index} value={subject.id}>
                 {subject.title}
               </option>
             ))}
@@ -207,7 +214,7 @@ const Models = () => {
               className="bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 overflow-hidden"
             >
               <img
-                src={`https://arfed-api.onrender.com/${model.image}`}
+                src={model.image}
                 alt={model.title}
                 className="w-full h-48 object-contain bg-[#181f2a]"
               />
@@ -220,7 +227,7 @@ const Models = () => {
                     <FaEdit className="w-3 h-3" />
                   </button>
                   <button
-                    onClick={() => deleteModel(model._id)}
+                    onClick={() => deleteModel(model.id)}
                     className="p-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
                   >
                     <FaTrash className="w-3 h-3" />
@@ -236,6 +243,16 @@ const Models = () => {
                   >
                     <FaCopy className="w-3 h-3" />
                   </button>
+                  <button
+                    onClick={() => {
+                      setModelUrl(model.model);
+                      setShow3DConfig(true);
+                    }}
+                    className="p-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
+                    title="3D Configuration"
+                  >
+                    <FaCube className="w-3 h-3" />
+                  </button>
                 </div>
                 <div className="flex-1 p-4">
                   <h3 className="text-lg font-semibold text-white mb-2">{model.title}</h3>
@@ -243,10 +260,10 @@ const Models = () => {
                     {model.description}
                   </div>
                   <div className="flex justify-between items-center text-white/60 text-xs">
-                    <span>{new Date(model.date).toLocaleDateString()}</span>
+                    <span>{model.date?.toDate ? model.date.toDate().toLocaleDateString() : ""}</span>
                     {model.subjectId && (
                       <span className="bg-indigo-600/20 text-indigo-300 px-2 py-1 rounded-full text-xs">
-                        {subjects.find(s => s._id === model.subjectId)?.title || 'Unknown Subject'}
+                        {subjects.find((s) => s.id === model.subjectId)?.title || "Unknown Subject"}
                       </span>
                     )}
                   </div>
@@ -262,7 +279,10 @@ const Models = () => {
         title={single ? "Edit Model" : "Add New Model"}
         centered
         open={open}
-        onCancel={() => openModal(false)}
+        onCancel={() => {
+          openModal(false);
+          clearModal();
+        }}
         footer={null}
         className="!bg-white !rounded-xl"
         styles={{ body: { background: '#fff', borderRadius: '0.75rem', boxShadow: '0 4px 32px rgba(0,0,0,0.10)' } }}
@@ -297,7 +317,7 @@ const Models = () => {
             >
               <option value="">Select a Subject</option>
               {subjects.map((subject, index) => (
-                <option key={index} value={subject._id}>
+                <option key={index} value={subject.id}>
                   {subject.title}
                 </option>
               ))}
@@ -365,8 +385,8 @@ const Models = () => {
                 className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:border-indigo-500 shadow-md"
               >
                 <option value="">Choose a subject</option>
-                {subjects.filter(s => s._id !== modelToDuplicate.subjectId).map(subject => (
-                  <option key={subject._id} value={subject._id}>{subject.title}</option>
+                {subjects.filter(s => s.id !== modelToDuplicate.subjectId).map(subject => (
+                  <option key={subject.id} value={subject.id}>{subject.title}</option>
                 ))}
               </select>
             </div>
@@ -375,24 +395,15 @@ const Models = () => {
                 onClick={async () => {
                   if (!duplicateTargetSubject || !modelToDuplicate) return;
                   try {
-                    await axios.post(
-                      "https://arfed-api.onrender.com/api/models",
-                      {
-                        title: modelToDuplicate.title,
-                        description: modelToDuplicate.description,
-                        image: modelToDuplicate.image,
-                        model: modelToDuplicate.model,
-                        iosModel: modelToDuplicate.iosModel,
-                        subjectId: duplicateTargetSubject,
-                      },
-                      {
-                        headers: {
-                          "Content-Type": "application/json",
-                          Accept: "application/json",
-                          "auth-token": token,
-                        },
-                      }
-                    );
+                    await addDoc(collection(db, "models"), {
+                      title: modelToDuplicate.title,
+                      description: modelToDuplicate.description,
+                      image: modelToDuplicate.image,
+                      model: modelToDuplicate.model,
+                      iosModel: modelToDuplicate.iosModel,
+                      subjectId: duplicateTargetSubject,
+                      date: serverTimestamp(),
+                    });
                     toast.success("Model duplicated successfully!");
                     setDuplicateModalOpen(false);
                     setModelToDuplicate(null);
@@ -424,7 +435,6 @@ const Models = () => {
             >
               Close
             </button>
-            
             {/* Simple header with model URL input */}
             <div className="flex items-center justify-between p-4 bg-gray-50 border-b">
               <div className="flex items-center space-x-4">
@@ -449,7 +459,6 @@ const Models = () => {
                 </button>
               </div>
             </div>
-            
             {/* Model Canvas */}
             <div className="w-full h-full overflow-hidden">
               <ModelCanvas

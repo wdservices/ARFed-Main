@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { getCookie } from "cookies-next";
 import Head from "next/head";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -8,11 +6,21 @@ import AdminLayout from "../../components/AdminLayout";
 import { motion } from "framer-motion";
 import { FaSearch, FaEdit, FaTrash, FaPlus } from "react-icons/fa";
 import { Modal } from "antd";
+import app from "../../lib/firebaseClient";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+} from "firebase/firestore";
+
+const db = getFirestore(app);
 
 const Subjects = () => {
-  const token = getCookie("token");
   const [subjects, setSubjects] = useState([]);
-  const [newSubjects, setNewSubjects] = useState([]);
   const [subject, openSubject] = useState(false);
   const [loading, setLoading] = useState(false);
   const [single, setSingle] = useState("");
@@ -27,67 +35,72 @@ const Subjects = () => {
 
   const fetchData = async () => {
     try {
-      const response = await axios.get("https://arfed-api.onrender.com/api/subject", {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "auth-token": token,
-        },
-      });
-      setSubjects(response.data);
-      setNewSubjects(response.data);
+      const subjectsSnap = await getDocs(collection(db, "subjects"));
+      const subjectsArr = subjectsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setSubjects(subjectsArr);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("Failed to fetch data");
     }
   };
 
-  const openModal = (subject) => {
-    setTitle(subject.title);
-    setDesc(subject.description);
-    setImage(subject.image);
-    setSingle(subject._id);
+  const openModal = (subject = {}) => {
+    setTitle(subject.title || "");
+    setDesc(subject.description || "");
+    setImage(subject.image || "");
+    setSingle(subject.id || "");
     openSubject(true);
+  };
+
+  const clearModal = () => {
+    setTitle("");
+    setDesc("");
+    setImage("");
+    setSingle("");
   };
 
   const editSubject = async () => {
     setLoading(true);
     try {
-      await axios.put(
-        `https://arfed-api.onrender.com/api/subject/${single}`,
-        {
+      if (!title.trim() || !description.trim()) {
+        toast.warn("Title and description are required");
+        setLoading(false);
+        return;
+      }
+      console.log("[DEBUG] Submitting subject:", { title, description, image, single });
+      if (single) {
+        // Update existing subject
+        await updateDoc(doc(db, "subjects", single), {
           title,
           description,
           image,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            "auth-token": token,
-          },
-        }
-      );
-      toast.success("Subject updated successfully");
+        });
+        toast.success("Subject updated successfully");
+        console.log("[DEBUG] Subject updated");
+      } else {
+        // Add new subject
+        const docRef = await addDoc(collection(db, "subjects"), {
+          title,
+          description,
+          image,
+        });
+        toast.success("Subject created successfully");
+        console.log("[DEBUG] Subject created with ID:", docRef.id);
+      }
       setLoading(false);
       openSubject(false);
+      clearModal();
       fetchData();
     } catch (error) {
       setLoading(false);
-      console.error(error);
-      toast.error("Failed to update subject");
+      console.error("[DEBUG] Failed to add/update subject:", error);
+      toast.error("Failed to add/update subject: " + (error.message || error));
     }
   };
 
   const deleteSubject = async (id) => {
     try {
-      await axios.delete(`https://arfed-api.onrender.com/api/subject/${id}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "auth-token": token,
-        },
-      });
+      await deleteDoc(doc(db, "subjects", id));
       toast.success("Subject deleted successfully");
       fetchData();
     } catch (error) {
@@ -97,7 +110,7 @@ const Subjects = () => {
   };
 
   const filteredSubjects = subjects.filter(subject =>
-    subject.title.toLowerCase().includes(searchTerm.toLowerCase())
+    subject.title?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -152,7 +165,7 @@ const Subjects = () => {
                   <FaEdit className="w-3 h-3" />
                 </button>
                 <button
-                  onClick={() => deleteSubject(subject._id)}
+                  onClick={() => deleteSubject(subject.id)}
                   className="p-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
                 >
                   <FaTrash className="w-3 h-3" />
@@ -164,7 +177,7 @@ const Subjects = () => {
                   {subject.description}
                 </div>
                 <span className="text-white/60 text-xs">
-                  {new Date(subject.date).toLocaleDateString()}
+                  {subject.date?.toDate ? subject.date.toDate().toLocaleDateString() : ""}
                 </span>
               </div>
             </div>
@@ -177,7 +190,10 @@ const Subjects = () => {
         title={single ? "Edit Subject" : "Add New Subject"}
         centered
         open={subject}
-        onCancel={() => openSubject(false)}
+        onCancel={() => {
+          openSubject(false);
+          clearModal();
+        }}
         footer={null}
         className="!bg-[#181f2a] !rounded-xl"
         bodyStyle={{ background: '#232946', borderRadius: '0.75rem', boxShadow: '0 4px 32px rgba(0,0,0,0.25)' }}

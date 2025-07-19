@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Head from "next/head";
-import axios from "axios";
-import { getCookie } from "cookies-next";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
+import app from "../lib/firebaseClient";
 import { useRouter } from "next/router";
 import styles from "../styles/Home.module.css";
 import { FaArrowLeft, FaMicrophone, FaMapPin } from "react-icons/fa";
@@ -11,7 +11,7 @@ import FloatingChat from "../components/FloatingChat";
 import { motion } from "framer-motion";
 
 function Single() {
-  const token = getCookie("token");
+  const token = null; // No longer needed for axios
   const router = useRouter();
   const [model, setModel] = useState({
     title: "Loading...",
@@ -38,56 +38,66 @@ function Single() {
     }
   }, []);
 
+  const db = getFirestore(app);
+
   useEffect(() => {
     const url = router.query.slug;
     if (!url) return;
 
     const fetchModel = async () => {
       try {
-        const response = await axios.get(`https://arfed-api.onrender.com/api/models/${url}`, {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            "auth-token": token,
-          },
-        });
-        setModel(response.data);
-        setError(null);
-
-        // Apply model color when model is loaded
-        if (modelViewerRef.current) {
-          const modelViewer = modelViewerRef.current;
-          modelViewer.addEventListener('load', () => {
-            // Apply model color
-            if (response.data.modelColor) {
-              const material = modelViewer.model.materials[0];
-              if (material) {
-                material.pbrMetallicRoughness.setBaseColorFactor(response.data.modelColor);
-              }
-            }
-          });
+        const modelDoc = await getDoc(doc(db, "models", url));
+        if (modelDoc.exists()) {
+          setModel(modelDoc.data());
+          setError(null);
+        } else {
+          setError("Model not found");
         }
-      } catch (e) {
-        console.error("Error fetching model:", e);
-        setError("Failed to load model. Please try again later.");
-        message.error("Failed to load model. Please try again later.");
+      } catch (error) {
+        setError("Failed to fetch model");
+      }
+    };
+    fetchModel();
+  }, [router.query.slug]);
 
-        // Set fallback data
-        setModel({
-          title: "Error Loading Model",
-          description: "We're having trouble loading this model. Please try again later.",
-          model: "",
-          image: "/images/error.png", // Make sure to add an error image
-          audio: "",
-          annotations: [],
-          modelColor: "#ffffff",
-          modelCustomizations: {}
-        });
+  // Handle model loading and sizing
+    useEffect(() => {
+    if (!modelViewerRef.current || !model.model) return;
+
+    const modelViewer = modelViewerRef.current;
+
+    const handleLoad = () => {
+      // Reset camera to a good viewing position
+      modelViewer.cameraOrbit = '0deg 75deg 5m';
+      modelViewer.fieldOfView = '30deg';
+
+      // Ensure model is properly scaled
+      modelViewer.scale = '1 1 1';
+
+      console.log('Model loaded and positioned');
+    };
+
+    const handleARStatus = (event) => {
+      console.log('AR status:', event.detail.status);
+      if (event.detail.status === 'failed') {
+        alert('AR failed to start. Please ensure you have good lighting and a flat surface.');
       }
     };
 
-    fetchModel();
-  }, [router.query.slug, token]);
+    const handleARTracking = (event) => {
+      console.log('AR tracking:', event.detail.status);
+    };
+
+    modelViewer.addEventListener('load', handleLoad);
+    modelViewer.addEventListener('ar-status', handleARStatus);
+    modelViewer.addEventListener('ar-tracking', handleARTracking);
+
+    return () => {
+      modelViewer.removeEventListener('load', handleLoad);
+      modelViewer.removeEventListener('ar-status', handleARStatus);
+      modelViewer.removeEventListener('ar-tracking', handleARTracking);
+    };
+  }, [model.model]);
 
   useEffect(() => {
     // Only run on client side
@@ -387,6 +397,7 @@ function Single() {
           :not(:defined)>* {
             display: none;
           }
+
         `}</style>
       </Head>
 
@@ -408,6 +419,21 @@ function Single() {
 
         {/* Microphone Icon for Audio Description */}
         <div className="flex items-center gap-4">
+          <button
+            onClick={() => {
+              if (modelViewerRef.current) {
+                modelViewerRef.current.cameraOrbit = '0deg 75deg 5m';
+                modelViewerRef.current.fieldOfView = '30deg';
+              }
+            }}
+            title="Reset Camera View"
+            className="p-2 rounded-full bg-green-500/20 hover:bg-green-500/40 text-green-200 border border-green-500/30 transition-colors focus:outline-none focus:ring-2 focus:ring-green-400"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+              <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+            </svg>
+          </button>
           <button
             onClick={() => speak(model.description)}
             title="Listen to Description"
@@ -440,29 +466,55 @@ function Single() {
                 exposure="1"
                 ar
                 ar-modes="webxr scene-viewer quick-look"
-                camera-orbit="0deg 75deg 2.5m"
-                min-camera-orbit="auto auto 1m"
-                max-camera-orbit="auto auto 10m"
+                ar-scale="auto"
+                ar-placement="floor"
+                ar-button
+                camera-orbit="0deg 75deg 5m"
+                min-camera-orbit="auto auto 2m"
+                max-camera-orbit="auto auto 15m"
                 field-of-view="30deg"
+                camera-target="0m 0m 0m"
+                min-field-of-view="15deg"
+                max-field-of-view="45deg"
+                scale="1 1 1"
+                bounds="tight"
+                interaction-prompt="auto"
+                interaction-policy="allow-when-focused"
                 style={{ width: '100%', height: '100%' }}
               >
                 {/* Hidden AR button for programmatic triggering */}
                 <button slot="ar-button" style={{ display: 'none' }} />
                 {model.annotations && model.annotations.map((annotation, index) => (
                   <button
-                    key={index}
+                    key={annotation.id || index}
                     className="hotspot"
                     slot={`hotspot-${index}`}
                     data-position={annotation.position}
                     data-normal={annotation.normal}
                     data-visibility-attribute="visible"
                   >
-                    <div className="annotation" slot={`annotation-${index}`}>{annotation.text}</div>
+                    <div className="annotation" slot={`annotation-${index}`}>{annotation.title}</div>
                   </button>
                 ))}
               </model-viewer>
             </div>
           </motion.div>
+
+          {/* Annotations List Section */}
+          {model.annotations && model.annotations.length > 0 && (
+            <div className="mb-8 bg-white/10 rounded-xl p-4">
+              <h3 className="text-lg font-bold text-white mb-2">Annotations</h3>
+              <ul className="space-y-2">
+                {model.annotations.map((annotation, idx) => (
+                  <li key={annotation.id || idx} className="bg-white/20 rounded p-3">
+                    <div className="font-semibold text-blue-200">{annotation.title}</div>
+                    <div className="text-white/80 text-sm mb-1">{annotation.content}</div>
+                    <div className="text-xs text-white/60">Position: x={annotation.position?.x}, y={annotation.position?.y}, z={annotation.position?.z}</div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* AR Button Section - Between Model and Info Cards */}
           <motion.div
@@ -477,12 +529,21 @@ function Single() {
                 // Start audio automatically when AR is activated
                 speak(model.description);
                 
-                // Try to trigger AR if available
-                const arButton = document.querySelector('[slot="ar-button"]');
-                if (arButton) {
-                  arButton.click();
+                // Simple AR activation - let model-viewer handle everything
+                if (modelViewerRef.current) {
+                  // Try to trigger AR directly
+                  try {
+                    modelViewerRef.current.activateAR();
+                  } catch (error) {
+                    // Fallback to button click
+                    const arButton = modelViewerRef.current.querySelector('[slot="ar-button"]');
+                    if (arButton) {
+                      arButton.click();
+                    } else {
+                      alert('AR functionality requires a compatible device and browser. Please try on a mobile device with AR support.');
+                    }
+                  }
                 } else {
-                  // Fallback message
                   alert('AR functionality requires a compatible device and browser. Please try on a mobile device with AR support.');
                 }
               }}
@@ -499,46 +560,16 @@ function Single() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+            className="max-w-2xl mx-auto"
           >
             {/* Model Details */}
             <div className="bg-white/15 backdrop-blur-lg rounded-2xl p-6 shadow-2xl border border-white/20">
-              {/* Model name as bold header, no 'Model Details' or 'Title' label */}
-              <h3 className="text-2xl font-bold text-white mb-4">{model.title}</h3>
               <div className="space-y-4">
                 <div>
-                  {/* Only show the description, no label */}
                   <p className="text-white/80">{model.description}</p>
                 </div>
-                {model.modelColor && (
-                  <div>
-                    <h4 className="text-lg font-semibold text-white mb-2">Model Color</h4>
-                    <div className="flex items-center gap-2">
-                      <div 
-                        className="w-6 h-6 rounded-full border-2 border-white/30" 
-                        style={{ backgroundColor: model.modelColor }}
-                      ></div>
-                      <span className="text-white/80">{model.modelColor}</span>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
-
-            {/* Model Customizations */}
-            {model.modelCustomizations && Object.keys(model.modelCustomizations).length > 0 && (
-              <div className="bg-white/15 backdrop-blur-lg rounded-2xl p-6 shadow-2xl border border-white/20">
-                <h3 className="text-2xl font-bold text-white mb-4">Customizations</h3>
-                <div className="space-y-4">
-                  {Object.entries(model.modelCustomizations).map(([key, value]) => (
-                    <div key={key}>
-                      <h4 className="text-lg font-semibold text-white mb-2 capitalize">{key.replace(/([A-Z])/g, ' $1')}</h4>
-                      <p className="text-white/80">{value}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </motion.div>
 
           {/* Error Display */}

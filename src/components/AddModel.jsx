@@ -37,7 +37,8 @@
 [16:12:12.670] Exiting build containerimport React, { useState, useEffect } from "react";
 import { Modal, Button } from "antd";
 import { getCookie } from "cookies-next";
-import axios from "axios";
+import { getFirestore, collection, addDoc, getDocs } from "firebase/firestore";
+import app from "../lib/firebaseClient";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -71,74 +72,49 @@ const AddModel = ({ open, closeModal }) => {
     position: { x: 0, y: 0, z: 0 }
   });
 
+  const db = getFirestore(app);
+
   useEffect(() => {
     console.log("Current token:", token);
     const fetchSubjects = async () => {
-      if (!token) {
-        console.warn("No token found, skipping subject fetch.");
-        toast.warn("Authentication token not found. Please log in again.");
-        return;
-      }
       try {
-        const response = await axios.get("https://arfed-api.onrender.com/api/subject", {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            "auth-token": token,
-          },
-        });
-        setSubjects(response.data);
-        console.log("Subjects fetched successfully:", response.data);
+        const querySnapshot = await getDocs(collection(db, "subjects"));
+        setSubjects(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
       } catch (error) {
         console.error("Failed to fetch subjects:", error);
         toast.error("Failed to fetch subjects");
       }
     };
     fetchSubjects();
-  }, [token]);
+  }, []);
 
-  const addSubject = () => {
+  const addSubject = async () => {
     if (title && description && image && model !== "") {
       try {
         setLoading(true);
-        axios
-          .post(
-            "https://arfed-api.onrender.com/api/models",
-            {
-              title,
-              description,
-              audio,
-              image,
-              model,
-              subjectId: subject,
-              iosModel: ios,
-              audio,
-              annotations: annotations.map((annotation, index) => ({
-                id: annotation.id || `annotation-${index}`,
-                title: annotation.title,
-                content: annotation.content,
-                position: annotation.position
-              }))
-            },
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-                "auth-token": token,
-              },
-            }
-          )
-          .then((response) => {
-            console.log(response.data);
-            setLoading(false);
-            closeModal();
-            setDesc("");
-            setImage("");
-            setTitle("");
-            setModel("");
-            setAnnotations([]);
-            toast.success("Model Created Successfully");
-          });
+        await addDoc(collection(db, "models"), {
+          title,
+          description,
+          audio,
+          image,
+          model,
+          subjectId: subject,
+          iosModel: ios,
+          annotations: annotations.map((annotation, index) => ({
+            id: annotation.id || `annotation-${index}`,
+            title: annotation.title,
+            content: annotation.content,
+            position: annotation.position
+          }))
+        });
+        setLoading(false);
+        closeModal();
+        setDesc("");
+        setImage("");
+        setTitle("");
+        setModel("");
+        setAnnotations([]);
+        toast.success("Model Created Successfully");
       } catch (err) {
         console.log(err);
         toast.error("Oops! some error occurred");

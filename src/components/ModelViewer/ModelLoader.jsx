@@ -3,7 +3,18 @@ import { useThree, useFrame } from '@react-three/fiber';
 import { useLoader } from '@react-three/fiber';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as THREE from 'three';
-import MeshoptDecoder from 'three/examples/jsm/libs/meshopt_decoder.module.js';
+// Try different import methods for MeshoptDecoder
+let MeshoptDecoder;
+try {
+  MeshoptDecoder = require('three/examples/jsm/libs/meshopt_decoder.module.js').MeshoptDecoder;
+} catch (e) {
+  try {
+    MeshoptDecoder = require('three/examples/jsm/libs/meshopt_decoder.module.js').default;
+  } catch (e2) {
+    console.warn("Could not import MeshoptDecoder, compression may not work");
+    MeshoptDecoder = null;
+  }
+}
 
 const ModelLoader = forwardRef(({ 
   url, 
@@ -33,13 +44,22 @@ const ModelLoader = forwardRef(({
         console.log("Starting model load from URL:", url);
         
         // Use GLTFLoader directly with better error handling
-        const gltfLoader = new GLTFLoader();
-        // Set the Meshopt decoder before loading
-        gltfLoader.setMeshoptDecoder(MeshoptDecoder);
+        const loader = new GLTFLoader();
+        // Set the Meshopt decoder before loading (with fallback)
+        if (MeshoptDecoder) {
+          try {
+            loader.setMeshoptDecoder(MeshoptDecoder);
+            console.log("MeshoptDecoder set successfully");
+          } catch (decoderError) {
+            console.warn("Failed to set MeshoptDecoder:", decoderError);
+          }
+        } else {
+          console.warn("MeshoptDecoder not available, proceeding without compression support");
+        }
         
         // Add a timeout to the loading process
         const loadPromise = new Promise((resolve, reject) => {
-          gltfLoader.load(
+          loader.load(
             url,
             (gltf) => resolve(gltf),
             (progress) => {
@@ -74,7 +94,7 @@ const ModelLoader = forwardRef(({
         // Calculate the maximum dimension to properly scale the model
         const maxDim = Math.max(size.x, size.y, size.z);
         
-        // Auto-resize very large models to fit in the viewport
+        // Simple scaling - only scale very large models
         if (maxDim > 10) {
           const autoScale = 5 / maxDim;
           loadedScene.scale.multiplyScalar(autoScale);
@@ -83,15 +103,14 @@ const ModelLoader = forwardRef(({
         // Apply the user-defined scale
         loadedScene.scale.multiplyScalar(scale);
         
-        // Position camera appropriately
-        if (!hasSetCamera.current && camera instanceof THREE.PerspectiveCamera) {
+        // Simple camera positioning - only for very large models
+        if (!hasSetCamera.current && camera instanceof THREE.PerspectiveCamera && maxDim > 10) {
           const fov = camera.fov * (Math.PI / 180);
-          // Position camera at a distance where the model fits in view
-          const cameraDistance = (maxDim / 2) / Math.tan(fov / 2) * 1.2; 
-          camera.position.set(center.x, center.y, Math.max(cameraDistance, 3) + center.z);
+          const cameraDistance = (maxDim / 2) / Math.tan(fov / 2) * 1.5;
+          camera.position.set(center.x, center.y, center.z + cameraDistance);
           camera.lookAt(center);
           camera.updateProjectionMatrix();
-          // Set OrbitControls target to model center if available
+          
           const controls = window.orbitControlsRef;
           if (controls && controls.target) {
             controls.target.set(center.x, center.y, center.z);
@@ -154,12 +173,19 @@ const ModelLoader = forwardRef(({
         if (object instanceof THREE.Mesh && object.material) {
           if (Array.isArray(object.material)) {
             object.material.forEach(material => {
-              if (material.color) {
+              // Log material and texture info
+              console.log(`Mesh: ${object.name}, Material: ${material.type}, Has Texture: ${!!material.map}`);
+              // Only set color if there is NO texture map
+              if (material.color && !material.map) {
                 material.color.set(color);
               }
             });
-          } else if (object.material.color) {
-            object.material.color.set(color);
+          } else {
+            // Log material and texture info
+            console.log(`Mesh: ${object.name}, Material: ${object.material.type}, Has Texture: ${!!object.material.map}`);
+            if (object.material.color && !object.material.map) {
+              object.material.color.set(color);
+            }
           }
         }
       });

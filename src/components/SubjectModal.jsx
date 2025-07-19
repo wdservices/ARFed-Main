@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Button } from "antd";
 import { getCookie } from "cookies-next";
-import axios from "axios";
+import { getFirestore, collection, addDoc } from "firebase/firestore";
+import app from "../lib/firebaseClient";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -12,35 +13,23 @@ const SubjectModal = ({ open, closeModal }) => {
   const [image, setImage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const addSubject = () => {
+  const db = getFirestore(app);
+
+  const addSubject = async () => {
     if (title && description && image !== "") {
       try {
         setLoading(true);
-        axios
-          .post(
-            "https://arfed-api.onrender.com/api/subject",
-            {
-              title,
-              description,
-              image,
-            },
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-                "auth-token": token,
-              },
-            }
-          )
-          .then((response) => {
-            console.log(response.data);
-            setLoading(false);
-            closeModal();
-            setDesc("");
-            setImage("");
-            setTitle("");
-            toast.success("Subject Created Successfully");
-          });
+        await addDoc(collection(db, "subjects"), {
+          title,
+          description,
+          image,
+        });
+        setLoading(false);
+        closeModal();
+        setDesc("");
+        setImage("");
+        setTitle("");
+        toast.success("Subject Created Successfully");
       } catch (err) {
         console.log(err);
         toast.error("Oops! some error occurred");

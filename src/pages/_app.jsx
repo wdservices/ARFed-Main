@@ -5,6 +5,10 @@ import Script from "next/script";
 import { ErrorBoundary } from 'react-error-boundary';
 import { UserProvider } from "../context/UserContext";
 import { Toaster } from '@/components/ui/toaster';
+import { useIsMobile } from "../hooks/use-mobile";
+import { useRouter } from "next/router";
+import React from "react";
+import { useUser } from "../context/UserContext";
 
 function ErrorFallback({ error }) {
   return (
@@ -15,44 +19,43 @@ function ErrorFallback({ error }) {
   );
 }
 
-function MyApp({ Component, pageProps, router }) {
+function DeviceCheckWrapper({ children }) {
+  const router = useRouter();
+  const isMobile = useIsMobile();
+  const { user, loading } = useUser();
+  const PUBLIC_ROUTES = ["/", "/UseMobile", "/login", "/signup"];
+
+  // Device check temporarily disabled for testing
+  // React.useEffect(() => {
+  //   if (loading || isMobile === undefined) return; // Wait until both are loaded
+  //   if (!PUBLIC_ROUTES.includes(router.pathname) && isMobile === false && (!user || user.role !== "admin")) {
+  //     router.replace("/UseMobile");
+  //   }
+  // }, [isMobile, router.pathname, user, loading]);
+
+  return children;
+}
+
+function MyApp({ Component, pageProps }) {
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
       <UserProvider>
-        <Toaster position="top-right" />
-        {/* <AnimatePresence mode="wait"> */}
-          {/* <motion.div
-            initial="pageInitial"
-            key={router.route}
-            animate="pageAnimate"
-            exit="pageExit"
-            variants={{
-              pageInitial: {
-                opacity: 0,
-              },
-              pageAnimate: {
-                opacity: 1,
-                transition: {
-                  delay: 0.4,
-                },
-              },
-              pageExit: {
-                filter: `invert()`,
-                opacity: 0,
-              },
-            }}
-          > */}
-            <Component {...pageProps} />
-            <Script
-              type="module"
-              src="https://unpkg.com/@google/model-viewer@3.4.0/dist/model-viewer.min.js"
-              strategy="beforeInteractive"
-            />
-          {/* </motion.div> */}
-        {/* </AnimatePresence> */}
+        <DeviceCheckWrapper>
+          <Toaster position="top-right" />
+          <Component {...pageProps} />
+          <Script
+            type="module"
+            src="https://unpkg.com/@google/model-viewer@^3.4.0/dist/model-viewer.min.js"
+            strategy="beforeInteractive"
+          />
+          <Script
+            src="https://unpkg.com/@google/model-viewer@^3.4.0/dist/model-viewer-legacy.js"
+            strategy="beforeInteractive"
+          />
+        </DeviceCheckWrapper>
       </UserProvider>
     </ErrorBoundary>
   );
 }
 
-export default MyApp;
+export default MyApp;    

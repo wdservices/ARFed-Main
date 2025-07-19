@@ -1,27 +1,33 @@
-import React, { useEffect, useState, useCallback } from "react";
-// Removed Nav component
-// import Nav from "../../components/MobileNav";
-// Removed ModelCard import as it seems the card is built directly in this file
-// import ModelCard from "../../components/modelCard";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import Head from "next/head";
-import Layout from "../../components/Layout"; 
-import axios from "axios";
-import { getCookie } from "cookies-next";
+import Layout from "../../components/Layout";
 import { useRouter } from "next/router";
-import { FaCrown, FaMicrophone, FaArrowLeft, FaSearch } from "react-icons/fa"; 
-import { Modal } from 'antd'; // Import Modal from antd
-import { useRef } from 'react';
+import { FaCrown, FaMicrophone, FaArrowLeft, FaSearch } from "react-icons/fa";
+import { Modal } from 'antd';
 import FloatingChat from "../../components/FloatingChat";
 import { useIsMobile } from "../../hooks/use-mobile";
 import { motion } from "framer-motion";
 import { FixedSizeGrid as Grid } from 'react-window';
+import app from "../../lib/firebaseClient";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  getDoc,
+  doc,
+  query,
+  where,
+  addDoc,
+} from "firebase/firestore";
+import { useUser } from "../../context/UserContext";
 
-// Memoized Model Card (simplified glassmorphism)
+const db = getFirestore(app);
+
 const ModelCard = React.memo(function ModelCard({ model, index, user, validPaidPlans, onClick, marginClass }) {
   return (
     <motion.div
-      key={model._id}
+      key={model.id}
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, delay: index < 4 ? index * 0.1 : 0 }}
@@ -59,8 +65,9 @@ const ModelCard = React.memo(function ModelCard({ model, index, user, validPaidP
   );
 });
 
-const SingleSubject = () => {
+function SingleSubject() {
   const router = useRouter();
+  const { user: currentUser, loading: userLoading } = useUser();
   const isMobile = useIsMobile();
   const [models, setModels] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -74,75 +81,79 @@ const SingleSubject = () => {
   const [search, setSearch] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const searchInputRef = useRef(null);
-
-  const token = getCookie("token");
-  const id = getCookie("id");
-
+  const [error, setError] = useState(null);
+  const [subject, setSubject] = useState(null);
   const validPaidPlans = ["daily", "weekly", "monthly", "termly", "yearly", "premium"];
 
-  // Device check: if not mobile and not admin, redirect to /UseMobile
-  useEffect(() => {
-    if (user && user.role !== "admin" && isMobile === false) {
-      router.replace("/UseMobile");
-    }
-  }, [user, isMobile, router]);
+  // Device check temporarily disabled for testing
+  // useEffect(() => {
+  //   if (userLoading || isMobile === undefined || !subject) return; // Wait for everything to load
+  //   if (
+  //     currentUser &&
+  //     currentUser.role !== "admin" &&
+  //     isMobile === false &&
+  //     subject.title !== "Free Demo"
+  //   ) {
+  //     router.replace("/UseMobile");
+  //   }
+  // }, [currentUser, isMobile, router, userLoading, subject]);
 
   useEffect(() => {
     const url = router.query.slug;
-    if (!url || typeof url !== 'string' || url.trim() === '') {
-      setLoading(false);
-      return;
-    }
+    console.log('[DEBUG] Subject slug:', url);
+    if (!url) return;
 
-    // Fetch models for the subject
-    axios
-      .get(`https://arfed-api.onrender.com/api/subject/${url}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "auth-token": token,
-        },
-      })
-      .then((response) => {
-        const modelsData = response.data || [];
-        setModels(modelsData);
-        setLoading(false);
-        
-        if (modelsData.length > 0) {
-          const modelData = modelsData[0];
-          setCurrentModel(modelData);
-          if (modelData.quizQuestions) {
-            setQuizQuestions(modelData.quizQuestions);
+    const fetchSubject = async () => {
+      try {
+        const subjectDocRef = doc(db, "subjects", url);
+        console.log('[DEBUG] Fetching subject with ID:', url);
+        const subjectDoc = await getDoc(subjectDocRef);
+        if (subjectDoc.exists()) {
+          console.log('[DEBUG] Subject found:', subjectDoc.data());
+          setSubject(subjectDoc.data());
+          setError(null);
+        } else {
+          setError("Subject not found");
+          console.error('[DEBUG] Subject not found for ID:', url);
+          if (typeof window !== "undefined") {
+            alert("Subject not found in Firestore");
           }
         }
-      })
-      .catch(error => {
-        console.error("Error fetching models:", error);
-        if (error.response) {
-          console.error("API response error:", error.response.data, error.response.status, error.response.headers);
-        } else if (error.request) {
-          console.error("No response received:", error.request);
-        } else {
-          console.error("Error setting up request:", error.message);
+      } catch (error) {
+        setError("Failed to fetch subject");
+        console.error("Firestore fetch error:", error);
+        if (typeof window !== "undefined") {
+          alert("Firestore fetch error: " + error.message);
         }
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+    fetchSubject();
+  }, [router.query.slug]);
 
-    // Fetch user info
-    if (id && token) {
-      axios.get(`https://arfed-api.onrender.com/api/user/${id}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "auth-token": token,
-        },
-      }).then((response) => {
-        setUser(response.data[0]);
-      }).catch(error => {
-        console.error("Error fetching user info:", error);
-      });
-    }
-  }, [router.query.slug, token, id]);
+  useEffect(() => {
+    const url = router.query.slug;
+    if (!url) return;
+
+    const fetchModels = async () => {
+      setLoading(true);
+      try {
+        const q = query(collection(db, "models"), where("subjectId", "==", url));
+        const querySnapshot = await getDocs(q);
+        const modelsArr = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        console.log("[DEBUG] Models fetched for subject:", modelsArr);
+        console.log("[DEBUG] Model titles for subject:", modelsArr.map(m => m.title));
+        setModels(modelsArr);
+      } catch (error) {
+        setError("Failed to fetch models for this subject");
+        console.error("Firestore fetch error (models):", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchModels();
+  }, [router.query.slug]);
 
   // Handle quiz input change
   const handleAnswerChange = (questionIndex, answer) => {
@@ -152,52 +163,36 @@ const SingleSubject = () => {
   // Calculate and submit quiz score
   const submitQuiz = async () => {
     let score = 0;
-    // Basic scoring logic: +1 for each correct answer
     quizQuestions.forEach((question, index) => {
-      // This scoring assumes a simple text match. Adjust based on actual quiz structure.
       if (userAnswers[index]?.toLowerCase() === question.correctAnswer.toLowerCase()) {
         score++;
       }
     });
     setQuizScore(score);
-
-    // Placeholder for sending score to backend
-    if (user && currentModel) {
+    // Store quiz result in Firestore
+    if (currentUser && currentModel) {
       try {
-        await axios.post('https://arfed-api.onrender.com/api/quiz-results', { // Hypothetical endpoint
-          userId: user._id,
-          modelId: currentModel._id,
+        await addDoc(collection(db, "quiz-results"), {
+          userId: currentUser.uid || currentUser.id,
+          modelId: currentModel.id,
           score: score,
-        }, {
-          headers: {
-            'Content-Type': 'application/json',
-            'auth-token': token,
-          },
+          timestamp: new Date().toISOString(),
         });
         console.log('Quiz score submitted successfully');
-        // Optionally show a success message
       } catch (error) {
         console.error('Error submitting quiz score:', error);
-        // Optionally show an error message
       }
     }
-
-    // Close quiz modal after submission (or keep open to show results)
-    // For now, let's close it and maybe show a score summary in the modal or a toast.
-    // setQuizOpen(false);
   };
 
   // Handle modal close
   const handleQuizModalClose = () => {
-      // If quiz was submitted, navigate away. Otherwise, maybe confirm exit.
-      if (quizScore !== null) {
-           setQuizOpen(false);
-           router.back(); // Navigate back after quiz is done
-      } else {
-          // User is closing the quiz without submitting. Ask for confirmation?
-          // For now, just close the modal and don't navigate.
-          setQuizOpen(false);
-      }
+    if (quizScore !== null) {
+      setQuizOpen(false);
+      router.back();
+    } else {
+      setQuizOpen(false);
+    }
   };
 
   // Add a click-away listener to close the search input when clicking outside
@@ -212,10 +207,41 @@ const SingleSubject = () => {
     return () => document.removeEventListener('mousedown', handleClick);
   }, [showSearch]);
 
+  // Show loading while user context is loading
+  if (userLoading || isMobile === undefined) {
+    return (
+      <Layout>
+        <div className="relative min-h-screen bg-gradient-to-br from-[#1E3A8A] via-[#2563EB] to-[#3B82F6] overflow-hidden">
+          <div className="flex flex-col items-center justify-center min-h-screen text-white">
+            <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+            <p className="mt-4">Loading...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Show message if user is not logged in
+  if (!currentUser) {
+    return (
+      <Layout>
+        <div className="relative min-h-screen bg-gradient-to-br from-[#1E3A8A] via-[#2563EB] to-[#3B82F6] overflow-hidden">
+          <div className="flex flex-col items-center justify-center min-h-screen text-white">
+            <p className="text-xl mb-4">You are not logged in.</p>
+            <button 
+              onClick={() => router.push('/login')}
+              className="px-6 py-2 bg-white text-blue-600 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              Go to Login
+            </button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
-    // Re-wrapped with Layout component
     <Layout>
-      {/* Applied gradient background to the main container */}
       <div className="relative min-h-screen bg-gradient-to-br from-[#1E3A8A] via-[#2563EB] to-[#3B82F6] overflow-hidden">
         {(!loading && models.length === 0) ? (
           <div className="flex flex-col items-center justify-center min-h-screen text-white">
@@ -232,13 +258,11 @@ const SingleSubject = () => {
             <div className="absolute top-10 left-10 w-32 h-32 bg-indigo-400 opacity-30 rounded-full blur-2xl animate-pulse" />
             <div className="absolute bottom-20 right-20 w-40 h-40 bg-blue-300 opacity-20 rounded-full blur-3xl animate-pulse" />
             <div className="absolute top-1/2 left-1/2 w-24 h-24 bg-indigo-200 opacity-20 rounded-full blur-2xl animate-pulse" style={{transform: 'translate(-50%, -50%)'}} />
-            
             <Head>
               <script src="https://www.gstatic.com/draco/versioned/decoders/1.5.6/draco_decoder.js"></script>
               <script src="https://www.gstatic.com/draco/versioned/decoders/1.5.6/draco_wasm_wrapper.js"></script>
               <script src="https://www.gstatic.com/draco/versioned/decoders/1.5.6/draco_decoder.wasm"></script>
             </Head>
-
             {/* Fixed Header: Back Button, Subject Title, and Microphone Icon */}
             <div className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center p-4 bg-white/10 backdrop-blur-lg border-b border-white/20">
               <button
@@ -281,7 +305,6 @@ const SingleSubject = () => {
                 </div>
               )}
             </div>
-
             {/* Main Content Area (starts below fixed header) */}
             <main className="pt-16 p-4 overflow-y-auto">
               <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -299,7 +322,6 @@ const SingleSubject = () => {
                     Discover interactive 3D models and AR experiences for this subject.
                   </p>
                 </motion.div>
-
                 {/* Models Grid */}
                 <div className="max-w-6xl mx-auto">
                   {loading ? (
@@ -325,12 +347,12 @@ const SingleSubject = () => {
                         if (isLastInRowXl) marginClass += ' xl:mr-4';
                         return (
                           <ModelCard
-                            key={model._id}
+                            key={model.id}
                             model={model}
                             index={index}
-                            user={user}
+                            user={currentUser}
                             validPaidPlans={validPaidPlans}
-                            onClick={() => router.push(`/${model._id}`)}
+                            onClick={() => router.push(`/${model.id}`)}
                             marginClass={marginClass}
                           />
                         );
@@ -340,7 +362,6 @@ const SingleSubject = () => {
                 </div>
               </div>
             </main>
-
             {/* Quiz Modal */}
             <Modal
               title="Quiz"
@@ -351,7 +372,6 @@ const SingleSubject = () => {
             >
               {/* Quiz content here */}
             </Modal>
-
             <FloatingChat />
           </>
         )}

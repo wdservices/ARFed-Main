@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useCallback } from "react";
-import axios from "axios";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/pagination";
@@ -15,20 +14,25 @@ import Link from "next/link";
 import { toast } from "@/components/ui/use-toast";
 import { useUser } from "../context/UserContext";
 import { motion } from "framer-motion";
+import app from "../lib/firebaseClient";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+} from "firebase/firestore";
+
+const db = getFirestore(app);
 
 const Subjects = () => {
-  const { user } = useUser();
-  const [token, setToken] = useState(null);
-  const [id, setId] = useState(null);
-  const [cookiesLoaded, setCookiesLoaded] = useState(false);
+  const { user, loading, logoutUser } = useUser();
   const [subjects, setSubjects] = useState([]);
   const [ads, setAds] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [open, openModal] = useState(false);
   const router = useRouter();
   const [darkMode, setDarkMode] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showDebug, setShowDebug] = useState(true);
+  const [error, setError] = useState(null);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -38,86 +42,67 @@ const Subjects = () => {
   };
 
   const logout = () => {
-    document.cookie = "token=; Max-Age=0; path=/";
-    document.cookie = "id=; Max-Age=0; path=/";
+    // Use the logoutUser function from UserContext
+    logoutUser();
     router.push("/");
   };
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const tokenValue = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
-      const idValue = document.cookie.split('; ').find(row => row.startsWith('id='))?.split('=')[1];
-      setToken(tokenValue);
-      setId(idValue);
-      setCookiesLoaded(true);
-
+    if (user) {
       // Show post-login payment message if needed
-      if (localStorage.getItem('showPostLoginPaymentMsg') === 'true') {
+      if (typeof window !== "undefined" && localStorage.getItem('showPostLoginPaymentMsg') === 'true') {
         toast({
           title: 'Continue to Premium',
           description: 'Now click any premium card below to subscribe.',
-          variant: 'premium', // custom variant for app color
+          variant: 'premium',
         });
         localStorage.removeItem('showPostLoginPaymentMsg');
       }
     }
-  }, []);
-
-  useEffect(() => {
-    if (user) {
-      console.log('User object:', user);
-      console.log('User plan:', user.plan);
-    }
   }, [user]);
 
   useEffect(() => {
-    if (!cookiesLoaded) return;
-    const fetchSubjectsAndAds = async () => {
-      try {
-        const [adsRes, subjectsRes] = await Promise.all([
-          axios.get("/api/ads", {
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-              "auth-token": token,
-            },
-          }),
-          axios.get("https://arfed-api.onrender.com/api/subject", {
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-              "auth-token": token,
-            },
-          })
-        ]);
-        setAds(adsRes.data);
-        setSubjects(subjectsRes.data);
-      } catch (error) {
-        console.error("Error fetching subjects or ads:", error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch subjects or ads.",
-          variant: "destructive",
-        });
-      }
-    };
-    if (token && id) {
-      fetchSubjectsAndAds().finally(() => setLoading(false));
-    } else {
-      setLoading(false);
+    if (loading) return; // Wait for user to load
+    if (!user) {
       toast({
         title: "Authentication Required",
         description: "Please log in to continue.",
         variant: "destructive",
       });
+      return;
     }
-  }, [token, id, cookiesLoaded]);
+    const fetchSubjects = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "subjects"));
+        const docs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setSubjects(docs);
+      } catch (error) {
+        setError("Failed to fetch subjects");
+        console.error("Firestore fetch error:", error);
+      } finally {
+      }
+    };
+    fetchSubjects();
+  }, [user, loading]);
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchAds = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "ads"));
+        setAds(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      } catch (error) {
+        console.error("Failed to fetch ads", error);
+      }
+    };
+    fetchAds();
+  }, [user]);
 
   const validPaidPlans = ["daily", "weekly", "monthly", "termly", "yearly", "premium"];
 
-  const single = (subjectId) => {
-    if (user && (subjectId === "63dace7d1b0974f12c03d419" || validPaidPlans.includes(user.plan))) {
-      router.push(`/subject/${subjectId}`);
+  const single = (subject) => {
+    if (user && (subject.title === "Free Demo" || validPaidPlans.includes(user.plan))) {
+      router.push(`/subject/${subject.id}`);
     } else if (user) {
       openModal(true);
     } else {
@@ -128,8 +113,6 @@ const Subjects = () => {
       });
     }
   };
-
-
 
   useEffect(() => {
     if (darkMode) {
@@ -219,13 +202,13 @@ const Subjects = () => {
             </div>
             <div className="text-sm text-white/60 mb-4 pb-4 border-b border-white/20">
               <p>Email: {user?.email || "N/A"}</p>
-              <p>Plan: {user?.plan || "N/A"}</p>
+              <p>Plan: {user?.plan ? (user.plan === 'free' ? 'Free' : user.plan) : 'Free'}</p>
             </div>
             {/* Subjects Section */}
             <div className="text-lg font-bold text-white mt-4">Subjects</div>
             <div className="flex flex-col gap-2 mb-6 pb-4 border-b border-white/20">
               {subjects.map((subject, index) => (
-                <Link key={subject._id} href={`/subject/${subject._id}`} className={`text-base text-white/80 hover:text-white transition-colors py-2 ${index < subjects.length - 1 ? 'border-b border-white/10' : ''}`} onClick={() => setMenuOpen(false)}>
+                <Link key={subject.id} href={`/subject/${subject.id}`} className={`text-base text-white/80 hover:text-white transition-colors py-2 ${index < subjects.length - 1 ? 'border-b border-white/10' : ''}`} onClick={() => setMenuOpen(false)}>
                   {subject.title}
                 </Link>
               ))}
@@ -311,10 +294,12 @@ const Subjects = () => {
 
         {/* Subjects Grid */}
         <div className="max-w-6xl mx-auto">
-          {loading ? (
+          {loading || subjects.length === 0 ? (
             <div className="flex justify-center items-center h-64">
               <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
             </div>
+          ) : error ? (
+            <div className="text-red-500 text-center my-8">{error}</div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {subjects.map((subject, index) => {
@@ -334,7 +319,7 @@ const Subjects = () => {
                 if (isLastInRowXl) marginClass += ' xl:mr-4';
                 return (
                   <SubjectCard
-                    key={subject._id}
+                    key={subject.id}
                     subject={subject}
                     index={index}
                     user={user}
@@ -359,16 +344,16 @@ const Subjects = () => {
 const SubjectCard = React.memo(function SubjectCard({ subject, index, user, single, marginClass }) {
   return (
     <motion.div
-      key={subject._id}
+      key={subject.id}
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, delay: index < 4 ? index * 0.1 : 0 }}
       whileHover={{ scale: 1.05, y: -8, transition: { duration: 0.2 } }}
-      onClick={() => single(subject._id)}
+      onClick={() => single(subject)}
       className={`group cursor-pointer${marginClass}`}
     >
       <div className="relative bg-white/30 rounded-2xl p-3 border border-white/20" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-        {user && subject._id !== "63dace7d1b0974f12c03d419" && user.plan === "free" && (
+        {user && (!user.plan || user.plan === "free") && subject.title !== "Free Demo" && (
           <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-lg z-10">
             <FaCrown className="text-white" size={10} />
             Premium

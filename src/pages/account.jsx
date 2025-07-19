@@ -3,7 +3,9 @@ import Layout from "../components/Layout";
 import Nav from "../components/MobileNav";
 import { AvatarGenerator } from "random-avatar-generator";
 import { getCookie, deleteCookie } from "cookies-next";
-import axios from "axios";
+import app from "../lib/firebaseClient";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { useRouter } from "next/router";
 import { useFlutterwave, closePaymentModal } from "flutterwave-react-v3";
 import { ToastContainer, toast } from "react-toastify";
@@ -22,44 +24,44 @@ const account = () => {
   const [loading, setLoading] = useState(true);
   const [open, openModal] = useState(false);
 
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
   useEffect(() => {
-    try {
-      axios
-        .get(`https://arfed-api.onrender.com/api/user/${id}`, {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            "auth-token": token,
-          },
-        })
-        .then((response) => {
-          console.log(response.data);
-          setUser(response.data[0] || response.data || null);
-          setLoading(false);
-        });
-    } catch (e) {
-      console.log(e);
-    }
-    setImage(generator.generateRandomAvatar(user?.name));
-  }, [id, token, user?.name]);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
+          setUser(userDoc.exists() ? userDoc.data() : null);
+        } catch (e) {
+          console.log(e);
+        }
+        setImage(generator.generateRandomAvatar(firebaseUser.displayName || "User"));
+        setLoading(false);
+      } else {
+        setUser(null);
+        setLoading(false);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   const logout = () => {
-    deleteCookie("token");
-    deleteCookie("id");
-    router.push("/");
+    // Use Firebase signOut
+    auth.signOut().then(() => {
+      router.push("/");
+    }).catch((error) => {
+      console.error("Error signing out:", error);
+    });
   };
 
   const refreshUser = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`https://arfed-api.onrender.com/api/user/${id}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "auth-token": token,
-        },
-      });
-      setUser(response.data[0] || response.data || null);
+      if (auth.currentUser) {
+        const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+        setUser(userDoc.exists() ? userDoc.data() : null);
+      }
     } catch (e) {
       console.log(e);
     }

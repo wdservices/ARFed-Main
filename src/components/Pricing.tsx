@@ -4,17 +4,16 @@ import { Check, Star, Smartphone, Users, Calendar } from "lucide-react";
 import { useState } from "react";
 import Payment from "./Payment";
 import { useRouter } from "next/router";
-import { getCookie } from "cookies-next";
+import { useUser } from "../context/UserContext";
 
 const Pricing = () => {
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const router = useRouter();
-  const token = getCookie("token");
+  const { user } = useUser();
 
   const handlePlanSelect = (plan) => {
-    if (!token) {
-      // If user is not logged in, redirect to login page with a query param
+    if (!user) {
       router.push("/login?from=landing-payment");
       return;
     }

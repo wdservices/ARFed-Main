@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link.js";
-import axios from "axios";
 import { motion } from "framer-motion";
 import { setCookies } from "cookies-next";
 import { useRouter } from "next/router";
@@ -10,6 +9,12 @@ import Head from "next/head";
 import { FaEye, FaEyeSlash, FaArrowLeft } from "react-icons/fa";
 import Image from "next/image";
 import { useIsMobile } from "../hooks/use-mobile";
+import app from "../lib/firebaseClient";
+import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
+import { db } from "../lib/firebaseClient";
+
+const ADMIN_EMAILS = ["hello.wdservices@gmail.com"];
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -18,6 +23,9 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const isMobile = useIsMobile();
+
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
   // Load saved email from localStorage on component mount
   useEffect(() => {
@@ -38,55 +46,59 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await axios.post("https://arfed-api.onrender.com/api/user/login", {
-        email,
-        password,
-      }, {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-      });
-
-      if (response.data.token) {
-        setCookies("token", response.data.token);
-        setCookies("id", response.data.id);
-        toast.success("Logged in successfully!");
-        
-        console.log("Login successful. Response data:", response.data);
-
-        // Add a small delay to ensure cookies are set before redirect
-        setTimeout(() => {
-          // Always redirect admin to /admin first
-          if (response.data.role === "admin") {
-            router.replace("/admin");
-          } else if (!isMobile) {
-            // If not mobile (desktop site requested), redirect to UseMobile page
-            router.replace("/UseMobile");
-          } else {
-            // If coming from landing payment, show a message and redirect to /subjects
-            if (router.query.from === "landing-payment") {
-              localStorage.setItem('showPostLoginPaymentMsg', 'true');
-            }
-            router.replace("/subjects");
-          }
-        }, 100);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      // Always update user doc with correct role
+      const isAdmin = ADMIN_EMAILS.includes(user.email.toLowerCase());
+      const userRef = doc(db, "users", user.uid);
+      await setDoc(userRef, {
+        email: user.email,
+        name: user.displayName || "",
+        role: isAdmin ? "admin" : "user",
+      }, { merge: true });
+      // Fetch user role from Firestore
+      const userDoc = await getDoc(userRef);
+      const userData = userDoc.exists() ? userDoc.data() : {};
+      if (userData.role === "admin") {
+        router.replace("/admin");
+      } else if (isMobile === false) {
+        toast.error("Admin privilege required to access on desktop.");
+        router.replace("/UseMobile");
+      } else {
+        router.replace("/subjects");
       }
     } catch (error) {
-      console.error("Login error:", error);
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        toast.error(error.response.data.message || "Login failed. Please check your credentials.");
-      } else if (error.request) {
-        // The request was made but no response was received
-        toast.error("No response from server. Please check your internet connection.");
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        toast.error("An error occurred. Please try again.");
-      }
-    } finally {
       setLoading(false);
+      toast.error(error.message);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      const isAdmin = ADMIN_EMAILS.includes(user.email.toLowerCase());
+      const userRef = doc(db, "users", user.uid);
+      await setDoc(userRef, {
+        email: user.email,
+        name: user.displayName || "",
+        role: isAdmin ? "admin" : "user",
+      }, { merge: true });
+      const userDoc = await getDoc(userRef);
+      const userData = userDoc.exists() ? userDoc.data() : {};
+      if (userData.role === "admin") {
+        router.replace("/admin");
+      } else if (isMobile === false) {
+        toast.error("Admin privilege required to access on desktop.");
+        router.replace("/UseMobile");
+      } else {
+        router.replace("/subjects");
+      }
+    } catch (error) {
+      setLoading(false);
+      toast.error(error.message);
     }
   };
 
@@ -164,6 +176,7 @@ const Login = () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className="w-full bg-white text-purple-600 py-3 rounded-lg font-medium hover:bg-white/90 transition-all duration-200 shadow-lg shadow-purple-500/20"
+            disabled={loading}
           >
             {loading ? (
               <div className="flex items-center justify-center">
@@ -175,6 +188,36 @@ const Login = () => {
             )}
           </motion.button>
         </form>
+        <div style={{ textAlign: 'center', marginTop: 16 }}>
+          <Link href="/forgot-password" style={{ color: '#fff', fontWeight: 600, textDecoration: 'none', fontSize: 15 }}>
+            Forgot password?
+          </Link>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 24 }}>
+          <button
+            onClick={handleGoogleSignIn}
+            disabled={loading}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: '#fff',
+              color: '#444',
+              border: '1px solid #ddd',
+              borderRadius: 4,
+              padding: '10px 24px',
+              fontWeight: 500,
+              fontSize: 16,
+              boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+              cursor: 'pointer',
+              margin: '0 auto',
+              width: 260
+            }}
+          >
+            <img src="/images/Icons/google.svg" alt="Google" style={{ width: 24, height: 24, marginRight: 12 }} />
+            Sign in with Google
+          </button>
+        </div>
 
         <motion.div
           initial={{ opacity: 0 }}
@@ -185,9 +228,6 @@ const Login = () => {
           <Link href="/signup" className="text-white font-medium hover:underline">
             Don't have an account? Sign up
           </Link>
-          <button className="text-gray-200 hover:text-white transition-colors duration-200">
-            Forgot Password?
-          </button>
         </motion.div>
       </div>
       <div className="absolute bottom-6 left-0 w-full flex justify-center z-10">

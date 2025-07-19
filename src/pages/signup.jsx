@@ -1,13 +1,21 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import axios from "axios";
 import { useRouter } from "next/router";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Head from "next/head";
 import { FaEye, FaEyeSlash, FaArrowLeft } from "react-icons/fa";
 import Image from "next/image";
+import app from "../lib/firebaseClient";
+import { getAuth, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { getFirestore, collection, addDoc, doc, getDoc, setDoc } from "firebase/firestore";
+import { useIsMobile } from "../hooks/use-mobile";
+
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const ADMIN_EMAILS = ["hello.wdservices@gmail.com"];
 
 const Signup = () => {
   const [email, setEmail] = useState("");
@@ -17,43 +25,87 @@ const Signup = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [accountType, setAccountType] = useState("individual"); // "individual" or "group"
+  const [accountType, setAccountType] = useState("individual");
   const [organizationName, setOrganizationName] = useState("");
   const router = useRouter();
+  const isMobile = useIsMobile();
+  React.useEffect(() => {
+    if (isMobile === false && accountType !== "admin") {
+      router.replace("/UseMobile");
+    }
+  }, [isMobile, router, accountType]);
 
   const signup = async () => {
     setLoading(true);
     try {
-      if (password === confirmPassword) {
-        await axios
-          .post(
-            "https://arfed-api.onrender.com/api/user/register",
-            {
-              name: name,
-              email: email,
-              password: password,
-              ...(accountType === "group" ? { organizationName } : {}),
-            },
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-              },
-            }
-          )
-          .then((response) => {
-            console.log(response.data);
-            setLoading(false);
-            toast.success("Signed up successfully!");
-            router.push("/login");
-          });
+      if (password !== confirmPassword) {
+        toast.warn("Passwords do not match");
+        setLoading(false);
+        return;
       }
-      setLoading(false);
+      // Create user with Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      // Ensure user doc exists
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+      if (!userSnap.exists()) {
+        await setDoc(userRef, {
+          email: user.email,
+          name: name || user.displayName || "",
+          role: ADMIN_EMAILS.includes(user.email) ? "admin" : "user",
+        });
+      }
+      // Fetch user role from Firestore
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      const userData = userDoc.exists() ? userDoc.data() : {};
+      if (userData.role === "admin") {
+        router.push("/admin");
+      } else if (isMobile === false) {
+        router.replace("/UseMobile");
+      } else {
+        toast.success("Signed up successfully!");
+        router.push("/login");
+      }
     } catch (err) {
       console.log(err);
-      toast.warn(err.response.data.message);
+      toast.warn(err.message || "Signup failed");
       setLoading(false);
     }
+    setLoading(false);
+  };
+
+  const handleGoogleSignUp = async () => {
+    setLoading(true);
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      // Ensure user doc exists
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+      if (!userSnap.exists()) {
+        await setDoc(userRef, {
+          email: user.email,
+          name: user.displayName || "",
+          role: ADMIN_EMAILS.includes(user.email) ? "admin" : "user",
+        });
+      }
+      // Fetch user role from Firestore
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      const userData = userDoc.exists() ? userDoc.data() : {};
+      if (userData.role === "admin") {
+        router.push("/admin");
+      } else if (isMobile === false) {
+        router.replace("/UseMobile");
+      } else {
+        toast.success("Signed up successfully!");
+        router.push("/subjects");
+      }
+    } catch (err) {
+      toast.warn(err.message || "Google signup failed");
+    }
+    setLoading(false);
   };
 
   return (
@@ -116,6 +168,17 @@ const Signup = () => {
                   className="w-4 h-4 text-purple-600 bg-white/10 border-white/20 focus:ring-purple-500"
                 />
                 School/Organization
+              </label>
+              <label className="flex items-center gap-2 text-white cursor-pointer">
+                <input
+                  type="radio"
+                  name="accountType"
+                  value="admin"
+                  checked={accountType === "admin"}
+                  onChange={(e) => setAccountType(e.target.value)}
+                  className="w-4 h-4 text-purple-600 bg-white/10 border-white/20 focus:ring-purple-500"
+                />
+                Admin
               </label>
             </div>
           </motion.div>
@@ -232,9 +295,36 @@ const Signup = () => {
             Login here
           </Link>
         </motion.div>
-      </div>
-      <div className="absolute left-0 w-full flex justify-center z-10" style={{ bottom: 24, pointerEvents: 'none' }}>
-        <span className="text-white/80 text-sm" style={{ marginTop: 32, marginBottom: 0 }}>From Waves Digital Services</span>
+        {/* Move Google sign-up button above the form and use Google-branded UI */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 24 }}>
+          <button
+            onClick={handleGoogleSignUp}
+            disabled={loading}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: '#fff',
+              color: '#444',
+              border: '1px solid #ddd',
+              borderRadius: 4,
+              padding: '10px 24px',
+              fontWeight: 500,
+              fontSize: 16,
+              boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+              cursor: 'pointer',
+              margin: '0 auto',
+              width: 260
+            }}
+          >
+            <img src="/images/Icons/google.svg" alt="Google" style={{ width: 24, height: 24, marginRight: 12 }} />
+            Sign up with Google
+          </button>
+        </div>
+        {/* Remove the image for Waves Digital Services and add a centered text below the card */}
+        <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: 32 }}>
+          <span style={{ color: '#888', fontSize: 15, fontWeight: 500, opacity: 0.8, letterSpacing: 0.5 }}>From Waves Digital Services</span>
+        </div>
       </div>
       <ToastContainer position="top-center" theme="dark" />
     </div>

@@ -1,10 +1,21 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { getCookie } from "cookies-next";
 import { toast } from "react-hot-toast";
 import AdminLayout from "../../components/AdminLayout";
 import { FaVrCardboard } from "react-icons/fa";
 import { useRouter } from "next/router";
+import app from "../../lib/firebaseClient";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  serverTimestamp,
+} from "firebase/firestore";
+
+const db = getFirestore(app);
 
 const VRPage = () => {
   const [vrLink, setVrLink] = useState("");
@@ -16,7 +27,6 @@ const VRPage = () => {
   const [loading, setLoading] = useState(false);
   const [subjectsLoading, setSubjectsLoading] = useState(true);
   const [subjectsError, setSubjectsError] = useState("");
-  const token = getCookie("token");
   const router = useRouter();
 
   useEffect(() => {
@@ -24,14 +34,9 @@ const VRPage = () => {
       setSubjectsLoading(true);
       setSubjectsError("");
       try {
-        const response = await axios.get("https://arfed-api.onrender.com/api/subject", {
-          headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-            "auth-token": token,
-          },
-        });
-        setSubjects(response.data);
+        const subjectsSnap = await getDocs(collection(db, "subjects"));
+        const subjectsArr = subjectsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        setSubjects(subjectsArr);
       } catch (error) {
         setSubjectsError("Failed to fetch subjects. Please try again.");
         setSubjects([]);
@@ -40,10 +45,8 @@ const VRPage = () => {
         setSubjectsLoading(false);
       }
     };
-    if (token) {
-      fetchSubjects();
-    }
-  }, [token]);
+    fetchSubjects();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -57,23 +60,14 @@ const VRPage = () => {
     }
     setLoading(true);
     try {
-      await axios.post(
-        "https://arfed-api.onrender.com/api/vr-content",
-        {
-          vrLink,
-          imageCover,
-          audio,
-          videoUrl,
-          subjectId,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-            "auth-token": token,
-          },
-        }
-      );
+      await addDoc(collection(db, "vr-content"), {
+        vrLink,
+        imageCover,
+        audio,
+        videoUrl,
+        subjectId,
+        date: serverTimestamp(),
+      });
       toast.success("360 VR Content added successfully!");
       setVrLink("");
       setImageCover("");
@@ -159,7 +153,7 @@ const VRPage = () => {
               >
                 <option value="">-- Choose a Subject --</option>
                 {subjects.map((subject) => (
-                  <option key={subject._id} value={subject._id}>
+                  <option key={subject.id} value={subject.id}>
                     {subject.title}
                   </option>
                 ))}

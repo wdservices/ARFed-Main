@@ -6,6 +6,10 @@ import { toast } from "@/components/ui/use-toast";
 import { FaCrown, FaCheck, FaCalendarAlt, FaCalendarDay, FaCalendarWeek } from "react-icons/fa";
 import PropTypes from "prop-types";
 import { useUser } from "../context/UserContext";
+import { getFirestore, doc, updateDoc } from "firebase/firestore";
+import app from "../lib/firebaseClient";
+
+const db = getFirestore(app);
 
 const Payment = ({ open, closeModal, user, refreshUser = () => {} }) => {
   const { fetchUser } = useUser();
@@ -215,7 +219,6 @@ const Payment = ({ open, closeModal, user, refreshUser = () => {} }) => {
         callback: async (response) => {
           try {
             console.log("Payment callback received:", response);
-            
             // Store payment info in localStorage as backup
             const paymentInfo = {
               transaction_id: response.transaction_id,
@@ -224,71 +227,25 @@ const Payment = ({ open, closeModal, user, refreshUser = () => {} }) => {
               status: 'pending_verification'
             };
             localStorage.setItem('pending_payment', JSON.stringify(paymentInfo));
-            
-            const result = await axios.put(
-              `/api/user/suscribe/${id}`,
-              {
-                plan: plan.id,
-                startDate: new Date().toISOString(),
-                endDate: calculateEndDate(plan.id),
-                paymentId: response.transaction_id,
-                flw_ref: response.flw_ref || null
-              },
-              {
-                headers: {
-                  "Content-Type": "application/json",
-                  Accept: "application/json",
-                  "auth-token": token,
-                },
-              }
-            );
-            
-            console.log("Subscription update result:", result.data);
-            
+            // Update Firestore user subscription info
+            await updateDoc(doc(db, "users", user.uid), {
+              plan: plan.id,
+              startDate: new Date().toISOString(),
+              endDate: calculateEndDate(plan.id),
+              paymentId: response.transaction_id,
+              flw_ref: response.flw_ref || null
+            });
             // Remove pending payment from localStorage
             localStorage.removeItem('pending_payment');
-            
-            toast.success("Payment Successful! Your subscription is now active.");
-            
-            // Always use context's fetchUser
-            if (fetchUser) {
-              await fetchUser();
-              // Show the new plan in a toast for confirmation
-              setTimeout(() => {
-                toast({
-                  title: "Subscription Updated",
-                  description: `Your new plan is: ${result.data.user?.plan || "unknown"}`,
-                  variant: "premium"
-                });
-              }, 500);
-            }
-            
-            closeModal();
-            
-          } catch (e) {
-            console.error("Payment verification failed:", e);
-            
-            // Show more specific error messages
-            if (e.response?.status === 401) {
-              toast.error("Authentication failed. Please log in again.");
-            } else if (e.response?.status === 404) {
-              toast.error("User not found. Please contact support.");
-            } else if (e.response?.status >= 500) {
-              toast.error("Server error. Your payment was successful but verification is pending. Please contact support with transaction ID: " + response.transaction_id);
-            } else {
-              toast.error("Payment verification failed. Please contact support with transaction ID: " + response.transaction_id);
-            }
-            
-            // Keep payment info in localStorage for manual verification
-            toast({
-              title: "Payment Info Saved",
-              description: "Your payment information has been saved. Contact support if access is not granted within 24 hours.",
-              variant: "default"
-            });
-            
-          } finally {
+            toast.success("Subscription updated successfully!");
             setIsProcessing(false);
             setSelectedPlan(null);
+            refreshUser();
+            fetchUser();
+          } catch (err) {
+            console.error("Error updating subscription:", err);
+            toast.error("Failed to update subscription");
+            setIsProcessing(false);
           }
         },
         // Mobile-specific configurations

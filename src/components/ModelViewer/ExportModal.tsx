@@ -4,7 +4,8 @@ import { Card } from '@/components/ui/card';
 import { X, ChevronDown } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { getCookie } from 'cookies-next';
-import axios from 'axios';
+import { getFirestore, collection, addDoc, getDocs } from "firebase/firestore";
+import app from "../../lib/firebaseClient";
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -50,12 +51,15 @@ const ExportModal: React.FC<ExportModalProps> = ({
   const [subjects, setSubjects] = useState<any[]>(propSubjects);
   const [loading, setLoading] = useState(false);
 
+  const db = getFirestore(app);
+
   // Fetch subjects if not provided as prop
   useEffect(() => {
-    if (isOpen && token && (!propSubjects || propSubjects.length === 0)) {
+    console.log("ExportModal useEffect triggered:", { isOpen, token, propSubjectsLength: propSubjects?.length });
+    if (isOpen) {
       fetchSubjects();
     }
-  }, [isOpen, token, propSubjects]);
+  }, [isOpen]);
 
   // Update config when modal opens or when generated code changes
   const generatedCode = useMemo(() => {
@@ -79,20 +83,32 @@ const ExportModal: React.FC<ExportModalProps> = ({
   }, [isOpen, modelUrl, generatedCode]);
 
   const fetchSubjects = async () => {
-    if (!token) {
-      console.warn("No token found, skipping subject fetch.");
-      if (typeof toast !== 'undefined') toast.warn("Authentication token not found. Please log in again.");
-      return;
-    }
     try {
-      const response = await axios.get("https://arfed-api.onrender.com/api/subject", {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "auth-token": token,
-        },
-      });
-      setSubjects(response.data);
+      const querySnapshot = await getDocs(collection(db, "subjects"));
+      const fetchedSubjects = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      // If no subjects exist, create default subjects
+      if (fetchedSubjects.length === 0) {
+        console.log("No subjects found, creating default subjects...");
+        const defaultSubjects = [
+          { title: "Biology", image: "/images/subjects/atom-29539_1280.svg", description: "Study of living organisms" },
+          { title: "Chemistry", image: "/images/subjects/beakers-309864_1280.svg", description: "Study of matter and its properties" },
+          { title: "Physics", image: "/images/subjects/system-152937_1280.svg", description: "Study of matter and energy" },
+          { title: "Geography", image: "/images/subjects/brain-2750415_1280.svg", description: "Study of Earth's surface" },
+          { title: "Free Demo", image: "/images/subjects/atom-29539_1280.svg", description: "Free demonstration content" }
+        ];
+        
+        // Add default subjects to Firestore
+        for (const subject of defaultSubjects) {
+          await addDoc(collection(db, "subjects"), subject);
+        }
+        
+        // Fetch the newly created subjects
+        const newQuerySnapshot = await getDocs(collection(db, "subjects"));
+        setSubjects(newQuerySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      } else {
+        setSubjects(fetchedSubjects);
+      }
     } catch (error) {
       console.error("Failed to fetch subjects:", error);
       if (typeof toast !== 'undefined') toast.error("Failed to fetch subjects");
@@ -111,41 +127,31 @@ const ExportModal: React.FC<ExportModalProps> = ({
     }
     try {
       setLoading(true);
-      await axios.post(
-        "https://arfed-api.onrender.com/api/models",
-        {
-          title: config.title,
-          description: config.description,
-          audio: config.audioUrl || '',
-          image: config.imageUrl || '',
-          model: modelUrl,
-          subjectId: config.subject,
-          iosModel: modelUrl,
-          annotations: annotations.map(annotation => ({
-            id: annotation.id,
-            title: annotation.title,
-            content: annotation.content,
-            position: {
-              x: annotation.position.x,
-              y: annotation.position.y,
-              z: annotation.position.z
-            }
-          })),
-          modelColor: modelColor,
-          modelCustomizations: {
-            color: modelColor,
-            annotations: annotations.length,
-            hasCustomizations: true
+      await addDoc(collection(db, "models"), {
+        title: config.title,
+        description: config.description,
+        audio: config.audioUrl || '',
+        image: config.imageUrl || '',
+        model: modelUrl,
+        subjectId: config.subject,
+        iosModel: modelUrl,
+        annotations: annotations.map(annotation => ({
+          id: annotation.id,
+          title: annotation.title,
+          content: annotation.content,
+          position: {
+            x: annotation.position.x,
+            y: annotation.position.y,
+            z: annotation.position.z
           }
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            "auth-token": token,
-          },
+        })),
+        modelColor: modelColor,
+        modelCustomizations: {
+          color: modelColor,
+          annotations: annotations.length,
+          hasCustomizations: true
         }
-      );
+      });
       setLoading(false);
       onExport(config);
       onClose();
@@ -228,7 +234,7 @@ const ExportModal: React.FC<ExportModalProps> = ({
                 >
                   <option value="">Select a Subject</option>
                   {subjects.map((subject) => (
-                    <option key={subject._id} value={subject._id}>
+                    <option key={subject.id} value={subject.id}>
                       {subject.title}
                     </option>
                   ))}
@@ -236,7 +242,15 @@ const ExportModal: React.FC<ExportModalProps> = ({
                 <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={20} />
               </div>
               {subjects.length === 0 && (
-                <p className="text-sm text-red-500 mt-1">No subjects found. Please create subjects first.</p>
+                <div className="text-sm text-red-500 mt-1">
+                  <p>No subjects found. Please create subjects first.</p>
+                  <button 
+                    onClick={fetchSubjects}
+                    className="mt-2 px-3 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600"
+                  >
+                    Create Default Subjects
+                  </button>
+                </div>
               )}
             </div>
 
@@ -255,13 +269,27 @@ const ExportModal: React.FC<ExportModalProps> = ({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Model Image URL (Optional)
+                Image URL
               </label>
               <input
-                type="url"
+                type="text"
                 value={config.imageUrl}
                 onChange={(e) => setConfig({ ...config, imageUrl: e.target.value })}
-                placeholder="Enter Model Image URL"
+                placeholder="Enter Image URL"
+                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              />
+            </div>
+
+            {/* iOS Model URL input */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                iOS Model URL (.usdz)
+              </label>
+              <input
+                type="text"
+                value={config.iosModelUrl}
+                onChange={(e) => setConfig({ ...config, iosModelUrl: e.target.value })}
+                placeholder="Enter iOS Model URL (.usdz)"
                 className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               />
             </div>

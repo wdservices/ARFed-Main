@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { getCookie } from "cookies-next";
 import Head from "next/head";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -8,9 +6,20 @@ import AdminLayout from "../../components/AdminLayout";
 import { motion } from "framer-motion";
 import { FaPlus, FaTrash, FaEdit } from "react-icons/fa";
 import { Modal } from "antd";
+import app from "../../lib/firebaseClient";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+} from "firebase/firestore";
+
+const db = getFirestore(app);
 
 const Ads = () => {
-  const token = getCookie("token");
   const [ads, setAds] = useState([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -25,68 +34,30 @@ const Ads = () => {
 
   const fetchAds = async () => {
     try {
-      const response = await axios.get("/api/ads", {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "auth-token": token,
-        },
-      });
-      setAds(response.data);
+      const querySnapshot = await getDocs(collection(db, "ads"));
+      setAds(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     } catch (error) {
-      console.error("Error fetching ads:", error);
       toast.error("Failed to fetch ads");
     }
   };
 
-  const addAd = async () => {
-    if (!img.trim()) {
-      toast.error("Please enter an image URL");
-      return;
-    }
-    const dataToSend = {
-      image: img,
-      link: link,
-    };
-    setLoading(true);
+  const addAd = async (adData) => {
     try {
-      const response = await axios.post(
-        "/api/ads",
-        dataToSend,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            "auth-token": token,
-          },
-        }
-      );
-      toast.success("Ad added successfully");
-      setLoading(false);
-      setOpen(false);
-      setImg("");
-      setLink("");
+      await addDoc(collection(db, "ads"), adData);
+      toast.success("Ad created successfully");
+      // Refresh ads
       fetchAds();
     } catch (error) {
-      setLoading(false);
-      console.error('Add error:', error);
-      toast.error("Failed to add ad");
+      toast.error("Failed to create ad");
     }
   };
 
   const deleteAd = async (id) => {
     try {
-      await axios.delete(`/api/ads?id=${id}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "auth-token": token,
-        },
-      });
+      await deleteDoc(doc(db, "ads", id));
       toast.success("Ad deleted successfully");
       fetchAds();
     } catch (error) {
-      console.error(error);
       toast.error("Failed to delete ad");
     }
   };
@@ -104,28 +75,12 @@ const Ads = () => {
     setNewAdData({ ...newAdData, [name]: value });
   };
 
-  const updateAd = async () => {
-    if (!newAdData.image.trim()) {
-      toast.error("Please enter an image URL");
-      return;
-    }
-    setLoading(true);
+  const updateAd = async (id, adData) => {
     try {
-      await axios.put(`/api/ads?id=${editingAd._id}`, { image: newAdData.image, link: newAdData.link }, {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "auth-token": token,
-        },
-      });
+      await updateDoc(doc(db, "ads", id), adData);
       toast.success("Ad updated successfully");
-      setLoading(false);
-      setEditingAd(null);
-      setNewAdData({ image: "", link: "" });
-      await fetchAds();
+      fetchAds();
     } catch (error) {
-      setLoading(false);
-      console.error('Update error:', error);
       toast.error("Failed to update ad");
     }
   };
@@ -150,52 +105,49 @@ const Ads = () => {
 
       {/* Ads Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {ads.map((ad, index) => {
-          console.log(`Ad ${index}:`, ad._id, 'Link:', ad.link);
-          return (
-            <motion.div
-              key={index}
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: index * 0.1 }}
-              className="bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 overflow-hidden group"
-            >
-              <div className="relative">
-                <a href={ad.link} target="_blank" rel="noopener noreferrer"> 
-                  <img
-                    src={ad.image}
-                    alt={`Ad ${index + 1}`}
-                    className="w-full h-48 object-cover"
-                  />
-                </a>
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-4"> 
-                  <button
-                    onClick={() => handleEditClick(ad)} 
-                    className="p-2 text-white hover:bg-white/10 rounded-lg transition-all duration-200"
-                  >
-                    <FaEdit />
-                  </button>
-                  <button
-                    onClick={() => deleteAd(ad._id)}
-                    className="p-2 text-white hover:bg-white/10 rounded-lg transition-all duration-200"
-                  >
-                    <FaTrash />
-                  </button>
-                </div>
+        {ads.map((ad, index) => (
+          <motion.div
+            key={index}
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: index * 0.1 }}
+            className="bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 overflow-hidden group"
+          >
+            <div className="relative">
+              <a href={ad.link} target="_blank" rel="noopener noreferrer"> 
+                <img
+                  src={ad.image}
+                  alt={`Ad ${index + 1}`}
+                  className="w-full h-48 object-cover"
+                />
+              </a>
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-4"> 
+                <button
+                  onClick={() => handleEditClick(ad)} 
+                  className="p-2 text-white hover:bg-white/10 rounded-lg transition-all duration-200"
+                >
+                  <FaEdit />
+                </button>
+                <button
+                  onClick={() => deleteAd(ad.id)}
+                  className="p-2 text-white hover:bg-white/10 rounded-lg transition-all duration-200"
+                >
+                  <FaTrash />
+                </button>
               </div>
-              <div className="p-4">
-                <p className="text-white/60 text-sm">
-                  Added {new Date(ad.date).toLocaleDateString()}
+            </div>
+            <div className="p-4">
+              <p className="text-white/60 text-sm">
+                Added {ad.date?.toDate ? ad.date.toDate().toLocaleDateString() : ""}
+              </p>
+              {ad.link && (
+                <p className="text-white/60 text-xs mt-1">
+                  Link: <a href={ad.link} target="_blank" rel="noopener noreferrer" className="underline text-blue-300 hover:text-blue-500">{ad.link}</a>
                 </p>
-                {ad.link && (
-                  <p className="text-white/60 text-xs mt-1">
-                    Link: {ad.link}
-                  </p>
-                )}
-              </div>
-            </motion.div>
-          );
-        })}
+              )}
+            </div>
+          </motion.div>
+        ))}
       </div>
 
       {/* Add Modal */}
@@ -230,7 +182,7 @@ const Ads = () => {
           </div>
           <div className="flex justify-end">
             <button
-              onClick={addAd}
+              onClick={() => addAd({ image: img, link: link })}
               disabled={loading}
               className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all duration-200 disabled:opacity-50 shadow-lg hover:shadow-xl"
             >
@@ -274,7 +226,7 @@ const Ads = () => {
               />
             </div>
             <div className="flex justify-end">
-              <button onClick={updateAd} disabled={loading} className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all duration-200 disabled:opacity-50 shadow-lg hover:shadow-xl">{loading ? "Updating..." : "Update Ad"}</button>
+              <button onClick={() => updateAd(editingAd.id, newAdData)} disabled={loading} className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all duration-200 disabled:opacity-50 shadow-lg hover:shadow-xl">{loading ? "Updating..." : "Update Ad"}</button>
               <button onClick={() => setEditingAd(null)} className="px-6 py-2 bg-red-600 hover:bg-red-600 text-white rounded-lg transition-all duration-200 ml-2">Cancel</button>
             </div>
           </div>

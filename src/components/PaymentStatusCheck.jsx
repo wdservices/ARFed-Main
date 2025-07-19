@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { getCookie } from 'cookies-next';
-import axios from 'axios';
+import { getAuth } from "firebase/auth";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
+import app from "../lib/firebaseClient";
 import { toast } from '@/components/ui/use-toast';
 import { FaCheckCircle, FaClock, FaExclamationTriangle, FaRefresh } from 'react-icons/fa';
 
@@ -10,6 +12,9 @@ const PaymentStatusCheck = () => {
   const [user, setUser] = useState(null);
   const token = getCookie('token');
   const id = getCookie('id');
+
+  const db = getFirestore(app);
+  const auth = getAuth(app);
 
   useEffect(() => {
     // Check for pending payment in localStorage
@@ -31,14 +36,10 @@ const PaymentStatusCheck = () => {
 
   const fetchUserData = async () => {
     try {
-      const response = await axios.get(`https://arfed-api.onrender.com/api/user/${id}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "auth-token": token,
-        },
-      });
-      setUser(response.data[0] || response.data || null);
+      if (auth.currentUser) {
+        const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+        setUser(userDoc.exists() ? userDoc.data() : null);
+      }
     } catch (error) {
       console.error('Error fetching user data:', error);
     }
