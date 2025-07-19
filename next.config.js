@@ -12,5 +12,6 @@ module.exports = withPWA({
     register: true,
     skipWaiting: true,
     disable: process.env.NODE_ENV === 'development',
+    // No Next.js options here!
   },
 });
