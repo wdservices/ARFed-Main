@@ -6,6 +6,9 @@ import Payment from "./Payment";
 import { useRouter } from "next/router";
 import { useUser } from "../context/UserContext";
 
+// Type for the user context
+// Place this at the top of the file
+
 type UserContextType = {
   user: any;
   loading: boolean;
